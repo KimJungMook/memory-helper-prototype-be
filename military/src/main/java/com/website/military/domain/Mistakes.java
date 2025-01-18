@@ -1,6 +1,10 @@
 package com.website.military.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -14,12 +18,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Mistakes {
-    private int mistakesId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "mistake_id", updatable = false)
+    private Long mistakesId;
     @ManyToOne
     @JoinColumn(name = "result_id")
     private Results results; // 외래키
     @ManyToOne
     @JoinColumn(name = "word_id")
-    private Word words;  // 외래키
+    private Word word;  // 외래키
     private String userAnswer; 
 }
