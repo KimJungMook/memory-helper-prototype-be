@@ -1,4 +1,4 @@
-package com.website.military.dto.response;
+package com.website.military.domain.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.website.military.dto;
+package com.website.military.domain.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

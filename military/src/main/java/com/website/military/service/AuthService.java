@@ -9,9 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.website.military.domain.Entity.User;
-import com.website.military.dto.SignUpDto;
-import com.website.military.dto.response.ResponseDataDto;
-import com.website.military.dto.response.ResponseMessageDto;
+import com.website.military.domain.dto.SignUpDto;
+import com.website.military.domain.dto.response.ResponseDataDto;
+import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.repository.UserRepository;
 
 @Service

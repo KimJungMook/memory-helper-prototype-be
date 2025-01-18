@@ -3,7 +3,7 @@ package com.website.military.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.website.military.dto.SignUpDto;
+import com.website.military.domain.dto.SignUpDto;
 import com.website.military.service.AuthService;
 
 import org.springframework.beans.factory.annotation.Autowired;
