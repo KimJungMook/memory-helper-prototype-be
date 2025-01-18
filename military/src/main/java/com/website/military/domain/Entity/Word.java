@@ -1,4 +1,5 @@
-package com.website.military.domain;
+package com.website.military.domain.Entity;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -17,25 +18,26 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "tests")
+@Table(name = "word")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Tests {
+public class Word {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "test_id", updatable = false)
-    private Long testId;
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user; // 외래키
+    @Column(name = "word_id", updatable = false)
+    private Long wordId;
+    private String word;
+    private String meaning;
+    private ArrayList<String> synonyms;
+    private ArrayList<String> antonyms;
+    private Date createAt;
+    private Date updatedAt;
     @ManyToOne
     @JoinColumn(name = "set_id")
-    private WordSets wordsets;  // 외래키
-    private int testType;
-    private Date createdAt;
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "tests")
+    private WordSets wordsets; // 단어셋 고유 ID 외래키
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "word")
     private List<TestProblems> testproblems;
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "tests")
-    private List<Results> results;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "word")
+    private List<Mistakes> mistakes;
 }

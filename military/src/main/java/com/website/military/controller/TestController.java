@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.website.military.domain.Text;
+import com.website.military.domain.Entity.Text;
 import com.website.military.dto.PostDto;
 import com.website.military.repository.TextRepository;
 import org.springframework.web.bind.annotation.PostMapping;
