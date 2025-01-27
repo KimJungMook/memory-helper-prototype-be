@@ -11,9 +11,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.website.military.domain.Entity.User;
-import com.website.military.domain.dto.auth.IdValidationDto;
-import com.website.military.domain.dto.auth.SignInDto;
-import com.website.military.domain.dto.auth.SignUpDto;
+import com.website.military.domain.dto.auth.request.IdValidationDto;
+import com.website.military.domain.dto.auth.request.SignInDto;
+import com.website.military.domain.dto.auth.request.SignUpDto;
+import com.website.military.domain.dto.auth.response.SignUpResponseDto;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.repository.UserRepository;
@@ -58,7 +59,10 @@ public class AuthService {
             User user = new User(dto.getUsername(), dto.getEmail(), password);
             user.setCreatedAt(new Date());
             userRepository.save(user);
-        return ResponseEntity.ok(ResponseDataDto.set("OK", user));
+            SignUpResponseDto responseDto = SignUpResponseDto.builder()
+                                            .email(user.getEmail())
+                                            .username(user.getUsername()).build();
+        return ResponseEntity.ok(ResponseDataDto.set("OK", responseDto));
         }catch(Exception e){
             e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -1,4 +1,4 @@
-package com.website.military.domain.dto.auth;
+package com.website.military.domain.dto.auth.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

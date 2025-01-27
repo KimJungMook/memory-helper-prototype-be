@@ -3,8 +3,8 @@ package com.website.military.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.website.military.domain.dto.auth.SignInDto;
-import com.website.military.domain.dto.auth.SignUpDto;
+import com.website.military.domain.dto.auth.request.SignInDto;
+import com.website.military.domain.dto.auth.request.SignUpDto;
 import com.website.military.service.AuthService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ public class AuthController {
         return entity;
     }
     
-    @PostMapping("/signin")
+    @PostMapping("/login")
     public ResponseEntity<?> SignIn(@RequestBody SignInDto dto) {
         ResponseEntity<?> entity = authService.signIn(dto);
         return entity;
