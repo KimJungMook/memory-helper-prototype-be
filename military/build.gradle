@@ -32,7 +32,11 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'mysql:mysql-connector-java:8.0.33'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.security:spring-security-crypto'
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5' // JWT 표준 API
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5' // 실제 구현체 (JWT 생성,서명,검증 기능)
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JWT 페이로드를 JSON 형식으로 처리
 }
 
 tasks.named('test') {

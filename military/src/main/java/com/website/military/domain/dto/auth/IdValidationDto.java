@@ -1,4 +1,4 @@
-package com.website.military.domain.dto;
+package com.website.military.domain.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostDto {
-    private String content;
+public class IdValidationDto {
+    private String email;
 }
