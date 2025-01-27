@@ -1,4 +1,4 @@
-package com.website.military.domain;
+package com.website.military.domain.Entity;
 
 import java.util.Date;
 import java.util.List;

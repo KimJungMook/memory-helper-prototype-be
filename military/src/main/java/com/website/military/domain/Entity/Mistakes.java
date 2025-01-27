@@ -1,4 +1,4 @@
-package com.website.military.domain;
+package com.website.military.domain.Entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
