@@ -10,10 +10,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.website.military.config.jwt.JwtProvider;
+import com.website.military.config.token.RefreshToken;
 import com.website.military.domain.Entity.User;
 import com.website.military.domain.dto.auth.request.IdValidationDto;
-import com.website.military.domain.dto.auth.request.SignInDto;
+import com.website.military.domain.dto.auth.request.LogInDto;
 import com.website.military.domain.dto.auth.request.SignUpDto;
+import com.website.military.domain.dto.auth.response.LoginResponseDto;
 import com.website.military.domain.dto.auth.response.SignUpResponseDto;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
@@ -29,6 +32,8 @@ public class AuthService {
     private UserRepository userRepository;
 
     private final BCryptPasswordEncoder passwordEncoder;
+
+    private final JwtProvider jwtProvider;
 
     @Value("${error.INTERNAL_SERVER_ERROR}")
     private String internalError;
@@ -46,6 +51,7 @@ public class AuthService {
         return ResponseEntity.status(HttpStatus.OK)
         .body(ResponseMessageDto.set("OK", "사용가능한 아이디입니다."));
     }
+
     // 회원가입 하는데 사용하는 메서드
     public ResponseEntity<?> signUp(SignUpDto dto){
         Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
@@ -70,12 +76,24 @@ public class AuthService {
         }
     }
 
-    public ResponseEntity<?> signIn(SignInDto dto){
+    // 로그인하는데 사용하는 메서드
+    public ResponseEntity<?> signIn(LogInDto dto){
         Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
         if(existingUser.isPresent()){
             if(passwordEncoder.matches(dto.getPassword(), existingUser.get().getPassword())){
+                Long id = existingUser.get().getUserId();
+                String username = existingUser.get().getUsername();
+                String accessToken = jwtProvider.generateAccessToken(id);
+                RefreshToken.removeUserRefreshToken(id);
+                String refreshToken = jwtProvider.generateRefreshToken(id);
+                RefreshToken.putRefreshToken(refreshToken, id);
+                LoginResponseDto responseDto = LoginResponseDto.builder()
+                                                .username(username)
+                                                .accessToken(accessToken)
+                                                .refreshToken(refreshToken)
+                                                .build();
                 return ResponseEntity.status(HttpStatus.OK)
-                .body(ResponseDataDto.set("OK", existingUser));
+                .body(ResponseDataDto.set("OK", responseDto));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(ResponseMessageDto.set(badRequestError, "아이디와 비밀번호가 일치하지않습니다."));
