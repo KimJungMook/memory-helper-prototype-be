@@ -34,6 +34,7 @@ public class WordSetService {
 
     @Value("${error.BAD_REQUEST_ERROR}")
     private String badRequestError;
+    
     private final JwtProvider jwtProvider;
 
     public ResponseEntity<?> getWordSets(HttpServletRequest request){
@@ -70,6 +71,7 @@ public class WordSetService {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "세트가 만들어지지 않았습니다."));
     }
+
 
     public Long getUserId(HttpServletRequest request){
         final String token = request.getHeader("Authorization");
