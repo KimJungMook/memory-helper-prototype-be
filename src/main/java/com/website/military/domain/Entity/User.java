@@ -4,6 +4,8 @@ package com.website.military.domain.Entity;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -31,6 +33,7 @@ public class User {
     private String password;
     private Date createdAt;
     private Date updatedAt;
+    @JsonManagedReference
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     private List<WordSets> wordsets;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")

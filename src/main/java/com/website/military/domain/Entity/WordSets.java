@@ -3,6 +3,9 @@ package com.website.military.domain.Entity;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -29,11 +32,18 @@ public class WordSets {
     private Long setId;
     private String setName;
     private Date createdAt;
+    
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user; // 외래키
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "wordsets")
-    private List<Word> words;
+    @OneToMany(mappedBy="wordsets", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WordSetMapping> wordsetmapping;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "wordsets")
     private List<Tests> tests;
+
+    public WordSets(String setName){
+        this.setName = setName;
+        this.createdAt = new Date();
+    }
 }
