@@ -1,10 +1,11 @@
-package com.website.military.controller;
+package com.website.military.controller.auth;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.website.military.domain.dto.auth.request.LogInDto;
 import com.website.military.domain.dto.auth.request.SignUpDto;
+import com.website.military.domain.dto.auth.response.GetUserInfoFromUsernameResponseDto;
 import com.website.military.domain.dto.auth.response.LoginResponseDto;
 import com.website.military.domain.dto.auth.response.SignUpResponseDto;
 import com.website.military.service.AuthService;
@@ -15,11 +16,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+
 
 
 @RestController
@@ -30,7 +34,19 @@ public class AuthController {
     private AuthService authService;
     
     // GET
-
+    @Operation(summary = "Get userInfo from token", description = "토큰을 통해서 아이디, 이름 알아낼 수 있게하는 메서드")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "성공",
+            content = {@Content(schema = @Schema(implementation = GetUserInfoFromUsernameResponseDto.class))}),
+        @ApiResponse(responseCode = "400", description = "해당하는 정보가 없습니다."),
+        @ApiResponse(responseCode = "500", description = "서버 에러")
+    })
+    @GetMapping("/user")
+    public ResponseEntity<?> getUserInfoFromToken(HttpServletRequest request) {
+        ResponseEntity<?> entity = authService.getUserInfoFromToken(request);
+        return entity;
+    }
+    
 
     // POST
     @Operation(summary = "signup", description = "회원가입")

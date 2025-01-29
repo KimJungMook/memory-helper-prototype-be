@@ -1,4 +1,4 @@
-package com.website.military.config;
+package com.website.military.config.swagger;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,6 +7,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 
 @Configuration
 public class SwaggerConfig {
@@ -30,6 +31,7 @@ public class SwaggerConfig {
         .components(new Components())
         .info(info)
         .addSecurityItem(securityRequirement)
+        .addServersItem(new Server().url("/")) // swagger상의 코스에러 문제 해결. 요청하는 주소를 바꿈.
         .components(components);
     }
 

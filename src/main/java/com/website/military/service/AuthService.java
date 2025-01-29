@@ -16,12 +16,14 @@ import com.website.military.domain.Entity.User;
 import com.website.military.domain.dto.auth.request.IdValidationDto;
 import com.website.military.domain.dto.auth.request.LogInDto;
 import com.website.military.domain.dto.auth.request.SignUpDto;
+import com.website.military.domain.dto.auth.response.GetUserInfoFromUsernameResponseDto;
 import com.website.military.domain.dto.auth.response.LoginResponseDto;
 import com.website.military.domain.dto.auth.response.SignUpResponseDto;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.repository.UserRepository;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 
@@ -103,4 +105,24 @@ public class AuthService {
         .body(ResponseMessageDto.set(badRequestError, "아이디가 존재하지 않습니다."));
     }
 
+    // 이름을 통해서 사용자의 정보를 알아내는 메서드
+    public ResponseEntity<?> getUserInfoFromToken(HttpServletRequest request){
+        final String token = request.getHeader("Authorization");
+        String id = null;
+        if(token != null && !token.isEmpty()){
+            String jwtToken = token.substring(7);
+            id = jwtProvider.getUsernameFromToken(jwtToken);
+        }
+        Optional<User> existingUser = userRepository.findById(Long.parseLong(id));
+        if (existingUser.isPresent()) {
+            GetUserInfoFromUsernameResponseDto responseDto = GetUserInfoFromUsernameResponseDto.builder()
+                                                            .email(existingUser.get().getEmail())
+                                                            .username(existingUser.get().getUsername())
+                                                            .build();
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responseDto));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(ResponseMessageDto.set(badRequestError, "해당하는 정보가 없습니다."));
+
+    }
 }
