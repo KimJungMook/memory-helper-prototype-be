@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
-import com.website.military.service.WordSetService;
+import com.website.military.service.wordsets.WordSetService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -24,17 +24,17 @@ public class WordSetController {
 
     // GET
     @GetMapping("")
-    public ResponseEntity<?> getWordSets() {
-        ResponseEntity<?> entity = wordSetService.getWordSets();
+    public ResponseEntity<?> getWordSets(HttpServletRequest request) {
+        ResponseEntity<?> entity = wordSetService.getWordSets(request);
         return entity;
     }
 
     // POST
 
-    @PostMapping("")
-    public ResponseEntity<?> postWordSets(@RequestBody WordSetsDto dto, HttpServletRequest request) {
+    @PostMapping("/register")
+    public ResponseEntity<?> RegisterWordSets(@RequestBody WordSetsDto dto, HttpServletRequest request) {
         //TODO: process POST request
-        ResponseEntity<?> entity = wordSetService.postWordSets(dto, request);
+        ResponseEntity<?> entity = wordSetService.RegisterWordSets(dto, request);
         return entity;
     }
     

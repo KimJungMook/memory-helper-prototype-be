@@ -32,8 +32,8 @@ public class WordSets {
     private Long setId;
     private String setName;
     private Date createdAt;
-    
-    @JsonBackReference
+
+    @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user; // 외래키

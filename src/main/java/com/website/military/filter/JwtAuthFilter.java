@@ -1,4 +1,4 @@
-package com.website.military.Filter;
+package com.website.military.filter;
 
 import java.io.IOException;
 import java.util.Collections;

@@ -33,7 +33,7 @@ public class User {
     private String password;
     private Date createdAt;
     private Date updatedAt;
-    @JsonManagedReference
+    @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     private List<WordSets> wordsets;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")

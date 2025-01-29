@@ -1,4 +1,4 @@
-package com.website.military.service;
+package com.website.military.service.wordsets;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,13 +36,18 @@ public class WordSetService {
     private String badRequestError;
     private final JwtProvider jwtProvider;
 
-    public ResponseEntity<?> getWordSets(){
-        List<WordSets> existingWordSets = wordSetsRepository.findAll();
-
-        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",existingWordSets));
+    public ResponseEntity<?> getWordSets(HttpServletRequest request){
+        Long id = getUserId(request);
+        Optional<User> existingUser = userRepository.findById(id);
+        if(existingUser.isPresent()){
+            Long userId = existingUser.get().getUserId();
+            List<WordSets> existingWordSets = wordSetsRepository.findByUser_UserId(userId);
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",existingWordSets));
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", ""));
     }
 
-    public ResponseEntity<?> postWordSets(WordSetsDto dto, HttpServletRequest request){
+    public ResponseEntity<?> RegisterWordSets(WordSetsDto dto, HttpServletRequest request){
         Optional<WordSets> existingWordSets = wordSetsRepository.findBysetName(dto.getSetName());
         if(existingWordSets.isPresent()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "이미 존재한 세트 이름"));
@@ -55,6 +60,7 @@ public class WordSetService {
                 User user = existingUser.get();
                 wordSets.setUser(user);
                 wordSetsRepository.save(wordSets);
+
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", wordSets)); // 여기서부터 다시.
             }
         }catch(Exception e){
