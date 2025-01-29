@@ -1,4 +1,4 @@
-package com.website.military.config;
+package com.website.military.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
