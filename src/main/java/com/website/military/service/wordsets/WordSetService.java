@@ -1,5 +1,6 @@
 package com.website.military.service.wordsets;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +16,7 @@ import com.website.military.domain.Entity.WordSets;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
+import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
 import com.website.military.repository.UserRepository;
 import com.website.military.repository.WordSetsRepository;
 
@@ -43,7 +45,16 @@ public class WordSetService {
         if(existingUser.isPresent()){
             Long userId = existingUser.get().getUserId();
             List<WordSets> existingWordSets = wordSetsRepository.findByUser_UserId(userId);
-            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",existingWordSets));
+            List<WordSetsResponseDto> dtos = new ArrayList<>();
+            for(WordSets sets : existingWordSets){
+                WordSetsResponseDto dto = WordSetsResponseDto.builder()
+                                            .setId(sets.getSetId())
+                                            .setName(sets.getSetName())
+                                            .createdAt(sets.getCreatedAt())
+                                            .build();
+                dtos.add(dto);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",dtos));
         }
         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", ""));
     }

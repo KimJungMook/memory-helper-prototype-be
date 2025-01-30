@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -36,8 +37,10 @@ public class WordSets {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user; // 외래키
+    @JsonManagedReference // 중복 순환 해결.
     @OneToMany(mappedBy="wordsets", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WordSetMapping> wordsetmapping;
+    @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "wordsets")
     private List<Tests> tests;
 

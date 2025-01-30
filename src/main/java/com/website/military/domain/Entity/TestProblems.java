@@ -1,6 +1,8 @@
 package com.website.military.domain.Entity;
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,9 +25,11 @@ public class TestProblems {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "problem_id", updatable = false)
     private Long problemId;
+    @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "test_id")
     private Tests tests; // 외래키
+    @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "word_id")
     private Word word; // 외래키

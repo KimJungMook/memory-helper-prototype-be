@@ -47,6 +47,7 @@ public class AuthController {
         ResponseEntity<?> entity = authService.getUserInfoFromToken(request);
         return entity;
     }
+    
     // POST
     @Operation(summary = "signup", description = "회원가입")
     @ApiResponses(value = {

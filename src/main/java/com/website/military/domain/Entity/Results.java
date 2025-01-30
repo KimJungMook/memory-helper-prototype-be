@@ -2,6 +2,9 @@ package com.website.military.domain.Entity;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -26,14 +29,17 @@ public class Results {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "result_id", updatable = false)
     private Long resultId;
+    @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user; // 외래키
+    @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "test_id")
     private Tests tests; // 외래키
     private int score;
     private Date submittedAt;
+    @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "results")
     private List<Mistakes> mistakes;
 }
