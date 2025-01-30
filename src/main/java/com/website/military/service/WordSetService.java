@@ -1,4 +1,4 @@
-package com.website.military.service.wordsets;
+package com.website.military.service;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.website.military.service.auth;
+package com.website.military.service;
 
 import java.util.Date;
 import java.util.Optional;

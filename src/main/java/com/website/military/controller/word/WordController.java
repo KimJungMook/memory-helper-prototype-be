@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.website.military.domain.Entity.Word;
 import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
 import com.website.military.domain.dto.word.request.ExistWordDto;
-import com.website.military.service.word.WordService;
+import com.website.military.service.WordService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

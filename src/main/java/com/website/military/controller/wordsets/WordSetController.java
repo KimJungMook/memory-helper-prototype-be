@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.website.military.domain.Entity.WordSets;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
-import com.website.military.service.wordsets.WordSetService;
+import com.website.military.service.WordSetService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

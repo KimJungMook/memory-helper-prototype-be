@@ -1,4 +1,4 @@
-package com.website.military.service.word;
+package com.website.military.service;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +23,6 @@ import com.website.military.repository.UserRepository;
 import com.website.military.repository.WordRepository;
 import com.website.military.repository.WordSetsMappingRepository;
 import com.website.military.repository.WordSetsRepository;
-import com.website.military.service.wordsets.WordSetService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
