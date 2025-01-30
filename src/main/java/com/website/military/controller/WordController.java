@@ -1,4 +1,4 @@
-package com.website.military.controller.word;
+package com.website.military.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
