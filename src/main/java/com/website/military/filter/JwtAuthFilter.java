@@ -1,4 +1,4 @@
-package com.website.military.Filter;
+package com.website.military.filter;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -32,8 +32,7 @@ public class JwtAuthFilter extends OncePerRequestFilter{
 
         if(token != null && !token.isEmpty()){
             String jwtToken = token.substring(7);
-
-            username = jwtProvider.getUsernameFromToken(jwtToken);
+            username = jwtProvider.getUserIdFromToken(jwtToken);
         }
 
         if(username != null && !username.isEmpty() && SecurityContextHolder.getContext().getAuthentication() == null){

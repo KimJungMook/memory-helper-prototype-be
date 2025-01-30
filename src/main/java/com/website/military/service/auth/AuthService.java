@@ -1,4 +1,4 @@
-package com.website.military.service;
+package com.website.military.service.auth;
 
 import java.util.Date;
 import java.util.Optional;
@@ -111,11 +111,12 @@ public class AuthService {
         String id = null;
         if(token != null && !token.isEmpty()){
             String jwtToken = token.substring(7);
-            id = jwtProvider.getUsernameFromToken(jwtToken);
+            id = jwtProvider.getUserIdFromToken(jwtToken);
         }
         Optional<User> existingUser = userRepository.findById(Long.parseLong(id));
         if (existingUser.isPresent()) {
             GetUserInfoFromUsernameResponseDto responseDto = GetUserInfoFromUsernameResponseDto.builder()
+                                                            .userId(existingUser.get().getUserId())
                                                             .email(existingUser.get().getEmail())
                                                             .username(existingUser.get().getUsername())
                                                             .build();
@@ -123,6 +124,6 @@ public class AuthService {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(ResponseMessageDto.set(badRequestError, "해당하는 정보가 없습니다."));
-
     }
+
 }

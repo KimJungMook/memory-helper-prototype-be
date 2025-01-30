@@ -1,9 +1,6 @@
 package com.website.military.domain.Entity;
-import java.util.Date;
-import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,33 +10,30 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "results")
+@Table(name = "wordsetmapping")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Results {
+public class WordSetMapping {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "result_id", updatable = false)
-    private Long resultId;
+    @Column(name = "id", updatable=false)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference // 중복 순환 해결.
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user; // 외래키
+    @JoinColumn(name = "word_id", nullable = false)
+    private Word word;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference // 중복 순환 해결.
-    @ManyToOne
-    @JoinColumn(name = "test_id")
-    private Tests tests; // 외래키
-    private int score;
-    private Date submittedAt;
-    @JsonManagedReference // 중복 순환 해결.
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "results")
-    private List<Mistakes> mistakes;
+    @JoinColumn(name = "set_id", nullable = false)
+    private WordSets wordsets;
 }

@@ -39,7 +39,7 @@ public class JwtProvider {
         key = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String getUsernameFromToken(final String token){
+    public String getUserIdFromToken(final String token){
         return getClaimFromToken(token, Claims::getId);
     }
 

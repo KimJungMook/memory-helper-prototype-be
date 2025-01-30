@@ -8,7 +8,7 @@ import com.website.military.domain.dto.auth.request.SignUpDto;
 import com.website.military.domain.dto.auth.response.GetUserInfoFromUsernameResponseDto;
 import com.website.military.domain.dto.auth.response.LoginResponseDto;
 import com.website.military.domain.dto.auth.response.SignUpResponseDto;
-import com.website.military.service.AuthService;
+import com.website.military.service.auth.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,13 +42,12 @@ public class AuthController {
         @ApiResponse(responseCode = "400", description = "해당하는 정보가 없습니다."),
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
-    @GetMapping("/user")
+    @GetMapping("/user") // 토큰에 해당하는 유저의 정보
     public ResponseEntity<?> getUserInfoFromToken(HttpServletRequest request) {
         ResponseEntity<?> entity = authService.getUserInfoFromToken(request);
         return entity;
     }
     
-
     // POST
     @Operation(summary = "signup", description = "회원가입")
     @ApiResponses(value = {

@@ -12,9 +12,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
-import com.website.military.Filter.JwtAuthFilter;
 import com.website.military.config.jwt.JwtAccessDeniedHandler;
 import com.website.military.config.jwt.JwtAuthenticationEntryPoint;
+import com.website.military.filter.JwtAuthFilter;
 
 import lombok.RequiredArgsConstructor;
 
