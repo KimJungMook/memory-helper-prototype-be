@@ -1,4 +1,4 @@
-package com.website.military.controller.auth;
+package com.website.military.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -8,7 +8,7 @@ import com.website.military.domain.dto.auth.request.SignUpDto;
 import com.website.military.domain.dto.auth.response.GetUserInfoFromUsernameResponseDto;
 import com.website.military.domain.dto.auth.response.LoginResponseDto;
 import com.website.military.domain.dto.auth.response.SignUpResponseDto;
-import com.website.military.service.auth.AuthService;
+import com.website.military.service.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

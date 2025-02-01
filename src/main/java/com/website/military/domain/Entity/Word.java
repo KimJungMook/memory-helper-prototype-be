@@ -1,17 +1,21 @@
 package com.website.military.domain.Entity;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.website.military.config.converter.StringListConverter;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -29,11 +33,17 @@ public class Word {
     @Column(name = "word_id", updatable = false)
     private Long wordId;
     private String word;
-    private String meaning;
-    private ArrayList<String> synonyms;
-    private ArrayList<String> antonyms;
+    @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
+    @Column(columnDefinition = "JSON")
+    private List<String> meaning;
     private Date createAt;
     private Date updatedAt;
+
+    @JsonBackReference // 중복 순환 해결.
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user; // 외래키
+
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "word")
     private List<WordSetMapping> wordsetmapping;

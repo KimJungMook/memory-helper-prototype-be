@@ -1,7 +1,5 @@
 package com.website.military.domain.dto.word.request;
 
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AddWordToWordSetDto {
+public class ExistWordDto {
     private String word;
-    private List<String> meaning;
 }

@@ -1,4 +1,4 @@
-package com.website.military.service.wordsets;
+package com.website.military.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.website.military.config.jwt.JwtProvider;
 import com.website.military.domain.Entity.User;
 import com.website.military.domain.Entity.WordSets;
 import com.website.military.domain.dto.response.ResponseDataDto;
@@ -30,17 +29,17 @@ public class WordSetService {
     private WordSetsRepository wordSetsRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private AuthService authService;
 
     @Value("${error.INTERNAL_SERVER_ERROR}")
     private String internalError;
 
     @Value("${error.BAD_REQUEST_ERROR}")
     private String badRequestError;
-    
-    private final JwtProvider jwtProvider;
 
     public ResponseEntity<?> getWordSets(HttpServletRequest request){
-        Long id = getUserId(request);
+        Long id = authService.getUserId(request);
         Optional<User> existingUser = userRepository.findById(id);
         if(existingUser.isPresent()){
             Long userId = existingUser.get().getUserId();
@@ -66,7 +65,7 @@ public class WordSetService {
         }
         WordSets wordSets = new WordSets(dto.getSetName());
         try{
-            Long id = getUserId(request);
+            Long id = authService.getUserId(request);
             Optional<User> existingUser = userRepository.findById(id);
             if(existingUser.isPresent()){
                 User user = existingUser.get();
@@ -83,14 +82,4 @@ public class WordSetService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "세트가 만들어지지 않았습니다."));
     }
 
-
-    public Long getUserId(HttpServletRequest request){
-        final String token = request.getHeader("Authorization");
-        String id = null;
-        if(token != null && !token.isEmpty()){
-            String jwtToken = token.substring(7);
-            id = jwtProvider.getUserIdFromToken(jwtToken);
-        }
-        return Long.parseLong(id);
-    }
 }

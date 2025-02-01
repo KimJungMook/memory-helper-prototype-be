@@ -1,11 +1,11 @@
-package com.website.military.controller.wordsets;
+package com.website.military.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.website.military.domain.Entity.WordSets;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
-import com.website.military.service.wordsets.WordSetService;
+import com.website.military.service.WordSetService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 
 
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/wordsets")
+@Tag(name = "WordSet", description = "단어세트 관련 API")
 public class WordSetController {
     @Autowired
     private WordSetService wordSetService;
