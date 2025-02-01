@@ -39,8 +39,10 @@ public class WordService {
 
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
-    private WordSetService wordSetService;
+    private AuthService authService;
+
     @Value("${error.INTERNAL_SERVER_ERROR}")
     private String internalError;
 
@@ -52,7 +54,7 @@ public class WordService {
 
     public ResponseEntity<?> existWord(ExistWordDto dto, HttpServletRequest request){
         String word = dto.getWord();
-        Long id = wordSetService.getUserId(request);
+        Long id = authService.getUserId(request);
         Optional<User> user = userRepository.findById(id);
         Optional<Word> words = wordRepository.findByWord(word);
         if(words.isPresent()){
@@ -83,15 +85,17 @@ public class WordService {
         List<String> meaning = dto.getMeaning();
         Optional<WordSets> existingWordSets = wordSetsRepository.findBySetId(wordSetId);
         if(existingWordSets.isPresent()){
-            Long id = wordSetService.getUserId(request);
+            Long id = authService.getUserId(request);
             Optional<User> user = userRepository.findById(id);
             if(user.isPresent()){
                 Long userId = user.get().getUserId();
+                User existingUser = user.get();
                 if(userId.equals(existingWordSets.get().getUser().getUserId())){
                     WordSets wordSets = existingWordSets.get();
                     Word newWord = new Word();
                     newWord.setWord(word);
                     newWord.setMeaning(meaning);
+                    newWord.setUser(existingUser);
                     wordRepository.save(newWord);
                     WordSetMapping mapping = new WordSetMapping();
                     mapping.setWord(newWord);
@@ -104,10 +108,10 @@ public class WordService {
                                                         .build();
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",dtos));
                 }else{
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어셋을 만든 사람과 사용하는 사용자가 다릅니다."));
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어셋을 만든 사람과 사용하는 사용자가 다릅니다."));
                 }
             }else{
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(badRequestError, "토큰에 해당하는 사용자가 없습니다."));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어셋의 입력이 잘못되었습니다."));

@@ -126,4 +126,14 @@ public class AuthService {
         .body(ResponseMessageDto.set(badRequestError, "해당하는 정보가 없습니다."));
     }
 
+   // 인증관련 유저의 id 알아내는 메서드
+    public Long getUserId(HttpServletRequest request){
+        final String token = request.getHeader("Authorization");
+        String id = null;
+        if(token != null && !token.isEmpty()){
+            String jwtToken = token.substring(7);
+            id = jwtProvider.getUserIdFromToken(jwtToken);
+        }
+        return Long.parseLong(id);
+    }
 }
