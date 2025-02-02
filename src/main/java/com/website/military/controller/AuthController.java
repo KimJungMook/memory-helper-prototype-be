@@ -2,7 +2,6 @@ package com.website.military.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.website.military.domain.dto.auth.request.LogInDto;
 import com.website.military.domain.dto.auth.request.SignUpDto;
 import com.website.military.domain.dto.auth.response.GetUserInfoFromUsernameResponseDto;
@@ -23,7 +22,10 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 
@@ -47,6 +49,11 @@ public class AuthController {
         return authService.getUserInfoFromToken(request);
     }
     
+    @GetMapping("/check-id")
+    public ResponseEntity<?> getMethodName(@RequestParam String email) {
+        return authService.idValidate(email);
+    }
+    
     // POST
     @Operation(summary = "signup", description = "회원가입")
     @ApiResponses(value = {
@@ -56,7 +63,7 @@ public class AuthController {
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
     @PostMapping("/signup")
-    public ResponseEntity<?> SignUp(@RequestBody SignUpDto dto) {
+    public ResponseEntity<?> signUp(@RequestBody SignUpDto dto) {
         return authService.signUp(dto);
     }
 
@@ -68,8 +75,8 @@ public class AuthController {
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
     @PostMapping("/login")
-    public ResponseEntity<?> SignIn(@RequestBody LogInDto dto) {
-        return authService.signIn(dto);
+    public ResponseEntity<?> logIn(@RequestBody LogInDto dto) {
+        return authService.logIn(dto);
     }
     
 
@@ -77,6 +84,9 @@ public class AuthController {
 
 
     // DELETE
-
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteUser( HttpServletRequest request){
+        return authService.deleteUser(request);
+    }
 
 }
