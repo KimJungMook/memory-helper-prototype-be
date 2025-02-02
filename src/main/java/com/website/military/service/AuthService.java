@@ -42,7 +42,7 @@ public class AuthService {
 
     @Value("${error.BAD_REQUEST_ERROR}")
     private String badRequestError;
-
+ 
     // 아이디 있는지 체크하는데 사용하는 메서드
     public ResponseEntity<?> idValidate(IdValidationDto dto){
         Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
@@ -116,7 +116,6 @@ public class AuthService {
         Optional<User> existingUser = userRepository.findById(Long.parseLong(id));
         if (existingUser.isPresent()) {
             GetUserInfoFromUsernameResponseDto responseDto = GetUserInfoFromUsernameResponseDto.builder()
-                                                            .userId(existingUser.get().getUserId())
                                                             .email(existingUser.get().getEmail())
                                                             .username(existingUser.get().getUsername())
                                                             .build();
@@ -136,4 +135,5 @@ public class AuthService {
         }
         return Long.parseLong(id);
     }
+
 }

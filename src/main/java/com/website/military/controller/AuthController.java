@@ -44,8 +44,7 @@ public class AuthController {
     })
     @GetMapping("/user") // 토큰에 해당하는 유저의 정보
     public ResponseEntity<?> getUserInfoFromToken(HttpServletRequest request) {
-        ResponseEntity<?> entity = authService.getUserInfoFromToken(request);
-        return entity;
+        return authService.getUserInfoFromToken(request);
     }
     
     // POST
@@ -58,8 +57,7 @@ public class AuthController {
     })
     @PostMapping("/signup")
     public ResponseEntity<?> SignUp(@RequestBody SignUpDto dto) {
-        ResponseEntity<?> entity = authService.signUp(dto);
-        return entity;
+        return authService.signUp(dto);
     }
 
     @Operation(summary = "login", description = "로그인하기")
@@ -71,8 +69,7 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<?> SignIn(@RequestBody LogInDto dto) {
-        ResponseEntity<?> entity = authService.signIn(dto);
-        return entity;
+        return authService.signIn(dto);
     }
     
 

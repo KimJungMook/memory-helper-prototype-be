@@ -35,7 +35,16 @@ public class Word {
     private String word;
     @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
     @Column(columnDefinition = "JSON")
-    private List<String> meaning;
+    private List<String> noun;
+    @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
+    @Column(columnDefinition = "JSON")
+    private List<String> verb;
+    @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
+    @Column(columnDefinition = "JSON")
+    private List<String> adjective;
+    @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
+    @Column(columnDefinition = "JSON")
+    private List<String> adverb;
     private Date createAt;
     private Date updatedAt;
 

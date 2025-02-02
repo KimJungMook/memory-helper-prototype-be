@@ -9,5 +9,8 @@ import lombok.Data;
 @Builder
 public class ExistWordResponseDto {
     private String word;
-    private List<String> meaning;
+    private List<String> noun;
+    private List<String> verb;
+    private List<String> adjective;
+    private List<String> adverb;
 }
