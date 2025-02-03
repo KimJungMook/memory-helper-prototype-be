@@ -10,6 +10,8 @@ import com.website.military.domain.dto.word.response.ExistWordResponseDto;
 import com.website.military.service.WordService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -58,7 +60,8 @@ public class WordController {
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
     @PostMapping("/{setId}")
-    public ResponseEntity<?> addWordToWordSet(@PathVariable Long setId, @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
+    public ResponseEntity<?> addWordToWordSet(@Parameter(description = "단어셋의 id", in = ParameterIn.PATH) @PathVariable(required = false) Long setId, 
+    @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
         return wordService.addWordToWordSet(setId, dto, request);
     }
 

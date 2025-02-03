@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 @Builder
 public class ExistWordResponseDto {
+    private Long id;
     private String word;
     private List<String> noun;
     private List<String> verb;

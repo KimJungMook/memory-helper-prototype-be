@@ -3,12 +3,15 @@ package com.website.military.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
 import com.website.military.domain.dto.wordsets.response.RegisterResponseDto;
 import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
 import com.website.military.service.WordSetService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,7 +24,9 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -66,6 +71,16 @@ public class WordSetController {
         return wordSetService.RegisterWordSets(dto, request);
     }
     
+    // PUT(patch)
+
+
+    // DELETE
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteWordSets(@Parameter(description = "단어셋의 id", in = ParameterIn.PATH) @PathVariable(required = false) Long id, 
+    HttpServletRequest request){
+        return wordSetService.deleteWordSets(id, request);
+    }
+
     
 
 }

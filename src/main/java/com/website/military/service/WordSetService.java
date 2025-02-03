@@ -15,6 +15,7 @@ import com.website.military.domain.Entity.WordSets;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
+import com.website.military.domain.dto.wordsets.response.DeleteResponseDto;
 import com.website.military.domain.dto.wordsets.response.RegisterResponseDto;
 import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
 import com.website.military.repository.UserRepository;
@@ -84,6 +85,29 @@ public class WordSetService {
             .body(ResponseMessageDto.set(internalError, "서버 에러"));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "세트가 만들어지지 않았습니다."));
+    }
+
+    public ResponseEntity<?> deleteWordSets(Long id, HttpServletRequest request){
+        Long userId = authService.getUserId(request);
+        Optional<User> existingUser = userRepository.findById(userId);
+        if(existingUser.isPresent()){
+            Optional<WordSets> existingWordSets = wordSetsRepository.findById(id);
+            if(existingWordSets.isPresent()){
+                WordSets sets = existingWordSets.get();
+                User user = existingUser.get();
+                if(sets.getUser().equals(user)){
+                    wordSetsRepository.deleteById(id);
+                    DeleteResponseDto dtos = DeleteResponseDto.builder()
+                                                        .id(id)
+                                                        .setName(sets.getSetName())
+                                                        .build();
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", dtos));
+                }
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하지 않는 세트입니다."));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하지 않는 유저입니다."));
     }
 
 }

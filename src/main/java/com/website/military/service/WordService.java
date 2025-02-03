@@ -81,6 +81,7 @@ public class WordService {
                 Word existingWord = words.get();
                 if(existingUser.equals(existingWord.getUser())){
                     ExistWordResponseDto dtos = ExistWordResponseDto.builder()
+                                                    .id(existingWord.getWordId())
                                                     .word(existingWord.getWord())
                                                     .noun(existingWord.getNoun())
                                                     .verb(existingWord.getVerb())
@@ -156,28 +157,27 @@ public class WordService {
 
                 if(userId.equals(existingWordSets.get().getUser().getUserId())){
                     WordSets wordSets = existingWordSets.get();
-                    Word newWord = new Word();
-                    newWord.setWord(word);
-                    newWord.setNoun(noun);
-                    newWord.setVerb(verb);
-                    newWord.setAdjective(adjective);
-                    newWord.setAdverb(adverb);
-                    newWord.setUser(existingUser);
-                    wordRepository.save(newWord);
-                    WordSetMapping mapping = new WordSetMapping();
-                    mapping.setWord(newWord);
-                    mapping.setWordsets(wordSets);
-                    wordSetsMappingRepository.save(mapping);
-                    AddWordToWordSetResponseDto dtos = AddWordToWordSetResponseDto.builder()
-                                                        .wordId(newWord.getWordId())
-                                                        .word(newWord.getWord())
-                                                        .noun(newWord.getNoun())
-                                                        .verb(newWord.getVerb())
-                                                        .adjective(newWord.getAdjective())
-                                                        .adverb(newWord.getAdverb())
-                                                        .build();
+                    Word newWord = new Word(word, noun, verb, adjective, adverb, existingUser);
+                    Optional<Word> words = wordRepository.findByWord(word);
+                    if(words.isPresent()){
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어가 이미 존재합니다."));
+                    }else{
+                        wordRepository.save(newWord);
+                        WordSetMapping mapping = new WordSetMapping();
+                        mapping.setWord(newWord);
+                        mapping.setWordsets(wordSets);
+                        wordSetsMappingRepository.save(mapping);
+                        AddWordToWordSetResponseDto dtos = AddWordToWordSetResponseDto.builder()
+                                                            .wordId(newWord.getWordId())
+                                                            .word(newWord.getWord())
+                                                            .noun(newWord.getNoun())
+                                                            .verb(newWord.getVerb())
+                                                            .adjective(newWord.getAdjective())
+                                                            .adverb(newWord.getAdverb())
+                                                            .build();
 
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",dtos));
+                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",dtos));
+                    }
                 }else{
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어셋을 만든 사람과 사용하는 사용자가 다릅니다."));
                 }

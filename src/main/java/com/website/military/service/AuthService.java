@@ -89,7 +89,6 @@ public class AuthService {
                 String refreshToken = jwtProvider.generateRefreshToken(id);
                 RefreshToken.putRefreshToken(refreshToken, id);
                 LoginResponseDto responseDto = LoginResponseDto.builder()
-                                                .userId(id)
                                                 .username(username)
                                                 .accessToken(accessToken)
                                                 .refreshToken(refreshToken)
