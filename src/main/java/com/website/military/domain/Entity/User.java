@@ -36,7 +36,7 @@ public class User {
     private Date updatedAt;
 
     @JsonManagedReference // 중복 순환 해결.
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
     private List<WordSets> wordsets;
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")

@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import com.website.military.config.jwt.JwtProvider;
 import com.website.military.config.token.RefreshToken;
 import com.website.military.domain.Entity.User;
-import com.website.military.domain.dto.auth.request.IdValidationDto;
 import com.website.military.domain.dto.auth.request.LogInDto;
 import com.website.military.domain.dto.auth.request.SignUpDto;
 import com.website.military.domain.dto.auth.response.GetUserInfoFromUsernameResponseDto;
@@ -42,10 +41,10 @@ public class AuthService {
 
     @Value("${error.BAD_REQUEST_ERROR}")
     private String badRequestError;
-
+ 
     // 아이디 있는지 체크하는데 사용하는 메서드
-    public ResponseEntity<?> idValidate(IdValidationDto dto){
-        Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
+    public ResponseEntity<?> idValidate(String email){
+        Optional<User> existingUser = userRepository.findByEmail(email);
         if(existingUser.isPresent()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(ResponseMessageDto.set(badRequestError, "존재하는 아이디가 있습니다."));
@@ -79,7 +78,7 @@ public class AuthService {
     }
 
     // 로그인하는데 사용하는 메서드
-    public ResponseEntity<?> signIn(LogInDto dto){
+    public ResponseEntity<?> logIn(LogInDto dto){
         Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
         if(existingUser.isPresent()){
             if(passwordEncoder.matches(dto.getPassword(), existingUser.get().getPassword())){
@@ -90,6 +89,7 @@ public class AuthService {
                 String refreshToken = jwtProvider.generateRefreshToken(id);
                 RefreshToken.putRefreshToken(refreshToken, id);
                 LoginResponseDto responseDto = LoginResponseDto.builder()
+                                                .userId(id)
                                                 .username(username)
                                                 .accessToken(accessToken)
                                                 .refreshToken(refreshToken)
@@ -105,6 +105,22 @@ public class AuthService {
         .body(ResponseMessageDto.set(badRequestError, "아이디가 존재하지 않습니다."));
     }
 
+    public ResponseEntity<?> deleteUser(HttpServletRequest request){
+        Long loginUserId = getUserId(request);
+        Optional<User> existingUser = userRepository.findById(loginUserId);
+        if(existingUser.isPresent()){
+                User user = existingUser.get();
+                GetUserInfoFromUsernameResponseDto response = GetUserInfoFromUsernameResponseDto.builder()
+                                                                .email(user.getEmail())
+                                                                .username(user.getUsername())
+                                                                .build();
+                userRepository.deleteById(loginUserId);
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
+            }
+         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하지않는 유저입니다."));
+    }
+
+
     // 이름을 통해서 사용자의 정보를 알아내는 메서드
     public ResponseEntity<?> getUserInfoFromToken(HttpServletRequest request){
         final String token = request.getHeader("Authorization");
@@ -116,7 +132,6 @@ public class AuthService {
         Optional<User> existingUser = userRepository.findById(Long.parseLong(id));
         if (existingUser.isPresent()) {
             GetUserInfoFromUsernameResponseDto responseDto = GetUserInfoFromUsernameResponseDto.builder()
-                                                            .userId(existingUser.get().getUserId())
                                                             .email(existingUser.get().getEmail())
                                                             .username(existingUser.get().getUsername())
                                                             .build();
@@ -136,4 +151,5 @@ public class AuthService {
         }
         return Long.parseLong(id);
     }
+
 }

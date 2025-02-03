@@ -15,6 +15,7 @@ import com.website.military.domain.Entity.WordSets;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
+import com.website.military.domain.dto.wordsets.response.RegisterResponseDto;
 import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
 import com.website.military.repository.UserRepository;
 import com.website.military.repository.WordSetsRepository;
@@ -71,8 +72,11 @@ public class WordSetService {
                 User user = existingUser.get();
                 wordSets.setUser(user);
                 wordSetsRepository.save(wordSets);
-
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", wordSets)); // 여기서부터 다시.
+                RegisterResponseDto dtos = RegisterResponseDto.builder()
+                                            .setId(wordSets.getSetId())
+                                            .setName(wordSets.getSetName())
+                                            .build();
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", dtos)); // 여기서부터 다시.
             }
         }catch(Exception e){
             e.printStackTrace();

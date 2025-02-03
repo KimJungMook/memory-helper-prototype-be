@@ -3,9 +3,9 @@ package com.website.military.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.website.military.domain.Entity.Word;
 import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
 import com.website.military.domain.dto.word.request.ExistWordDto;
+import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
 import com.website.military.domain.dto.word.response.ExistWordResponseDto;
 import com.website.military.service.WordService;
 
@@ -45,14 +45,13 @@ public class WordController {
     })
     @PostMapping("/exists")
     public ResponseEntity<?> existWord(@RequestBody ExistWordDto dto, HttpServletRequest request) {
-        ResponseEntity<?> entity = wordService.existWord(dto, request);
-        return entity;
+        return wordService.existWord(dto, request);
     }
 
     @Operation(summary = "add Word to Wordsets", description = "단어를 단어세트에 넣기.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "성공",
-            content = {@Content(schema = @Schema(implementation = Word.class))}),
+            content = {@Content(schema = @Schema(implementation = AddWordToWordSetResponseDto.class))}),
         @ApiResponse(responseCode = "401", description = "단어셋을 만든 사람과 사용하는 사용자가 다릅니다."),
         @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
         @ApiResponse(responseCode = "400", description = "단어셋의 입력이 잘못되었습니다."),
@@ -60,9 +59,7 @@ public class WordController {
     })
     @PostMapping("/{setId}")
     public ResponseEntity<?> addWordToWordSet(@PathVariable Long setId, @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
-        //TODO: process POST request
-        ResponseEntity<?> entity = wordService.addWordToWordSet(setId, dto, request);
-        return entity;
+        return wordService.addWordToWordSet(setId, dto, request);
     }
 
 }

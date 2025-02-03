@@ -2,7 +2,6 @@ package com.website.military.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.website.military.domain.dto.auth.request.LogInDto;
 import com.website.military.domain.dto.auth.request.SignUpDto;
 import com.website.military.domain.dto.auth.response.GetUserInfoFromUsernameResponseDto;
@@ -23,7 +22,10 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 
@@ -44,8 +46,12 @@ public class AuthController {
     })
     @GetMapping("/user") // 토큰에 해당하는 유저의 정보
     public ResponseEntity<?> getUserInfoFromToken(HttpServletRequest request) {
-        ResponseEntity<?> entity = authService.getUserInfoFromToken(request);
-        return entity;
+        return authService.getUserInfoFromToken(request);
+    }
+    
+    @GetMapping("/check-id")
+    public ResponseEntity<?> getMethodName(@RequestParam String email) {
+        return authService.idValidate(email);
     }
     
     // POST
@@ -57,9 +63,8 @@ public class AuthController {
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
     @PostMapping("/signup")
-    public ResponseEntity<?> SignUp(@RequestBody SignUpDto dto) {
-        ResponseEntity<?> entity = authService.signUp(dto);
-        return entity;
+    public ResponseEntity<?> signUp(@RequestBody SignUpDto dto) {
+        return authService.signUp(dto);
     }
 
     @Operation(summary = "login", description = "로그인하기")
@@ -70,9 +75,8 @@ public class AuthController {
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
     @PostMapping("/login")
-    public ResponseEntity<?> SignIn(@RequestBody LogInDto dto) {
-        ResponseEntity<?> entity = authService.signIn(dto);
-        return entity;
+    public ResponseEntity<?> logIn(@RequestBody LogInDto dto) {
+        return authService.logIn(dto);
     }
     
 
@@ -80,6 +84,9 @@ public class AuthController {
 
 
     // DELETE
-
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteUser( HttpServletRequest request){
+        return authService.deleteUser(request);
+    }
 
 }

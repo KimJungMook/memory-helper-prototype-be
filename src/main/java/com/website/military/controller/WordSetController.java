@@ -3,8 +3,9 @@ package com.website.military.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.website.military.domain.Entity.WordSets;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
+import com.website.military.domain.dto.wordsets.response.RegisterResponseDto;
+import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
 import com.website.military.service.WordSetService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,22 +41,21 @@ public class WordSetController {
             content = @Content(
                 mediaType = "application/json",
                 array = @ArraySchema(
-                    schema = @Schema(implementation=WordSets.class)
+                    schema = @Schema(implementation=WordSetsResponseDto.class)
                 )
             ) ),
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
     @GetMapping("")
     public ResponseEntity<?> getWordSets(HttpServletRequest request) {
-        ResponseEntity<?> entity = wordSetService.getWordSets(request);
-        return entity;
+        return wordSetService.getWordSets(request);
     }
 
     // POST
     @Operation(summary = "add to wordSets", description = "단어세트 만들기")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "성공",
-            content = {@Content(schema = @Schema(implementation = WordSets.class))}),
+            content = {@Content(schema = @Schema(implementation = RegisterResponseDto.class))}),
         @ApiResponse(responseCode = "400", description = "이미 존재한 세트 이름"),
         @ApiResponse(responseCode = "400", description = "세트가 만들어지지 않았습니다."),
         @ApiResponse(responseCode = "500", description = "서버 에러")
@@ -63,8 +63,7 @@ public class WordSetController {
     @PostMapping("/register")
     public ResponseEntity<?> RegisterWordSets(@RequestBody WordSetsDto dto, HttpServletRequest request) {
         //TODO: process POST request
-        ResponseEntity<?> entity = wordSetService.RegisterWordSets(dto, request);
-        return entity;
+        return wordSetService.RegisterWordSets(dto, request);
     }
     
     
