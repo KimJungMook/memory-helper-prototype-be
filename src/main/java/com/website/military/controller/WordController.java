@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
 import com.website.military.domain.dto.word.request.ExistWordDto;
+import com.website.military.domain.dto.word.request.UpdateMeaningDto;
 import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
 import com.website.military.domain.dto.word.response.ExistWordResponseDto;
 import com.website.military.service.WordService;
@@ -21,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -63,6 +65,13 @@ public class WordController {
     public ResponseEntity<?> addWordToWordSet(@Parameter(description = "단어셋의 id", in = ParameterIn.PATH) @PathVariable(required = false) Long setId, 
     @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
         return wordService.addWordToWordSet(setId, dto, request);
+    }
+
+    // PATCH(PUT)
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> updateMeaning(@Parameter(description = "단어셋의 id", in = ParameterIn.PATH) @PathVariable(required = false) Long id,
+    UpdateMeaningDto dto,HttpServletRequest request){
+        return wordService.updateMeaning(id, dto, request);
     }
 
 }

@@ -24,8 +24,10 @@ import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
 import com.website.military.domain.dto.word.request.ExistWordDto;
+import com.website.military.domain.dto.word.request.UpdateMeaningDto;
 import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
 import com.website.military.domain.dto.word.response.ExistWordResponseDto;
+import com.website.military.domain.dto.word.response.UpdateMeaningResponseDto;
 import com.website.military.repository.UserRepository;
 import com.website.military.repository.WordRepository;
 import com.website.military.repository.WordSetsMappingRepository;
@@ -186,6 +188,39 @@ public class WordService {
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어셋의 입력이 잘못되었습니다."));
+    }
+
+    public ResponseEntity<?> updateMeaning(Long id, UpdateMeaningDto dto,HttpServletRequest request){
+        Long userId = authService.getUserId(request);
+        Optional<User> user = userRepository.findById(userId);
+        if(user.isPresent()){
+            Optional<Word> existingWord = wordRepository.findById(id);
+            if(existingWord.isPresent()){
+                Word words = existingWord.get();
+                if(userId.equals(words.getUser().getUserId())){
+                    Optional.ofNullable(dto.getNoun())
+                    .ifPresent(words::setNoun);
+                    Optional.ofNullable(dto.getVerb())
+                    .ifPresent(words::setVerb);
+                    Optional.ofNullable(dto.getAdjective())
+                    .ifPresent(words::setAdjective);
+                    Optional.ofNullable(dto.getAdverb())
+                    .ifPresent(words::setAdverb);
+                    wordRepository.save(words);
+                    UpdateMeaningResponseDto dtos = UpdateMeaningResponseDto.builder()
+                                                    .wordId(words.getWordId())
+                                                    .noun(words.getNoun())
+                                                    .verb(words.getVerb())
+                                                    .adjective(words.getAdjective())
+                                                    .adverb(words.getAdverb())
+                                                    .build();            
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",dtos));
+                }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어를 만든 사람과 사용하는 사용자가 다릅니다."));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "해당하는 단어가 없습니다."));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
     }
     // 여기서부터 다시 하기. 뜻에 나오는게 내가 예상한대로 나오지 않음.
         public String getAIDescription(String word){

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AddWordToWordSetDto {
+public class UpdateMeaningDto {
     private String word;
     private List<String> noun;
     private List<String> verb;

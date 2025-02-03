@@ -3,7 +3,7 @@ package com.website.military.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
+import com.website.military.domain.dto.wordsets.request.ChangeSetNameDto;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
 import com.website.military.domain.dto.wordsets.response.RegisterResponseDto;
 import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -65,17 +66,19 @@ public class WordSetController {
         @ApiResponse(responseCode = "400", description = "세트가 만들어지지 않았습니다."),
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
-    @PostMapping("/register")
+    @PostMapping("")
     public ResponseEntity<?> RegisterWordSets(@RequestBody WordSetsDto dto, HttpServletRequest request) {
-        //TODO: process POST request
         return wordSetService.RegisterWordSets(dto, request);
     }
     
     // PUT(patch)
-
-
+    @PatchMapping("/name/{id}")
+    public ResponseEntity<?> ChangeSetName(@Parameter(description = "단어셋의 id", in = ParameterIn.PATH) @PathVariable(required = false) Long id,
+    ChangeSetNameDto dto,HttpServletRequest request){
+        return wordSetService.ChangeSetName(id, dto.getSetName() ,request);
+    }
     // DELETE
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteWordSets(@Parameter(description = "단어셋의 id", in = ParameterIn.PATH) @PathVariable(required = false) Long id, 
     HttpServletRequest request){
         return wordSetService.deleteWordSets(id, request);

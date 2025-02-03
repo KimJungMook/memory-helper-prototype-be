@@ -86,7 +86,28 @@ public class WordSetService {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "세트가 만들어지지 않았습니다."));
     }
-
+    public ResponseEntity<?> ChangeSetName(Long id, String setName,HttpServletRequest request){
+        Long userId = authService.getUserId(request);
+        Optional<User> existingUser = userRepository.findById(userId);
+        if(existingUser.isPresent()){
+            Optional<WordSets> existingWordSets = wordSetsRepository.findById(id);
+            if(existingWordSets.isPresent()){
+                if(userId.equals(existingWordSets.get().getUser().getUserId())){
+                    WordSets sets = existingWordSets.get();
+                    sets.setSetName(setName);
+                    wordSetsRepository.save(sets);
+                    RegisterResponseDto dto = RegisterResponseDto.builder()
+                                                    .setId(id)
+                                                    .setName(setName)
+                                                    .build();
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", dto));
+                }
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하지 않는 세트입니다."));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하지 않는 유저입니다."));
+    }
     public ResponseEntity<?> deleteWordSets(Long id, HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<User> existingUser = userRepository.findById(userId);
