@@ -187,7 +187,7 @@ public class WordService {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어셋의 입력이 잘못되었습니다."));
     }
-    // 여기서부터 다시 하기. 뜻에 나오는게 내가 예상한대로 나오지 않음.
+
         public String getAIDescription(String word){
         String requestUrl = apiUrl + "?key=" + apiKey;
         GeminiRequestDto request = new GeminiRequestDto();

@@ -43,6 +43,7 @@ public class SecurityConfig {
         MvcRequestMatcher[] permitAllWhiteList = {
             mvc.pattern("/api/auth/signup"),
             mvc.pattern("/api/auth/login"),
+            mvc.pattern("/api/auth/check-id"),
             mvc.pattern("/swagger-ui.html"),  // Swagger UI 메인 페이지
             mvc.pattern("/swagger-ui/**"),  // Swagger UI 관련 자원
             mvc.pattern("/v3/api-docs/**"),  // Swagger API 문서
