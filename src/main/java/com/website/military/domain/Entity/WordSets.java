@@ -1,6 +1,6 @@
 package com.website.military.domain.Entity;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -18,6 +18,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -26,13 +27,14 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class WordSets {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "set_id", updatable = false)
     private Long setId;
     private String setName;
-    private Date createdAt;
+    private Instant createdAt;
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -46,6 +48,6 @@ public class WordSets {
 
     public WordSets(String setName){
         this.setName = setName;
-        this.createdAt = new Date();
+        this.createdAt = Instant.now();
     }
 }

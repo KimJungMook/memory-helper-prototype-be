@@ -1,14 +1,15 @@
-package com.website.military.domain.dto.word.response;
+package com.website.military.domain.dto.word.request;
 
 import java.util.List;
 
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@Builder
-public class ExistWordResponseDto {
-    private Long id;
+@AllArgsConstructor
+@NoArgsConstructor
+public class UpdateMeaningDto {
     private String word;
     private List<String> noun;
     private List<String> verb;

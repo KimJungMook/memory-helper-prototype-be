@@ -1,7 +1,7 @@
 package com.website.military.domain.Entity;
 
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -32,8 +32,8 @@ public class User {
     private String username;
     private String email;
     private String password;
-    private Date createdAt;
-    private Date updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
 
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
@@ -53,6 +53,6 @@ public class User {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.createdAt = new Date();
+        this.createdAt = Instant.now();
     }
 }

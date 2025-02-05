@@ -1,5 +1,6 @@
 package com.website.military.service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,8 +25,11 @@ import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
 import com.website.military.domain.dto.word.request.ExistWordDto;
+import com.website.military.domain.dto.word.request.UpdateMeaningDto;
 import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
+import com.website.military.domain.dto.word.response.DeleteWordResponseDto;
 import com.website.military.domain.dto.word.response.ExistWordResponseDto;
+import com.website.military.domain.dto.word.response.UpdateMeaningResponseDto;
 import com.website.military.repository.UserRepository;
 import com.website.military.repository.WordRepository;
 import com.website.military.repository.WordSetsMappingRepository;
@@ -69,11 +73,12 @@ public class WordService {
     @Value("${error.UNAUTHORIZE}")
     private String unAuthorize;
 
+// 수정사항 발생(완) -> 같은 단어지만 사용자가 다르게 뜻을 넣을 수 있기에, word와 userId로 search하는 방법으로 찾아야할듯.(02. 04) -> query문 다시 짜서 방법 찾긴함. (02. 05)
     public ResponseEntity<?> existWord(ExistWordDto dto, HttpServletRequest request){
         String word = dto.getWord();
         Long id = authService.getUserId(request);
         Optional<User> user = userRepository.findById(id);
-        Optional<Word> words = wordRepository.findByWord(word);
+        Optional<Word> words = wordRepository.findByWordAndUser_UserId(word, id);
 
         if(words.isPresent()){
             if(user.isPresent()){
@@ -81,6 +86,7 @@ public class WordService {
                 Word existingWord = words.get();
                 if(existingUser.equals(existingWord.getUser())){
                     ExistWordResponseDto dtos = ExistWordResponseDto.builder()
+                                                    .id(existingWord.getWordId())
                                                     .word(existingWord.getWord())
                                                     .noun(existingWord.getNoun())
                                                     .verb(existingWord.getVerb())
@@ -124,7 +130,6 @@ public class WordService {
             for(int i=0;i<adjectiveLength;i++){
                 meanings.get(2).add(adjective.getString(i));    
             }
-            
             for(int i=0;i<adverbLength;i++){
                 meanings.get(3).add(adverb.getString(i));    
             }
@@ -135,6 +140,11 @@ public class WordService {
             .body(ResponseMessageDto.set(internalError, "서버 에러"));
         }
 
+    }
+    // 정확도가 조금 떨어지긴 함. (02. 05.)
+    public ResponseEntity<?> correctSpelling(String word){
+        String returnWord = correctWordCheck(word);
+        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", returnWord));
     }
 
     public ResponseEntity<?> addWordToWordSet(Long setId, AddWordToWordSetDto dto, HttpServletRequest request){
@@ -151,33 +161,30 @@ public class WordService {
             Optional<User> user = userRepository.findById(id);
 
             if(user.isPresent()){
-                Long userId = user.get().getUserId();
                 User existingUser = user.get();
-
-                if(userId.equals(existingWordSets.get().getUser().getUserId())){
+                if(id.equals(existingWordSets.get().getUser().getUserId())){
                     WordSets wordSets = existingWordSets.get();
-                    Word newWord = new Word();
-                    newWord.setWord(word);
-                    newWord.setNoun(noun);
-                    newWord.setVerb(verb);
-                    newWord.setAdjective(adjective);
-                    newWord.setAdverb(adverb);
-                    newWord.setUser(existingUser);
-                    wordRepository.save(newWord);
-                    WordSetMapping mapping = new WordSetMapping();
-                    mapping.setWord(newWord);
-                    mapping.setWordsets(wordSets);
-                    wordSetsMappingRepository.save(mapping);
-                    AddWordToWordSetResponseDto dtos = AddWordToWordSetResponseDto.builder()
-                                                        .wordId(newWord.getWordId())
-                                                        .word(newWord.getWord())
-                                                        .noun(newWord.getNoun())
-                                                        .verb(newWord.getVerb())
-                                                        .adjective(newWord.getAdjective())
-                                                        .adverb(newWord.getAdverb())
-                                                        .build();
+                    Word newWord = new Word(word, noun, verb, adjective, adverb, existingUser);
+                    Optional<Word> words = wordRepository.findByWordAndUser_UserId(word, id); 
+                    if(words.isPresent()){
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어가 이미 존재합니다."));
+                    }else{
+                        wordRepository.save(newWord);
+                        WordSetMapping mapping = new WordSetMapping();
+                        mapping.setWord(newWord);
+                        mapping.setWordsets(wordSets);
+                        wordSetsMappingRepository.save(mapping);
+                        AddWordToWordSetResponseDto dtos = AddWordToWordSetResponseDto.builder()
+                                                            .wordId(newWord.getWordId())
+                                                            .word(newWord.getWord())
+                                                            .noun(newWord.getNoun())
+                                                            .verb(newWord.getVerb())
+                                                            .adjective(newWord.getAdjective())
+                                                            .adverb(newWord.getAdverb())
+                                                            .build();
 
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",dtos));
+                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",dtos));
+                    }
                 }else{
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어셋을 만든 사람과 사용하는 사용자가 다릅니다."));
                 }
@@ -187,8 +194,69 @@ public class WordService {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어셋의 입력이 잘못되었습니다."));
     }
-    // 여기서부터 다시 하기. 뜻에 나오는게 내가 예상한대로 나오지 않음.
-        public String getAIDescription(String word){
+
+    // QA 테스트 미흡 ( 2.3.) -> 수정하면 시간 변경하도록. -> (2. 5) 시간 변경 완료
+    public ResponseEntity<?> updateMeaning(Long id, UpdateMeaningDto dto,HttpServletRequest request){
+        Long userId = authService.getUserId(request);
+        Optional<User> user = userRepository.findById(userId);
+        if(user.isPresent()){
+            Optional<Word> existingWord = wordRepository.findById(id);
+            if(existingWord.isPresent()){
+                Word words = existingWord.get();
+                if(userId.equals(words.getUser().getUserId())){
+                    Optional.ofNullable(dto.getNoun())
+                    .ifPresent(words::setNoun);
+                    Optional.ofNullable(dto.getVerb())
+                    .ifPresent(words::setVerb);
+                    Optional.ofNullable(dto.getAdjective())
+                    .ifPresent(words::setAdjective);
+                    Optional.ofNullable(dto.getAdverb())
+                    .ifPresent(words::setAdverb);
+                    words.setUpdatedAt(Instant.now());
+                    wordRepository.save(words);
+                    UpdateMeaningResponseDto dtos = UpdateMeaningResponseDto.builder()
+                                                    .wordId(words.getWordId())
+                                                    .noun(words.getNoun())
+                                                    .verb(words.getVerb())
+                                                    .adjective(words.getAdjective())
+                                                    .adverb(words.getAdverb())
+                                                    .build();            
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",dtos));
+                }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어를 만든 사람과 사용하는 사용자가 다릅니다."));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "해당하는 단어가 없습니다."));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
+    }
+
+    public ResponseEntity<?> deleteWord(Long id, HttpServletRequest request){
+        Long userId = authService.getUserId(request);
+        Optional<User> existingUser = userRepository.findById(userId);
+        if(existingUser.isPresent()){
+            Optional<Word> existingWord = wordRepository.findById(id);
+            if(existingWord.isPresent()){
+                User user = existingUser.get();
+                Word words = existingWord.get();
+                if(user.equals(words.getUser())){
+                    wordRepository.deleteById(id);
+                    DeleteWordResponseDto dtos = DeleteWordResponseDto.builder()
+                                                .wordId(id)
+                                                .word(words.getWord())
+                                                .noun(words.getNoun())
+                                                .verb(words.getVerb())
+                                                .adjective(words.getAdjective())
+                                                .adverb(words.getAdverb())
+                                                .build();
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("DELETE", dtos));
+                }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어를 만든 사람과 삭제하는 사용자가 다릅니다."));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "해당하는 단어가 없습니다."));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
+    }
+    public String getAIDescription(String word){
         String requestUrl = apiUrl + "?key=" + apiKey;
         GeminiRequestDto request = new GeminiRequestDto();
 
@@ -203,8 +271,28 @@ public class WordService {
                 return null;
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
+        return description;
+    }
+
+    public String correctWordCheck(String word){
+        String requestUrl = apiUrl + "?key=" + apiKey;
+        GeminiRequestDto request = new GeminiRequestDto();
+        String processedSentence = word + " 의 철자가 틀리지 않으면 그 단어를 그대로 대답하고 틀렸으면, 가장 비슷한 단어를 단어만 대답해줘.";
+        request.createGeminiReqDto(processedSentence);
+        String description = "";
+        try {
+            GeminiResponseDto response = restTemplate.postForObject(requestUrl, request, GeminiResponseDto.class);
+            if(response != null){
+                description = response.getCandidates().get(0).getContent().getParts().get(0).getText();
+            }else{
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        description =  description.trim();
         return description;
     }
 }

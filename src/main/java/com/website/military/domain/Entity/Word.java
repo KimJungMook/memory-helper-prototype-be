@@ -1,5 +1,5 @@
 package com.website.military.domain.Entity;
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -50,9 +50,10 @@ public class Word {
     @Column(columnDefinition = "JSON")
     private List<String> adverb;
 
-    private Date createAt;
-    private Date updatedAt;
-
+    private Instant createAt;
+    private Instant updatedAt;
+    private boolean isPublic; 
+    
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -67,4 +68,15 @@ public class Word {
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "word")
     private List<Mistakes> mistakes;
+
+    public Word(String word, List<String> noun, List<String> verb, List<String> adjective, List<String> adverb, User user){
+        this.word = word;
+        this.noun = noun;
+        this.verb = verb;
+        this.adjective = adjective;
+        this.adverb = adverb;
+        this.user = user;
+        this.createAt = Instant.now();
+        this.isPublic = false;
+    }
 }

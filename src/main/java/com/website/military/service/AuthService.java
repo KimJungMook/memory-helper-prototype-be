@@ -1,6 +1,6 @@
 package com.website.military.service;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +64,7 @@ public class AuthService {
         try{
             String password = passwordEncoder.encode(dto.getPassword());
             User user = new User(dto.getUsername(), dto.getEmail(), password);
-            user.setCreatedAt(new Date());
+            user.setCreatedAt(Instant.now());
             userRepository.save(user);
             SignUpResponseDto responseDto = SignUpResponseDto.builder()
                                             .email(user.getEmail())
@@ -89,7 +89,6 @@ public class AuthService {
                 String refreshToken = jwtProvider.generateRefreshToken(id);
                 RefreshToken.putRefreshToken(refreshToken, id);
                 LoginResponseDto responseDto = LoginResponseDto.builder()
-                                                .userId(id)
                                                 .username(username)
                                                 .accessToken(accessToken)
                                                 .refreshToken(refreshToken)

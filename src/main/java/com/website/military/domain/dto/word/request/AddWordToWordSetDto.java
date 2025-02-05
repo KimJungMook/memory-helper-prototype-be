@@ -15,5 +15,4 @@ public class AddWordToWordSetDto {
     private List<String> verb;
     private List<String> adjective;
     private List<String> adverb;
-
 }

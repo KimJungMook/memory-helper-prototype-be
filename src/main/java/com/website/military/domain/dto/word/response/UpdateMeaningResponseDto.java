@@ -7,9 +7,8 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ExistWordResponseDto {
-    private Long id;
-    private String word;
+public class UpdateMeaningResponseDto {
+    private Long wordId;
     private List<String> noun;
     private List<String> verb;
     private List<String> adjective;
