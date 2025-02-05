@@ -27,6 +27,7 @@ import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
 import com.website.military.domain.dto.word.request.ExistWordDto;
 import com.website.military.domain.dto.word.request.UpdateMeaningDto;
 import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
+import com.website.military.domain.dto.word.response.DeleteWordResponseDto;
 import com.website.military.domain.dto.word.response.ExistWordResponseDto;
 import com.website.military.domain.dto.word.response.UpdateMeaningResponseDto;
 import com.website.military.repository.UserRepository;
@@ -71,12 +72,13 @@ public class WordService {
 
     @Value("${error.UNAUTHORIZE}")
     private String unAuthorize;
-// 수정사항 발생 -> 같은 단어지만 사용자가 다르게 뜻을 넣을 수 있기에, word와 userId로 search하는 방법으로 찾아야할듯.(02-04)
+
+// 수정사항 발생(완) -> 같은 단어지만 사용자가 다르게 뜻을 넣을 수 있기에, word와 userId로 search하는 방법으로 찾아야할듯.(02. 04) -> query문 다시 짜서 방법 찾긴함. (02. 05)
     public ResponseEntity<?> existWord(ExistWordDto dto, HttpServletRequest request){
         String word = dto.getWord();
         Long id = authService.getUserId(request);
         Optional<User> user = userRepository.findById(id);
-        Optional<Word> words = wordRepository.findByWord(word);
+        Optional<Word> words = wordRepository.findByWordAndUser_UserId(word, id);
 
         if(words.isPresent()){
             if(user.isPresent()){
@@ -159,13 +161,11 @@ public class WordService {
             Optional<User> user = userRepository.findById(id);
 
             if(user.isPresent()){
-                Long userId = user.get().getUserId();
                 User existingUser = user.get();
-
-                if(userId.equals(existingWordSets.get().getUser().getUserId())){
+                if(id.equals(existingWordSets.get().getUser().getUserId())){
                     WordSets wordSets = existingWordSets.get();
                     Word newWord = new Word(word, noun, verb, adjective, adverb, existingUser);
-                    Optional<Word> words = wordRepository.findByWord(word);
+                    Optional<Word> words = wordRepository.findByWordAndUser_UserId(word, id); 
                     if(words.isPresent()){
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어가 이미 존재합니다."));
                     }else{
@@ -195,7 +195,7 @@ public class WordService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어셋의 입력이 잘못되었습니다."));
     }
 
-    // QA 테스트 미흡 ( 2.3.) -> 수정하면 시간 변경하도록.
+    // QA 테스트 미흡 ( 2.3.) -> 수정하면 시간 변경하도록. -> (2. 5) 시간 변경 완료
     public ResponseEntity<?> updateMeaning(Long id, UpdateMeaningDto dto,HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<User> user = userRepository.findById(userId);
@@ -230,6 +230,32 @@ public class WordService {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
     }
 
+    public ResponseEntity<?> deleteWord(Long id, HttpServletRequest request){
+        Long userId = authService.getUserId(request);
+        Optional<User> existingUser = userRepository.findById(userId);
+        if(existingUser.isPresent()){
+            Optional<Word> existingWord = wordRepository.findById(id);
+            if(existingWord.isPresent()){
+                User user = existingUser.get();
+                Word words = existingWord.get();
+                if(user.equals(words.getUser())){
+                    wordRepository.deleteById(id);
+                    DeleteWordResponseDto dtos = DeleteWordResponseDto.builder()
+                                                .wordId(id)
+                                                .word(words.getWord())
+                                                .noun(words.getNoun())
+                                                .verb(words.getVerb())
+                                                .adjective(words.getAdjective())
+                                                .adverb(words.getAdverb())
+                                                .build();
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("DELETE", dtos));
+                }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어를 만든 사람과 삭제하는 사용자가 다릅니다."));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "해당하는 단어가 없습니다."));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
+    }
     public String getAIDescription(String word){
         String requestUrl = apiUrl + "?key=" + apiKey;
         GeminiRequestDto request = new GeminiRequestDto();

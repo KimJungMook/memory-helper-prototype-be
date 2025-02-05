@@ -90,7 +90,11 @@ public class WordSetController {
     }
 
     @DeleteMapping("/{setId}/words/{wordId}")
-    public ResponseEntity<?> detachWordFromSet(@PathVariable("setId") Long setId, @PathVariable("wordId")Long wordId, HttpServletRequest request){
+    public ResponseEntity<?> detachWordFromSet(
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64"))     
+    @PathVariable("setId") Long setId, 
+    @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("wordId")Long wordId, HttpServletRequest request){
         return wordSetService.detachWordFromSet(setId, wordId, request);
     }
 
