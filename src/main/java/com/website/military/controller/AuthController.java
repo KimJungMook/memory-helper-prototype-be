@@ -89,6 +89,5 @@ public class AuthController {
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteUser(HttpServletRequest request){
         return authService.deleteUser(request);
-    }
-
+  }
 }
