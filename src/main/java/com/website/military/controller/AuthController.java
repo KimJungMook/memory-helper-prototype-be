@@ -52,7 +52,7 @@ public class AuthController {
     
     
     // POST
-    @PostMapping("/check-id")
+    @PostMapping("/check")
     public ResponseEntity<?> getMethodName(@RequestBody IdValidationDto dto) {
         return authService.idValidate(dto.getEmail());
     }

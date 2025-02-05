@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.website.military.domain.Entity.User;
+import com.website.military.domain.Entity.WordSetMapping;
 import com.website.military.domain.Entity.WordSets;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
@@ -19,6 +20,7 @@ import com.website.military.domain.dto.wordsets.response.DeleteResponseDto;
 import com.website.military.domain.dto.wordsets.response.RegisterResponseDto;
 import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
 import com.website.military.repository.UserRepository;
+import com.website.military.repository.WordSetsMappingRepository;
 import com.website.military.repository.WordSetsRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +33,8 @@ public class WordSetService {
     private WordSetsRepository wordSetsRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private WordSetsMappingRepository wordSetsMappingRepository;
     @Autowired
     private AuthService authService;
 
@@ -60,7 +64,7 @@ public class WordSetService {
         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", ""));
     }
 
-    public ResponseEntity<?> RegisterWordSets(WordSetsDto dto, HttpServletRequest request){
+    public ResponseEntity<?> registerWordSets(WordSetsDto dto, HttpServletRequest request){
         Optional<WordSets> existingWordSets = wordSetsRepository.findBysetName(dto.getSetName());
         if(existingWordSets.isPresent()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "이미 존재한 세트 이름"));
@@ -86,7 +90,7 @@ public class WordSetService {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "세트가 만들어지지 않았습니다."));
     }
-    public ResponseEntity<?> ChangeSetName(Long id, String setName,HttpServletRequest request){
+    public ResponseEntity<?> changeSetName(Long id, String setName,HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<User> existingUser = userRepository.findById(userId);
         if(existingUser.isPresent()){
@@ -131,4 +135,28 @@ public class WordSetService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하지 않는 유저입니다."));
     }
 
+    public ResponseEntity<?> detachWordFromSet(Long setId, Long wordId, HttpServletRequest request){
+        Long userId = authService.getUserId(request);
+        Optional<User> existingUser = userRepository.findById(userId);
+        if(existingUser.isPresent()){
+            Optional<WordSets> existingWordSets = wordSetsRepository.findById(setId);
+            if (existingWordSets.isPresent()) {
+                WordSets sets = existingWordSets.get();
+                if(existingUser.get().equals(sets.getUser())){
+                    Optional<WordSetMapping> mappings = wordSetsMappingRepository.findByWord_WordIdAndWordsets_SetId(wordId, setId);
+                    if(mappings.isPresent()){
+                        Long deleteId = mappings.get().getId();
+                        wordSetsMappingRepository.deleteById(deleteId);
+                        return ResponseEntity.status(HttpStatus.OK).body(ResponseMessageDto.set("OK", "DELETE"));
+                    }
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
+                }
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하지 않는 세트입니다."));
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하지 않는 유저입니다."));
+
+    }
 }

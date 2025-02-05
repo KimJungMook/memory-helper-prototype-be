@@ -1,5 +1,5 @@
 package com.website.military.domain.Entity;
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -38,7 +38,7 @@ public class Results {
     @JoinColumn(name = "test_id")
     private Tests tests; // 외래키
     private int score;
-    private Date submittedAt;
+    private Instant submittedAt;
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "results")
     private List<Mistakes> mistakes;

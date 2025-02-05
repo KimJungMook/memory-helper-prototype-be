@@ -1,8 +1,7 @@
 package com.website.military.domain.dto.wordsets.response;
 
 
-import java.util.Date;
-
+import java.time.Instant;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,5 +10,5 @@ import lombok.Data;
 public class WordSetsResponseDto {
     private Long setId;
     private String setName;
-    private Date createdAt;
+    private Instant createdAt;
 }

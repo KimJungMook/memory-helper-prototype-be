@@ -12,7 +12,6 @@ import com.website.military.service.WordService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -52,6 +51,11 @@ public class WordController {
         return wordService.existWord(dto, request);
     }
 
+    @PostMapping("/spelling-error")
+    public ResponseEntity<?> correctSpelling(@RequestBody ExistWordDto dto ){
+        return wordService.correctSpelling(dto.getWord());
+    }
+
     @Operation(summary = "add Word to Wordsets", description = "단어를 단어세트에 넣기.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "성공",
@@ -62,16 +66,23 @@ public class WordController {
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
     @PostMapping("/{setId}")
-    public ResponseEntity<?> addWordToWordSet(@Parameter(description = "단어셋의 id", in = ParameterIn.PATH) @PathVariable(required = false) Long setId, 
+    public ResponseEntity<?> addWordToWordSet(
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("setId") Long setId, 
     @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
         return wordService.addWordToWordSet(setId, dto, request);
     }
 
     // PATCH(PUT)
     @PatchMapping("/{id}")
-    public ResponseEntity<?> updateMeaning(@Parameter(description = "단어셋의 id", in = ParameterIn.PATH) @PathVariable(required = false) Long id,
-    UpdateMeaningDto dto,HttpServletRequest request){
+    public ResponseEntity<?> updateMeaning(
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("id") Long id,
+    @RequestBody UpdateMeaningDto dto,HttpServletRequest request){
         return wordService.updateMeaning(id, dto, request);
     }
+
+    // DELETE
+    
 
 }

@@ -1,5 +1,6 @@
 package com.website.military.service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -70,7 +71,7 @@ public class WordService {
 
     @Value("${error.UNAUTHORIZE}")
     private String unAuthorize;
-
+// 수정사항 발생 -> 같은 단어지만 사용자가 다르게 뜻을 넣을 수 있기에, word와 userId로 search하는 방법으로 찾아야할듯.(02-04)
     public ResponseEntity<?> existWord(ExistWordDto dto, HttpServletRequest request){
         String word = dto.getWord();
         Long id = authService.getUserId(request);
@@ -127,7 +128,6 @@ public class WordService {
             for(int i=0;i<adjectiveLength;i++){
                 meanings.get(2).add(adjective.getString(i));    
             }
-            
             for(int i=0;i<adverbLength;i++){
                 meanings.get(3).add(adverb.getString(i));    
             }
@@ -138,6 +138,11 @@ public class WordService {
             .body(ResponseMessageDto.set(internalError, "서버 에러"));
         }
 
+    }
+    // 정확도가 조금 떨어지긴 함. (02. 05.)
+    public ResponseEntity<?> correctSpelling(String word){
+        String returnWord = correctWordCheck(word);
+        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", returnWord));
     }
 
     public ResponseEntity<?> addWordToWordSet(Long setId, AddWordToWordSetDto dto, HttpServletRequest request){
@@ -190,6 +195,7 @@ public class WordService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어셋의 입력이 잘못되었습니다."));
     }
 
+    // QA 테스트 미흡 ( 2.3.) -> 수정하면 시간 변경하도록.
     public ResponseEntity<?> updateMeaning(Long id, UpdateMeaningDto dto,HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<User> user = userRepository.findById(userId);
@@ -206,6 +212,7 @@ public class WordService {
                     .ifPresent(words::setAdjective);
                     Optional.ofNullable(dto.getAdverb())
                     .ifPresent(words::setAdverb);
+                    words.setUpdatedAt(Instant.now());
                     wordRepository.save(words);
                     UpdateMeaningResponseDto dtos = UpdateMeaningResponseDto.builder()
                                                     .wordId(words.getWordId())
@@ -222,8 +229,8 @@ public class WordService {
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
     }
-    // 여기서부터 다시 하기. 뜻에 나오는게 내가 예상한대로 나오지 않음.
-        public String getAIDescription(String word){
+
+    public String getAIDescription(String word){
         String requestUrl = apiUrl + "?key=" + apiKey;
         GeminiRequestDto request = new GeminiRequestDto();
 
@@ -238,8 +245,28 @@ public class WordService {
                 return null;
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
+        return description;
+    }
+
+    public String correctWordCheck(String word){
+        String requestUrl = apiUrl + "?key=" + apiKey;
+        GeminiRequestDto request = new GeminiRequestDto();
+        String processedSentence = word + " 의 철자가 틀리지 않으면 그 단어를 그대로 대답하고 틀렸으면, 가장 비슷한 단어를 단어만 대답해줘.";
+        request.createGeminiReqDto(processedSentence);
+        String description = "";
+        try {
+            GeminiResponseDto response = restTemplate.postForObject(requestUrl, request, GeminiResponseDto.class);
+            if(response != null){
+                description = response.getCandidates().get(0).getContent().getParts().get(0).getText();
+            }else{
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        description =  description.trim();
         return description;
     }
 }

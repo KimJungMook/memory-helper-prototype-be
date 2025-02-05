@@ -11,7 +11,6 @@ import com.website.military.service.WordSetService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -67,23 +66,32 @@ public class WordSetController {
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
     @PostMapping("")
-    public ResponseEntity<?> RegisterWordSets(@RequestBody WordSetsDto dto, HttpServletRequest request) {
-        return wordSetService.RegisterWordSets(dto, request);
+    public ResponseEntity<?> registerWordSets(@RequestBody WordSetsDto dto, HttpServletRequest request) {
+        return wordSetService.registerWordSets(dto, request);
     }
     
     // PUT(patch)
     @PatchMapping("/name/{id}")
-    public ResponseEntity<?> ChangeSetName(@Parameter(description = "단어셋의 id", in = ParameterIn.PATH) @PathVariable(required = false) Long id,
-    ChangeSetNameDto dto,HttpServletRequest request){
-        return wordSetService.ChangeSetName(id, dto.getSetName() ,request);
+    @Operation(summary = "단어셋 이름 변경", description = "ID에 해당하는 단어셋의 이름을 변경합니다.")
+    public ResponseEntity<?> changeSetName(
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("id") Long id,
+    @RequestBody ChangeSetNameDto dto,HttpServletRequest request){
+        return wordSetService.changeSetName(id, dto.getSetName() ,request);
     }
     // DELETE
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteWordSets(@Parameter(description = "단어셋의 id", in = ParameterIn.PATH) @PathVariable(required = false) Long id, 
+    @Operation(summary = "단어셋 삭제", description = "ID에 해당하는 단어셋을 삭제합니다.")
+    public ResponseEntity<?> deleteWordSets(
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("id") Long id, 
     HttpServletRequest request){
         return wordSetService.deleteWordSets(id, request);
     }
 
-    
+    @DeleteMapping("/{setId}/words/{wordId}")
+    public ResponseEntity<?> detachWordFromSet(@PathVariable("setId") Long setId, @PathVariable("wordId")Long wordId, HttpServletRequest request){
+        return wordSetService.detachWordFromSet(setId, wordId, request);
+    }
 
 }
