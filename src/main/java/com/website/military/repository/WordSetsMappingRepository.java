@@ -11,6 +11,6 @@ import com.website.military.domain.Entity.WordSetMapping;
 
 public interface WordSetsMappingRepository extends JpaRepository<WordSetMapping, Long>{
     Optional<WordSetMapping> findByWord_WordIdAndWordsets_SetId(Long wordId, Long setId);
-    @Query("SELECT wsm FROM WordSetMapping wsm JOIN FETCH wsm.word WHERE wsm.wordsets.setId = :setId")
+    @Query("SELECT wsm FROM WordSetMapping wsm JOIN FETCH wsm.word WHERE wsm.wordsets.setId = :setId") // 이런것도 알아두기.
     List<WordSetMapping> findAllByWordsets_SetId(@Param("setId") Long setId);
 }
