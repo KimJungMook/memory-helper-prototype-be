@@ -66,10 +66,11 @@ public class AuthService {
             User user = new User(dto.getUsername(), dto.getEmail(), password);
             user.setCreatedAt(Instant.now());
             userRepository.save(user);
-            SignUpResponseDto responseDto = SignUpResponseDto.builder()
-                                            .email(user.getEmail())
-                                            .username(user.getUsername()).build();
-        return ResponseEntity.ok(ResponseDataDto.set("OK", responseDto));
+            SignUpResponseDto response = SignUpResponseDto.builder()
+            .email(user.getEmail())
+            .username(user.getUsername())
+            .build();
+        return ResponseEntity.ok(ResponseDataDto.set("OK", response));
         }catch(Exception e){
             e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -82,19 +83,19 @@ public class AuthService {
         Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
         if(existingUser.isPresent()){
             if(passwordEncoder.matches(dto.getPassword(), existingUser.get().getPassword())){
-                Long id = existingUser.get().getUserId();
+                Long userId = existingUser.get().getUserId();
                 String username = existingUser.get().getUsername();
-                String accessToken = jwtProvider.generateAccessToken(id);
-                RefreshToken.removeUserRefreshToken(id);
-                String refreshToken = jwtProvider.generateRefreshToken(id);
-                RefreshToken.putRefreshToken(refreshToken, id);
-                LoginResponseDto responseDto = LoginResponseDto.builder()
-                                                .username(username)
-                                                .accessToken(accessToken)
-                                                .refreshToken(refreshToken)
-                                                .build();
+                String accessToken = jwtProvider.generateAccessToken(userId);
+                RefreshToken.removeUserRefreshToken(userId);
+                String refreshToken = jwtProvider.generateRefreshToken(userId);
+                RefreshToken.putRefreshToken(refreshToken, userId);
+                LoginResponseDto response = LoginResponseDto.builder()
+                .username(username)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
                 return ResponseEntity.status(HttpStatus.OK)
-                .body(ResponseDataDto.set("OK", responseDto));
+                .body(ResponseDataDto.set("OK", response));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(ResponseMessageDto.set(badRequestError, "아이디와 비밀번호가 일치하지않습니다."));
@@ -110,9 +111,9 @@ public class AuthService {
         if(existingUser.isPresent()){
                 User user = existingUser.get();
                 GetUserInfoFromUsernameResponseDto response = GetUserInfoFromUsernameResponseDto.builder()
-                                                                .email(user.getEmail())
-                                                                .username(user.getUsername())
-                                                                .build();
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .build();
                 userRepository.deleteById(loginUserId);
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
             }
@@ -130,11 +131,11 @@ public class AuthService {
         }
         Optional<User> existingUser = userRepository.findById(Long.parseLong(id));
         if (existingUser.isPresent()) {
-            GetUserInfoFromUsernameResponseDto responseDto = GetUserInfoFromUsernameResponseDto.builder()
-                                                            .email(existingUser.get().getEmail())
-                                                            .username(existingUser.get().getUsername())
-                                                            .build();
-            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responseDto));
+            GetUserInfoFromUsernameResponseDto response = GetUserInfoFromUsernameResponseDto.builder()
+            .email(existingUser.get().getEmail())
+            .username(existingUser.get().getUsername())
+            .build();
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(ResponseMessageDto.set(badRequestError, "해당하는 정보가 없습니다."));

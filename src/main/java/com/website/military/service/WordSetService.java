@@ -11,15 +11,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.website.military.domain.Entity.User;
+import com.website.military.domain.Entity.Word;
 import com.website.military.domain.Entity.WordSetMapping;
 import com.website.military.domain.Entity.WordSets;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
+import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
+import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
+import com.website.military.domain.dto.word.response.ExistWordResponseDto;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
 import com.website.military.domain.dto.wordsets.response.DeleteResponseDto;
+import com.website.military.domain.dto.wordsets.response.DetachResponse;
+import com.website.military.domain.dto.wordsets.response.GetWordsBySetIdResponse;
 import com.website.military.domain.dto.wordsets.response.RegisterResponseDto;
 import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
 import com.website.military.repository.UserRepository;
+import com.website.military.repository.WordRepository;
 import com.website.military.repository.WordSetsMappingRepository;
 import com.website.military.repository.WordSetsRepository;
 
@@ -36,6 +43,8 @@ public class WordSetService {
     @Autowired
     private WordSetsMappingRepository wordSetsMappingRepository;
     @Autowired
+    private WordRepository wordRepository;
+    @Autowired
     private AuthService authService;
 
     @Value("${error.INTERNAL_SERVER_ERROR}")
@@ -44,24 +53,51 @@ public class WordSetService {
     @Value("${error.BAD_REQUEST_ERROR}")
     private String badRequestError;
 
+    @Value("${error.UNAUTHORIZE}")
+    private String unAuthorize;
+
     public ResponseEntity<?> getWordSets(HttpServletRequest request){
-        Long id = authService.getUserId(request);
-        Optional<User> existingUser = userRepository.findById(id);
+        Long userId = authService.getUserId(request);
+        Optional<User> existingUser = userRepository.findById(userId);
         if(existingUser.isPresent()){
-            Long userId = existingUser.get().getUserId();
             List<WordSets> existingWordSets = wordSetsRepository.findByUser_UserId(userId);
-            List<WordSetsResponseDto> dtos = new ArrayList<>();
+            List<WordSetsResponseDto> responses = new ArrayList<>();
             for(WordSets sets : existingWordSets){
-                WordSetsResponseDto dto = WordSetsResponseDto.builder()
-                                            .setId(sets.getSetId())
-                                            .setName(sets.getSetName())
-                                            .createdAt(sets.getCreatedAt())
-                                            .build();
-                dtos.add(dto);
+                WordSetsResponseDto response = WordSetsResponseDto.builder()
+                .setId(sets.getSetId())
+                .setName(sets.getSetName())
+                .createdAt(sets.getCreatedAt())
+                .build();
+                responses.add(response);
             }
-            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",dtos));
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
         }
         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", ""));
+    }
+
+    public ResponseEntity<?> getWordsBySetId(Long id, HttpServletRequest request){
+        Long userId = authService.getUserId(request);
+        Optional<User> existingUser = userRepository.findById(userId);
+        if (existingUser.isPresent()) {
+            List<WordSetMapping> mappings = wordSetsMappingRepository.findAllByWordsets_SetId(id);
+            List<GetWordsBySetIdResponse> words = new ArrayList<>();
+            for(WordSetMapping mapping : mappings){
+                Word response = mapping.getWord();
+                GetWordsBySetIdResponse responses = GetWordsBySetIdResponse.builder()
+                .id(response.getWordId())
+                .word(response.getWord())
+                .noun(response.getNoun())
+                .verb(response.getVerb())
+                .adjective(response.getAdjective())
+                .adverb(response.getAdverb())
+                .createdAt(response.getCreateAt())
+                .build();
+                words.add(responses);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", words));
+
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하지 않는 유저입니다."));
     }
 
     public ResponseEntity<?> registerWordSets(WordSetsDto dto, HttpServletRequest request){
@@ -71,17 +107,17 @@ public class WordSetService {
         }
         WordSets wordSets = new WordSets(dto.getSetName());
         try{
-            Long id = authService.getUserId(request);
-            Optional<User> existingUser = userRepository.findById(id);
+            Long userId = authService.getUserId(request);
+            Optional<User> existingUser = userRepository.findById(userId);
             if(existingUser.isPresent()){
                 User user = existingUser.get();
                 wordSets.setUser(user);
                 wordSetsRepository.save(wordSets);
-                RegisterResponseDto dtos = RegisterResponseDto.builder()
-                                            .setId(wordSets.getSetId())
-                                            .setName(wordSets.getSetName())
-                                            .build();
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", dtos)); // 여기서부터 다시.
+                RegisterResponseDto response = RegisterResponseDto.builder()
+                .setId(wordSets.getSetId())
+                .setName(wordSets.getSetName())
+                .build();
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response)); // 여기서부터 다시.
             }
         }catch(Exception e){
             e.printStackTrace();
@@ -90,6 +126,84 @@ public class WordSetService {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "세트가 만들어지지 않았습니다."));
     }
+
+    public ResponseEntity<?> assignWordToSet(Long setId, Long wordId, HttpServletRequest request){
+        Long userId = authService.getUserId(request);
+        Optional<User> existingUser = userRepository.findById(userId);
+        if(existingUser.isPresent()){
+            Optional<WordSets> existingWordSets = wordSetsRepository.findBySetId(setId);
+            if(existingWordSets.isPresent()){
+                Optional<Word> existingWord = wordRepository.findById(wordId);
+                if(existingWord.isPresent()){
+                    Word word = existingWord.get();
+                    WordSets sets = existingWordSets.get();
+                    WordSetMapping mapping = new WordSetMapping();
+                    mapping.setWord(word);
+                    mapping.setWordsets(sets);
+                    wordSetsMappingRepository.save(mapping);
+                    ExistWordResponseDto response = ExistWordResponseDto.builder()
+                    .id(word.getWordId())
+                    .noun(word.getNoun())
+                    .verb(word.getVerb())
+                    .adjective(word.getAdjective())
+                    .adverb(word.getAdverb())
+                    .build();
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+                }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어가 없습니다."));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어셋이 없습니다."));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
+    }
+
+    public ResponseEntity<?> addWordToWordSet(Long setId, AddWordToWordSetDto dto, HttpServletRequest request){
+        String word = dto.getWord();
+        List<String> noun = dto.getNoun();
+        List<String> verb = dto.getVerb();
+        List<String> adjective = dto.getAdjective();
+        List<String> adverb = dto.getAdverb();
+        Optional<WordSets> existingWordSets = wordSetsRepository.findBySetId(setId);
+
+        if(existingWordSets.isPresent()){
+            Long userId = authService.getUserId(request);
+            Optional<User> user = userRepository.findById(userId);
+
+            if(user.isPresent()){
+                User existingUser = user.get();
+                if(userId.equals(existingWordSets.get().getUser().getUserId())){
+                    WordSets wordSets = existingWordSets.get();
+                    Word Word = new Word(word, noun, verb, adjective, adverb, existingUser);
+                    Optional<Word> existingWord = wordRepository.findByWordAndUser_UserId(word, userId); 
+                    if(existingWord.isPresent()){
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어가 이미 존재합니다."));
+                    }else{
+                        wordRepository.save(Word);
+                        WordSetMapping mapping = new WordSetMapping();
+                        mapping.setWord(Word);
+                        mapping.setWordsets(wordSets);
+                        wordSetsMappingRepository.save(mapping);
+                        AddWordToWordSetResponseDto response = AddWordToWordSetResponseDto.builder()
+                        .wordId(Word.getWordId())
+                        .word(Word.getWord())
+                        .noun(Word.getNoun())
+                        .verb(Word.getVerb())
+                        .adjective(Word.getAdjective())
+                        .adverb(Word.getAdverb())
+                        .build();
+
+                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+                    }
+                }else{
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어셋을 만든 사람과 사용하는 사용자가 다릅니다."));
+                }
+            }else{
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어셋의 입력이 잘못되었습니다."));
+    }
+
     public ResponseEntity<?> changeSetName(Long id, String setName,HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<User> existingUser = userRepository.findById(userId);
@@ -100,11 +214,11 @@ public class WordSetService {
                     WordSets sets = existingWordSets.get();
                     sets.setSetName(setName);
                     wordSetsRepository.save(sets);
-                    RegisterResponseDto dto = RegisterResponseDto.builder()
-                                                    .setId(id)
-                                                    .setName(setName)
-                                                    .build();
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", dto));
+                    RegisterResponseDto response = RegisterResponseDto.builder()
+                    .setId(id)
+                    .setName(setName)
+                    .build();
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
                 }
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
             }
@@ -112,6 +226,7 @@ public class WordSetService {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하지 않는 유저입니다."));
     }
+
     public ResponseEntity<?> deleteWordSets(Long id, HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<User> existingUser = userRepository.findById(userId);
@@ -122,11 +237,11 @@ public class WordSetService {
                 User user = existingUser.get();
                 if(sets.getUser().equals(user)){
                     wordSetsRepository.deleteById(id);
-                    DeleteResponseDto dtos = DeleteResponseDto.builder()
-                                                        .id(id)
-                                                        .setName(sets.getSetName())
-                                                        .build();
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", dtos));
+                    DeleteResponseDto response = DeleteResponseDto.builder()
+                    .id(id)
+                    .setName(sets.getSetName())
+                    .build();
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
                 }
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
             }
@@ -146,8 +261,16 @@ public class WordSetService {
                     Optional<WordSetMapping> mappings = wordSetsMappingRepository.findByWord_WordIdAndWordsets_SetId(wordId, setId);
                     if(mappings.isPresent()){
                         Long deleteId = mappings.get().getId();
+                        Word Word = mappings.get().getWord();
+                        DetachResponse response = DetachResponse.builder()
+                        .id(Word.getWordId())
+                        .noun(Word.getNoun())
+                        .verb(Word.getVerb())
+                        .adjective(Word.getAdjective())
+                        .adverb(Word.getAdverb())
+                        .build();
                         wordSetsMappingRepository.deleteById(deleteId);
-                        return ResponseEntity.status(HttpStatus.OK).body(ResponseMessageDto.set("OK", "DELETE"));
+                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("DELETE", response));
                     }
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
                 }

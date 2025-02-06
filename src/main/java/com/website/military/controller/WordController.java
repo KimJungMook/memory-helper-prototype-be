@@ -3,7 +3,6 @@ package com.website.military.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
 import com.website.military.domain.dto.word.request.ExistWordDto;
 import com.website.military.domain.dto.word.request.UpdateMeaningDto;
 import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
@@ -66,13 +65,6 @@ public class WordController {
         @ApiResponse(responseCode = "400", description = "단어셋의 입력이 잘못되었습니다."),
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
-    @PostMapping("/{setId}")
-    public ResponseEntity<?> addWordToWordSet(
-    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
-    @PathVariable("setId") Long setId, 
-    @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
-        return wordService.addWordToWordSet(setId, dto, request);
-    }
 
     // PATCH(PUT)
     @PatchMapping("/{id}")
