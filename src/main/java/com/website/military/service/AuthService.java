@@ -15,6 +15,7 @@ import com.website.military.config.token.RefreshToken;
 import com.website.military.domain.Entity.User;
 import com.website.military.domain.dto.auth.request.LogInDto;
 import com.website.military.domain.dto.auth.request.SignUpDto;
+import com.website.military.domain.dto.auth.response.DeleteUserResponse;
 import com.website.military.domain.dto.auth.response.GetUserInfoFromUsernameResponseDto;
 import com.website.military.domain.dto.auth.response.LoginResponseDto;
 import com.website.military.domain.dto.auth.response.SignUpResponseDto;
@@ -58,7 +59,7 @@ public class AuthService {
         Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
         if(existingUser.isPresent()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(ResponseMessageDto.set(badRequestError, "존재하는 아이디가 있습니다."));
+            .body(ResponseMessageDto.set(badRequestError, "해당 ID의 유저가 존재합니다."));
         }
         
         try{
@@ -110,7 +111,7 @@ public class AuthService {
         Optional<User> existingUser = userRepository.findById(loginUserId);
         if(existingUser.isPresent()){
                 User user = existingUser.get();
-                GetUserInfoFromUsernameResponseDto response = GetUserInfoFromUsernameResponseDto.builder()
+                DeleteUserResponse response = DeleteUserResponse.builder()
                 .email(user.getEmail())
                 .username(user.getUsername())
                 .build();

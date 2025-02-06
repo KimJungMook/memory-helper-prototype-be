@@ -72,7 +72,7 @@ public class WordSetService {
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
         }
-        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", ""));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
     }
 
     public ResponseEntity<?> getWordsBySetId(Long id, HttpServletRequest request){
@@ -97,7 +97,7 @@ public class WordSetService {
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", words));
 
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하지 않는 유저입니다."));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
     }
 
     public ResponseEntity<?> registerWordSets(WordSetsDto dto, HttpServletRequest request){
@@ -119,12 +119,12 @@ public class WordSetService {
                 .build();
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response)); // 여기서부터 다시.
             }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
         }catch(Exception e){
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(ResponseMessageDto.set(internalError, "서버 에러"));
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "세트가 만들어지지 않았습니다."));
     }
 
     public ResponseEntity<?> assignWordToSet(Long setId, Long wordId, HttpServletRequest request){
@@ -176,7 +176,7 @@ public class WordSetService {
                     Word Word = new Word(word, noun, verb, adjective, adverb, existingUser);
                     Optional<Word> existingWord = wordRepository.findByWordAndUser_UserId(word, userId); 
                     if(existingWord.isPresent()){
-                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어가 이미 존재합니다."));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어가 이미 존재합니다."));
                     }else{
                         wordRepository.save(Word);
                         WordSetMapping mapping = new WordSetMapping();

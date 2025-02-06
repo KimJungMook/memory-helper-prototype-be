@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.website.military.domain.dto.auth.request.IdValidationDto;
 import com.website.military.domain.dto.auth.request.LogInDto;
 import com.website.military.domain.dto.auth.request.SignUpDto;
+import com.website.military.domain.dto.auth.response.DeleteUserResponse;
 import com.website.military.domain.dto.auth.response.GetUserInfoFromUsernameResponseDto;
 import com.website.military.domain.dto.auth.response.LoginResponseDto;
 import com.website.military.domain.dto.auth.response.SignUpResponseDto;
@@ -38,7 +39,7 @@ public class AuthController {
     private AuthService authService;
     
     // GET
-    @Operation(summary = "Get userInfo from token", description = "토큰을 통해서 아이디, 이름 알아낼 수 있게하는 메서드")
+    @Operation(summary = "토큰을 통해 회원정보 얻기", description = "토큰을 통해서 아이디, 이름 알아낼 수 있게하는 메서드")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "성공",
             content = {@Content(schema = @Schema(implementation = GetUserInfoFromUsernameResponseDto.class))}),
@@ -52,12 +53,19 @@ public class AuthController {
     
     
     // POST
+    @Operation(summary = "아이디 체크 ", description = "아이디 중복확인 하는데에 사용하는 api")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "성공",
+            content = {@Content(schema = @Schema(implementation = GetUserInfoFromUsernameResponseDto.class))}),
+        @ApiResponse(responseCode = "400", description = "존재하는 아이디가 있습니다."),
+        @ApiResponse(responseCode = "500", description = "서버 에러")
+    })
     @PostMapping("/check")
     public ResponseEntity<?> getMethodName(@RequestBody IdValidationDto dto) {
         return authService.idValidate(dto.getEmail());
     }
     
-    @Operation(summary = "signup", description = "회원가입")
+    @Operation(summary = "회원가입", description = "회원가입 하는데에 사용하는 api")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "성공",
             content = {@Content(schema = @Schema(implementation = SignUpResponseDto.class))}),
@@ -69,11 +77,12 @@ public class AuthController {
         return authService.signUp(dto);
     }
 
-    @Operation(summary = "login", description = "로그인하기")
+    @Operation(summary = "로그인 하기", description = "로그인하는데 필요한 메서드, 토큰 반환")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "성공",
             content = {@Content(schema = @Schema(implementation = LoginResponseDto.class))}),
-        @ApiResponse(responseCode = "400", description = "해당 ID의 유저가 존재합니다."),
+        @ApiResponse(responseCode = "400", description = "아이디와 비밀번호가 일치하지않습니다."),
+        @ApiResponse(responseCode = "400", description = "아이디가 존재하지 않습니다."),
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
     @PostMapping("/login")
@@ -86,6 +95,13 @@ public class AuthController {
 
 
     // DELETE
+    @Operation(summary = "회원탈퇴하기 ", description = "회원 탈퇴하는데 사용하는 api, 로그인 한 상태에서만 가능.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "성공",
+            content = {@Content(schema = @Schema(implementation = DeleteUserResponse.class))}),
+        @ApiResponse(responseCode = "400", description = "존재하지않는 유저입니다."),
+        @ApiResponse(responseCode = "500", description = "서버 에러")
+    })
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteUser(HttpServletRequest request){
         return authService.deleteUser(request);
