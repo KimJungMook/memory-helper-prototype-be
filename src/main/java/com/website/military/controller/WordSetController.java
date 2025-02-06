@@ -3,6 +3,7 @@ package com.website.military.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
 import com.website.military.domain.dto.wordsets.request.ChangeSetNameDto;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
 import com.website.military.domain.dto.wordsets.response.RegisterResponseDto;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 
 
+
 @RestController
 @RequestMapping("/api/wordsets")
 @Tag(name = "WordSet", description = "단어세트 관련 API")
@@ -55,6 +57,13 @@ public class WordSetController {
     public ResponseEntity<?> getWordSets(HttpServletRequest request) {
         return wordSetService.getWordSets(request);
     }
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getWordsBySetId(    
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("id") Long id, HttpServletRequest request) {
+        return wordSetService.getWordsBySetId(id, request);
+    }
+    
 
     // POST
     @Operation(summary = "add to wordSets", description = "단어세트 만들기")
@@ -70,6 +79,23 @@ public class WordSetController {
         return wordSetService.registerWordSets(dto, request);
     }
     
+    @PostMapping("/{setId}/words/{wordId}")
+    public ResponseEntity<?> assignWordToSet(
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("setId") Long setId, 
+    @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("wordId") Long wordId, HttpServletRequest request ){
+        return wordSetService.assignWordToSet(setId, wordId, request);
+    }
+
+    @PostMapping("/{setId}")
+    public ResponseEntity<?> addWordToWordSet(
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("setId") Long setId, 
+    @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
+        return wordSetService.addWordToWordSet(setId, dto, request);
+    }
+
     // PUT(patch)
     @PatchMapping("/name/{id}")
     @Operation(summary = "단어셋 이름 변경", description = "ID에 해당하는 단어셋의 이름을 변경합니다.")
@@ -79,6 +105,7 @@ public class WordSetController {
     @RequestBody ChangeSetNameDto dto,HttpServletRequest request){
         return wordSetService.changeSetName(id, dto.getSetName() ,request);
     }
+    
     // DELETE
     @DeleteMapping("/{id}")
     @Operation(summary = "단어셋 삭제", description = "ID에 해당하는 단어셋을 삭제합니다.")
@@ -97,5 +124,7 @@ public class WordSetController {
     @PathVariable("wordId")Long wordId, HttpServletRequest request){
         return wordSetService.detachWordFromSet(setId, wordId, request);
     }
+
+    
 
 }
