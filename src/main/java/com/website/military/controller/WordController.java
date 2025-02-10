@@ -5,8 +5,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.website.military.domain.dto.word.request.ExistWordDto;
 import com.website.military.domain.dto.word.request.UpdateMeaningDto;
-import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
+import com.website.military.domain.dto.word.response.DeleteWordResponseDto;
 import com.website.military.domain.dto.word.response.ExistWordResponseDto;
+import com.website.military.domain.dto.word.response.UpdateMeaningResponseDto;
 import com.website.military.service.WordService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,7 +39,7 @@ public class WordController {
     // GET
 
     // POST
-    @Operation(summary = "exist to word", description = "단어가 있는지 체크")
+    @Operation(summary = "단어 존재 체크", description = "단어가 있는지 체크를 해주는 메서드")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "EXIST",
             content = {@Content(schema = @Schema(implementation = ExistWordResponseDto.class))}),
@@ -51,22 +52,27 @@ public class WordController {
         return wordService.existWord(dto, request);
     }
 
+    @Operation(summary = "스펠링 체크", description = "스펠링을 체크를 해주는 메서드, 정확도가 조금 낮음.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "OK",
+            content = {@Content(schema = @Schema(implementation = String.class))}),
+        @ApiResponse(responseCode = "500", description = "서버 에러")
+    })
     @PostMapping("/spelling-error")
     public ResponseEntity<?> correctSpelling(@RequestBody ExistWordDto dto ){
         return wordService.correctSpelling(dto.getWord());
     }
 
-    @Operation(summary = "add Word to Wordsets", description = "단어를 단어세트에 넣기.")
+    // PATCH(PUT)
+    @Operation(summary = "단어 의미 변경", description = "단어의 의미를 바꾸고 싶을 때 사용하는 메서드")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "성공",
-            content = {@Content(schema = @Schema(implementation = AddWordToWordSetResponseDto.class))}),
-        @ApiResponse(responseCode = "401", description = "단어셋을 만든 사람과 사용하는 사용자가 다릅니다."),
+        @ApiResponse(responseCode = "200", description = "OK",
+            content = {@Content(schema = @Schema(implementation = UpdateMeaningResponseDto.class))}),
+        @ApiResponse(responseCode = "200", description = "해당하는 단어가 없습니다."),
         @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
-        @ApiResponse(responseCode = "400", description = "단어셋의 입력이 잘못되었습니다."),
+        @ApiResponse(responseCode = "401", description = "단어를 만든 사람과 사용하는 사용자가 다릅니다."),
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
-
-    // PATCH(PUT)
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateMeaning(
     @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
@@ -76,6 +82,15 @@ public class WordController {
     }
 
     // DELETE
+    @Operation(summary = "단어 삭제", description = "단어를 DB에서 삭제하고 싶을 때 사용하는 메서드")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "DELETE",
+            content = {@Content(schema = @Schema(implementation = DeleteWordResponseDto.class))}),
+        @ApiResponse(responseCode = "200", description = "해당하는 단어가 없습니다."),
+        @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
+        @ApiResponse(responseCode = "401", description = "단어를 만든 사람과 삭제하는 사용자가 다릅니다."),
+        @ApiResponse(responseCode = "500", description = "서버 에러")
+    })
     @DeleteMapping("{id}")
     public ResponseEntity<?> deleteWord(
     @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 

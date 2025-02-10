@@ -129,6 +129,7 @@ public class WordService {
         }
 
     }
+    
     // 정확도가 조금 떨어지긴 함. (02. 05.)
     public ResponseEntity<?> correctSpelling(String word){
         String returnWord = correctWordCheck(word);

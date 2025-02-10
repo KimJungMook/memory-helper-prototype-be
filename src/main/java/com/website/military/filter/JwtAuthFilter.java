@@ -2,6 +2,7 @@ package com.website.military.filter;
 
 import java.io.IOException;
 import java.util.Collections;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +16,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -22,23 +24,23 @@ import lombok.RequiredArgsConstructor;
 public class JwtAuthFilter extends OncePerRequestFilter{
     private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
-    
+
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-    FilterChain filterChain) throws ServletException, IOException{
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+    @NonNull FilterChain filterChain) throws ServletException, IOException{
         final String token = request.getHeader("Authorization");
 
         String username = null;
-
+        String jwtToken = null;
         if(token != null && !token.isEmpty()){
-            String jwtToken = token.substring(7);
+            jwtToken = token.substring(7);
             username = jwtProvider.getUserIdFromToken(jwtToken);
         }
 
         if(username != null && !username.isEmpty() && SecurityContextHolder.getContext().getAuthentication() == null){
             SecurityContextHolder.getContext().setAuthentication(getUserAuth(username));
         }
-
         filterChain.doFilter(request, response);
     }
 
