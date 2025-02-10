@@ -24,13 +24,21 @@ public class Mistakes {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "mistake_id", updatable = false)
     private Long mistakesId;
+
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "result_id")
     private Results results; // 외래키
+    
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "word_id")
     private Word word;  // 외래키
+
+    @JsonBackReference // 중복 순환 해결.
+    @ManyToOne
+    @JoinColumn(name = "gpt_word_id")
+    private GptWord gptword;  // 외래키
+
     private String userAnswer; 
 }

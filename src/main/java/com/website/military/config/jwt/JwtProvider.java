@@ -112,14 +112,20 @@ public class JwtProvider {
             return true;
         }catch (SecurityException e){
             log.warn("Invalid JWT signature: {}", e.getMessage());
+            e.printStackTrace();
         }catch (MalformedJwtException e){
             log.warn("Invalid JWT token: {}", e.getMessage());
+            e.printStackTrace();
+            throw new MalformedJwtException(token + "문제 발생");
         }catch (ExpiredJwtException e){
             log.warn("JWT token is expired: {}", e.getMessage());
+            e.printStackTrace();
         }catch (UnsupportedJwtException e){
             log.warn("JWT token is unsupported: {}", e.getMessage());    
+            e.printStackTrace();
         }catch (IllegalArgumentException e){
             log.warn("JWT claims string is empty: {}", e.getMessage());    
+            e.printStackTrace();
         }
 
         return false;

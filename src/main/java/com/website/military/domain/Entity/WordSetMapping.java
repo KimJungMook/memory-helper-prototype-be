@@ -34,6 +34,11 @@ public class WordSetMapping {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference // 중복 순환 해결.
+    @JoinColumn(name = "gpt_word_id", nullable = false)
+    private GptWord gptword;  
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference // 중복 순환 해결.
     @JoinColumn(name = "set_id", nullable = false)
     private WordSets wordsets;
 }

@@ -15,16 +15,15 @@ public class RefreshTokenService {
 
     public RefreshTokenResponseDto refreshToken(final String refreshToken){
         checkRefreshToken(refreshToken);
-
         var id = RefreshToken.getRefreshToken(refreshToken);
-
         String newAccessToken = jwtProvider.generateAccessToken(id);
 
         RefreshToken.removeUserRefreshToken(id);
-
+        String newRefreshToken = jwtProvider.generateRefreshToken(id);
+        RefreshToken.putRefreshToken(newRefreshToken, id);
         return RefreshTokenResponseDto.builder()
         .accessToken(newAccessToken)
-        .refreshToken(newAccessToken)
+        .refreshToken(newRefreshToken)
         .build();
     }
 

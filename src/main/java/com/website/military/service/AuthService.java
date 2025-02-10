@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.website.military.config.jwt.JwtProvider;
+import com.website.military.config.redis.RedisUtil;
 import com.website.military.config.token.RefreshToken;
 import com.website.military.domain.Entity.User;
 import com.website.military.domain.dto.auth.request.LogInDto;
@@ -37,6 +38,7 @@ public class AuthService {
 
     private final JwtProvider jwtProvider;
 
+    private final RedisUtil redisUtil;
     @Value("${error.INTERNAL_SERVER_ERROR}")
     private String internalError;
 
@@ -104,6 +106,16 @@ public class AuthService {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(ResponseMessageDto.set(badRequestError, "아이디가 존재하지 않습니다."));
+    }
+
+    public ResponseEntity<?> logout(HttpServletRequest request){
+        final String token = request.getHeader("Authorization");
+        String jwtToken = token.substring(7);
+        if(!jwtProvider.validateToken(jwtToken)){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "이미 로그아웃"));
+        }
+        redisUtil.setBlackList(token, "accessToken", 5);
+        return ResponseEntity.status(HttpStatus.OK).body(ResponseMessageDto.set("logout", "로그아웃 완료"));
     }
 
     public ResponseEntity<?> deleteUser(HttpServletRequest request){

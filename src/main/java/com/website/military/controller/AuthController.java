@@ -3,6 +3,7 @@ package com.website.military.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.website.military.config.token.RefreshTokenService;
 import com.website.military.domain.dto.auth.request.IdValidationDto;
 import com.website.military.domain.dto.auth.request.LogInDto;
 import com.website.military.domain.dto.auth.request.SignUpDto;
@@ -10,6 +11,9 @@ import com.website.military.domain.dto.auth.response.DeleteUserResponse;
 import com.website.military.domain.dto.auth.response.GetUserInfoFromUsernameResponseDto;
 import com.website.military.domain.dto.auth.response.LoginResponseDto;
 import com.website.military.domain.dto.auth.response.SignUpResponseDto;
+import com.website.military.domain.dto.response.ResponseDataDto;
+import com.website.military.domain.dto.token.request.RefreshTokenDto;
+import com.website.military.domain.dto.token.response.RefreshTokenResponseDto;
 import com.website.military.service.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,6 +42,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class AuthController {
     @Autowired
     private AuthService authService;
+    @Autowired
+    private RefreshTokenService refreshTokenService;
     
     // GET
     @Operation(summary = "토큰을 통해 회원정보 얻기", description = "토큰을 통해서 아이디, 이름 알아낼 수 있게하는 메서드")
@@ -91,6 +98,17 @@ public class AuthController {
     }
     
 
+    @PostMapping("/token-refresh")
+    public ResponseEntity<?> tokenRefresh(@RequestBody RefreshTokenDto dto){
+        RefreshTokenResponseDto response = refreshTokenService.refreshToken(dto.getRefreshToken());
+        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        return authService.logout(request);
+    }
+    
     // PUT
 
 
