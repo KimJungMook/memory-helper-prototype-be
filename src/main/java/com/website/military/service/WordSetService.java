@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.website.military.domain.Entity.GptWord;
+import com.website.military.domain.Entity.GptWordSetMapping;
 import com.website.military.domain.Entity.User;
 import com.website.military.domain.Entity.Word;
 import com.website.military.domain.Entity.WordSetMapping;
@@ -25,6 +27,8 @@ import com.website.military.domain.dto.wordsets.response.DetachResponse;
 import com.website.military.domain.dto.wordsets.response.GetWordsBySetIdResponse;
 import com.website.military.domain.dto.wordsets.response.RegisterResponseDto;
 import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
+import com.website.military.repository.GptWordRepository;
+import com.website.military.repository.GptWordSetMappingRepository;
 import com.website.military.repository.UserRepository;
 import com.website.military.repository.WordRepository;
 import com.website.military.repository.WordSetsMappingRepository;
@@ -43,7 +47,11 @@ public class WordSetService {
     @Autowired
     private WordSetsMappingRepository wordSetsMappingRepository;
     @Autowired
+    private GptWordSetMappingRepository gptWordSetMappingRepository;
+    @Autowired
     private WordRepository wordRepository;
+    @Autowired
+    private GptWordRepository gptWordRepository;
     @Autowired
     private AuthService authService;
 
@@ -99,6 +107,7 @@ public class WordSetService {
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
     }
+
 
     public ResponseEntity<?> registerWordSets(WordSetsDto dto, HttpServletRequest request){
         Optional<WordSets> existingWordSets = wordSetsRepository.findBysetName(dto.getSetName());
@@ -185,6 +194,53 @@ public class WordSetService {
                         wordSetsMappingRepository.save(mapping);
                         AddWordToWordSetResponseDto response = AddWordToWordSetResponseDto.builder()
                         .wordId(Word.getWordId())
+                        .word(Word.getWord())
+                        .noun(Word.getNoun())
+                        .verb(Word.getVerb())
+                        .adjective(Word.getAdjective())
+                        .adverb(Word.getAdverb())
+                        .build();
+
+                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+                    }
+                }else{
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어셋을 만든 사람과 사용하는 사용자가 다릅니다."));
+                }
+            }else{
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어셋의 입력이 잘못되었습니다."));
+    }
+
+    public ResponseEntity<?> addGptWordToWordSet(Long setId, AddWordToWordSetDto dto, HttpServletRequest request){
+        String word = dto.getWord();
+        List<String> noun = dto.getNoun();
+        List<String> verb = dto.getVerb();
+        List<String> adjective = dto.getAdjective();
+        List<String> adverb = dto.getAdverb();
+        Optional<WordSets> existingWordSets = wordSetsRepository.findBySetId(setId);
+
+        if(existingWordSets.isPresent()){
+            Long userId = authService.getUserId(request);
+            Optional<User> user = userRepository.findById(userId);
+
+            if(user.isPresent()){
+                User existingUser = user.get();
+                if(userId.equals(existingWordSets.get().getUser().getUserId())){
+                    WordSets wordSets = existingWordSets.get();
+                    GptWord Word = new GptWord(word, noun, verb, adjective, adverb, existingUser);
+                    Optional<Word> existingWord = wordRepository.findByWordAndUser_UserId(word, userId); 
+                    if(existingWord.isPresent()){
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어가 이미 존재합니다."));
+                    }else{
+                        gptWordRepository.save(Word);
+                        GptWordSetMapping mapping = new GptWordSetMapping();
+                        mapping.setGptword(Word);
+                        mapping.setWordsets(wordSets);
+                        gptWordSetMappingRepository.save(mapping);
+                        AddWordToWordSetResponseDto response = AddWordToWordSetResponseDto.builder()
+                        .wordId(Word.getGptWordId())
                         .word(Word.getWord())
                         .noun(Word.getNoun())
                         .verb(Word.getVerb())

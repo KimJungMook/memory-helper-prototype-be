@@ -110,11 +110,15 @@ public class AuthService {
 
     public ResponseEntity<?> logout(HttpServletRequest request){
         final String token = request.getHeader("Authorization");
+        if(token == null || !token.startsWith("Bearer ")){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+        }
         String jwtToken = token.substring(7);
+
         if(!jwtProvider.validateToken(jwtToken)){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "이미 로그아웃"));
         }
-        redisUtil.setBlackList(token, "accessToken", 5);
+        redisUtil.setBlackList(jwtToken, "accessToken", 5);
         return ResponseEntity.status(HttpStatus.OK).body(ResponseMessageDto.set("logout", "로그아웃 완료"));
     }
 

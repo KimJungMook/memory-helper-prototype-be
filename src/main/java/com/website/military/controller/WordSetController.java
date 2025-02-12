@@ -116,7 +116,7 @@ public class WordSetController {
         return wordSetService.assignWordToSet(setId, wordId, request);
     }
 
-    @Operation(summary = "단어 단어세트에 넣기", description = "존재하지 않는 단어를 단어장에 넣는 api")
+    @Operation(summary = "유저가 만든 단어 단어세트에 넣기", description = "존재하지 않는 단어를 단어장에 넣는 api")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "OK",
             content = {@Content(schema = @Schema(implementation = AddWordToWordSetResponseDto.class))}),
@@ -132,6 +132,24 @@ public class WordSetController {
     @PathVariable("setId") Long setId, 
     @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
         return wordSetService.addWordToWordSet(setId, dto, request);
+    }
+
+    @Operation(summary = "GPT 단어 단어세트에 넣기", description = "존재하지 않는 단어를 단어장에 넣는 api")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "OK",
+            content = {@Content(schema = @Schema(implementation = AddWordToWordSetResponseDto.class))}),
+        @ApiResponse(responseCode = "400", description = "단어셋의 입력이 잘못되었습니다."),
+        @ApiResponse(responseCode = "400", description = "단어가 이미 존재합니다."),
+        @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
+        @ApiResponse(responseCode = "401", description = "단어셋을 만든 사람과 사용하는 사용자가 다릅니다."),
+        @ApiResponse(responseCode = "500", description = "서버 에러")
+    })
+    @PostMapping("/gpt/{setId}")
+    public ResponseEntity<?> addGptWordToWordSet(
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("setId") Long setId, 
+    @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
+        return wordSetService.addGptWordToWordSet(setId, dto, request);
     }
 
     // PUT(patch)
