@@ -182,11 +182,11 @@ public class WordSetService {
                 User existingUser = user.get();
                 if(userId.equals(existingWordSets.get().getUser().getUserId())){
                     WordSets wordSets = existingWordSets.get();
-                    Word Word = new Word(word, noun, verb, adjective, adverb, existingUser);
                     Optional<Word> existingWord = wordRepository.findByWordAndUser_UserId(word, userId); 
                     if(existingWord.isPresent()){
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어가 이미 존재합니다."));
                     }else{
+                        Word Word = new Word(word, noun, verb, adjective, adverb, existingUser);
                         wordRepository.save(Word);
                         WordSetMapping mapping = new WordSetMapping();
                         mapping.setWord(Word);
@@ -227,13 +227,13 @@ public class WordSetService {
 
             if(user.isPresent()){
                 User existingUser = user.get();
-                if(userId.equals(existingWordSets.get().getUser().getUserId())){
+                if(userId.equals(existingWordSets.get().getUser().getUserId())){ 
                     WordSets wordSets = existingWordSets.get();
-                    GptWord Word = new GptWord(word, noun, verb, adjective, adverb, existingUser);
-                    Optional<Word> existingWord = wordRepository.findByWordAndUser_UserId(word, userId); 
+                    Optional<GptWord> existingWord = gptWordRepository.findByWordAndUser_UserId(word, userId); 
                     if(existingWord.isPresent()){
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어가 이미 존재합니다."));
                     }else{
+                        GptWord Word = new GptWord(word, noun, verb, adjective, adverb, existingUser);
                         gptWordRepository.save(Word);
                         GptWordSetMapping mapping = new GptWordSetMapping();
                         mapping.setGptword(Word);
