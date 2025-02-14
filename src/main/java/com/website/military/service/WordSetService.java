@@ -71,11 +71,7 @@ public class WordSetService {
             List<WordSets> existingWordSets = wordSetsRepository.findByUser_UserId(userId);
             List<WordSetsResponseDto> responses = new ArrayList<>();
             for(WordSets sets : existingWordSets){
-                WordSetsResponseDto response = WordSetsResponseDto.builder()
-                .setId(sets.getSetId())
-                .setName(sets.getSetName())
-                .createdAt(sets.getCreatedAt())
-                .build();
+                WordSetsResponseDto response = new WordSetsResponseDto(sets.getSetId(), sets.getSetName(), sets.getCreatedAt());
                 responses.add(response);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
@@ -91,15 +87,8 @@ public class WordSetService {
             List<GetWordsBySetIdResponse> words = new ArrayList<>();
             for(WordSetMapping mapping : mappings){
                 Word response = mapping.getWord();
-                GetWordsBySetIdResponse responses = GetWordsBySetIdResponse.builder()
-                .id(response.getWordId())
-                .word(response.getWord())
-                .noun(response.getNoun())
-                .verb(response.getVerb())
-                .adjective(response.getAdjective())
-                .adverb(response.getAdverb())
-                .createdAt(response.getCreateAt())
-                .build();
+                GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getWordId(), response.getWord(), response.getNoun(), 
+                response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt());
                 words.add(responses);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", words));
@@ -122,10 +111,7 @@ public class WordSetService {
                 User user = existingUser.get();
                 wordSets.setUser(user);
                 wordSetsRepository.save(wordSets);
-                RegisterResponseDto response = RegisterResponseDto.builder()
-                .setId(wordSets.getSetId())
-                .setName(wordSets.getSetName())
-                .build();
+                RegisterResponseDto response = new RegisterResponseDto(wordSets.getSetId(), wordSets.getSetName());
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response)); // 여기서부터 다시.
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
@@ -136,6 +122,7 @@ public class WordSetService {
         }
     }
 
+    // 이미 존재한 단어를 단어장에 넣기
     public ResponseEntity<?> assignWordToSet(Long setId, Long wordId, HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<User> existingUser = userRepository.findById(userId);
@@ -150,13 +137,8 @@ public class WordSetService {
                     mapping.setWord(word);
                     mapping.setWordsets(sets);
                     wordSetsMappingRepository.save(mapping);
-                    ExistWordResponseDto response = ExistWordResponseDto.builder()
-                    .id(word.getWordId())
-                    .noun(word.getNoun())
-                    .verb(word.getVerb())
-                    .adjective(word.getAdjective())
-                    .adverb(word.getAdverb())
-                    .build();
+                    ExistWordResponseDto response = new ExistWordResponseDto(word.getWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
+                    word.getAdjective(), word.getAdverb());
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                 }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어가 없습니다."));
@@ -166,6 +148,33 @@ public class WordSetService {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
     }
 
+        // 이미 존재한 단어를 단어장에 넣기
+        public ResponseEntity<?> assignGptWordToSet(Long setId, Long wordId, HttpServletRequest request){
+            Long userId = authService.getUserId(request);
+            Optional<User> existingUser = userRepository.findById(userId);
+            if(existingUser.isPresent()){
+                Optional<WordSets> existingWordSets = wordSetsRepository.findBySetId(setId);
+                if(existingWordSets.isPresent()){
+                    Optional<GptWord> existingGptWord = gptWordRepository.findById(wordId);
+                    if(existingGptWord.isPresent()){
+                        GptWord word = existingGptWord.get();
+                        WordSets sets = existingWordSets.get();
+                        GptWordSetMapping mapping = new GptWordSetMapping();
+                        mapping.setGptword(word);
+                        mapping.setWordsets(sets);
+                        gptWordSetMappingRepository.save(mapping);
+                        ExistWordResponseDto response = new ExistWordResponseDto(word.getGptWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
+                        word.getAdjective(), word.getAdverb());
+                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+                    }
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어가 없습니다."));
+                }
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어셋이 없습니다."));
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
+        }
+
+    // 단어를 단어장에 넣기 (유저가 만든 단어)
     public ResponseEntity<?> addWordToWordSet(Long setId, AddWordToWordSetDto dto, HttpServletRequest request){
         String word = dto.getWord();
         List<String> noun = dto.getNoun();
@@ -192,15 +201,8 @@ public class WordSetService {
                         mapping.setWord(Word);
                         mapping.setWordsets(wordSets);
                         wordSetsMappingRepository.save(mapping);
-                        AddWordToWordSetResponseDto response = AddWordToWordSetResponseDto.builder()
-                        .wordId(Word.getWordId())
-                        .word(Word.getWord())
-                        .noun(Word.getNoun())
-                        .verb(Word.getVerb())
-                        .adjective(Word.getAdjective())
-                        .adverb(Word.getAdverb())
-                        .build();
-
+                        AddWordToWordSetResponseDto response = new AddWordToWordSetResponseDto(Word.getWordId(), Word.getWord(), Word.getNoun(), 
+                        Word.getVerb(), Word.getAdjective(), Word.getAdverb());
                         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                     }
                 }else{
@@ -212,7 +214,8 @@ public class WordSetService {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어셋의 입력이 잘못되었습니다."));
     }
-
+ // 2.12 로직 체크 아직 못함 -> 로직 체크 필요
+     // GPT 단어를 단어장에 넣기 (GPT가 만든 단어)
     public ResponseEntity<?> addGptWordToWordSet(Long setId, AddWordToWordSetDto dto, HttpServletRequest request){
         String word = dto.getWord();
         List<String> noun = dto.getNoun();
@@ -239,15 +242,8 @@ public class WordSetService {
                         mapping.setGptword(Word);
                         mapping.setWordsets(wordSets);
                         gptWordSetMappingRepository.save(mapping);
-                        AddWordToWordSetResponseDto response = AddWordToWordSetResponseDto.builder()
-                        .wordId(Word.getGptWordId())
-                        .word(Word.getWord())
-                        .noun(Word.getNoun())
-                        .verb(Word.getVerb())
-                        .adjective(Word.getAdjective())
-                        .adverb(Word.getAdverb())
-                        .build();
-
+                        AddWordToWordSetResponseDto response = new AddWordToWordSetResponseDto(Word.getGptWordId(), Word.getWord(), Word.getNoun(), 
+                        Word.getVerb(), Word.getAdjective(), Word.getAdverb());
                         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                     }
                 }else{
@@ -270,10 +266,7 @@ public class WordSetService {
                     WordSets sets = existingWordSets.get();
                     sets.setSetName(setName);
                     wordSetsRepository.save(sets);
-                    RegisterResponseDto response = RegisterResponseDto.builder()
-                    .setId(id)
-                    .setName(setName)
-                    .build();
+                    RegisterResponseDto response = new RegisterResponseDto(id, setName);
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
                 }
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
@@ -293,10 +286,7 @@ public class WordSetService {
                 User user = existingUser.get();
                 if(sets.getUser().equals(user)){
                     wordSetsRepository.deleteById(id);
-                    DeleteResponseDto response = DeleteResponseDto.builder()
-                    .id(id)
-                    .setName(sets.getSetName())
-                    .build();
+                    DeleteResponseDto response = new DeleteResponseDto(id, sets.getSetName());
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
                 }
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
@@ -318,13 +308,8 @@ public class WordSetService {
                     if(mappings.isPresent()){
                         Long deleteId = mappings.get().getId();
                         Word Word = mappings.get().getWord();
-                        DetachResponse response = DetachResponse.builder()
-                        .id(Word.getWordId())
-                        .noun(Word.getNoun())
-                        .verb(Word.getVerb())
-                        .adjective(Word.getAdjective())
-                        .adverb(Word.getAdverb())
-                        .build();
+                        DetachResponse response = new DetachResponse(Word.getWordId(), Word.getWord(), Word.getNoun(), Word.getVerb(),
+                        Word.getAdjective(), Word.getAdjective());
                         wordSetsMappingRepository.deleteById(deleteId);
                         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("DELETE", response));
                     }

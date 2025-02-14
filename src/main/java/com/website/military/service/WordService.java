@@ -139,7 +139,7 @@ public class WordService {
         String word = dto.getWord();
         Long userId = authService.getUserId(request);
         Optional<Word> existingWord = wordRepository.findByWordAndUser_UserId(word, userId);
-        if(existingWord.isPresent()){ // gpt 존재하는 지 체크
+        if(existingWord.isPresent()){ // 기존 단어 존재하는 지 체크
             Word words = existingWord.get();
             ExistWordResponseDto response = ExistWordResponseDto.builder()
             .id(words.getWordId())
@@ -150,9 +150,9 @@ public class WordService {
             .adverb(words.getAdverb())
             .build();
              return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("EXIST", response));      
-        }else{ 
-            Optional<GptWord> existingGptWord = gptWordRepository.findByWordAndUser_UserId(word, userId);
-            if(existingWord.isPresent()){
+        }else{
+            Optional<GptWord> existingGptWord = gptWordRepository.findByWordAndUser_UserId(word, userId); 
+            if(existingWord.isPresent()){ // Gpt 단어 존재하는 지 체크
                     GptWord words = existingGptWord.get();
                     ExistWordResponseDto response = ExistWordResponseDto.builder()
                     .id(words.getGptWordId())
@@ -163,7 +163,7 @@ public class WordService {
                     .adverb(words.getAdverb())
                     .build();
                      return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("EXIST", response));                
-            }else{
+            }else{ // 없으니까, gpt 돌려서 단어 만들어서 주기.
                 try {
                     String s = getAIDescription(word);
                     String cleanJson = s.replaceAll("^```json\\s*", "").replaceAll("\\s*```$", ""); // 불필요한 json이런게 들어감.
