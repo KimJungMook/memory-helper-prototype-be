@@ -13,14 +13,15 @@ public class ExistWordResponseDto {
     private List<String> verb;
     private List<String> adjective;
     private List<String> adverb;
-
+    private boolean isGpt;
     public ExistWordResponseDto(Long id, String word, List<String> noun, List<String> verb, 
-    List<String> adjective, List<String> adverb){
+    List<String> adjective, List<String> adverb, boolean isGpt){
         this.id = id;
         this.word = word;
         this.noun = noun;
         this.verb = verb;
         this.adjective = adjective;
         this.adverb = adverb;
+        this.isGpt = isGpt;
     }
 }

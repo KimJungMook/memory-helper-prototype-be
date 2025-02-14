@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.website.military.domain.Entity.GptWord;
 
 public interface GptWordRepository extends JpaRepository<GptWord, Long>{
-    Optional<GptWord> findByWordAndUser_UserId(String word, Long userId);
+    Optional<GptWord> findByWord(String word);
 }

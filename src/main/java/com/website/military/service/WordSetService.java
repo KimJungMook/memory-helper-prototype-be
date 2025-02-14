@@ -145,7 +145,7 @@ public class WordSetService {
                     mapping.setWordsets(sets);
                     wordSetsMappingRepository.save(mapping);
                     ExistWordResponseDto response = new ExistWordResponseDto(word.getWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
-                    word.getAdjective(), word.getAdverb());
+                    word.getAdjective(), word.getAdverb(), false);
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                 }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어가 없습니다."));
@@ -171,7 +171,7 @@ public class WordSetService {
                         mapping.setWordsets(sets);
                         gptWordSetMappingRepository.save(mapping);
                         ExistWordResponseDto response = new ExistWordResponseDto(word.getGptWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
-                        word.getAdjective(), word.getAdverb());
+                        word.getAdjective(), word.getAdverb(), true);
                         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                     }
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어가 없습니다."));
@@ -239,7 +239,7 @@ public class WordSetService {
                 User existingUser = user.get();
                 if(userId.equals(existingWordSets.get().getUser().getUserId())){ 
                     WordSets wordSets = existingWordSets.get();
-                    Optional<GptWord> existingWord = gptWordRepository.findByWordAndUser_UserId(word, userId); 
+                    Optional<GptWord> existingWord = gptWordRepository.findByWord(word); 
                     if(existingWord.isPresent()){
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어가 이미 존재합니다."));
                     }else{

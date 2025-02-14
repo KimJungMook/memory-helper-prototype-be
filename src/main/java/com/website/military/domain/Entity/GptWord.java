@@ -52,7 +52,6 @@ public class GptWord {
 
     private Instant createAt;
     private Instant updatedAt;
-    private boolean isPublic; 
     
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
@@ -77,6 +76,5 @@ public class GptWord {
         this.adverb = adverb;
         this.user = user;
         this.createAt = Instant.now();
-        this.isPublic = false;
     }
 }
