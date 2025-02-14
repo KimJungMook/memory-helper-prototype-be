@@ -3,7 +3,6 @@ package com.website.military.domain.dto.wordsets.response;
 import lombok.Data;
 
 @Data
-
 public class DeleteResponseDto {
     private Long id;
     private String setName;

@@ -6,7 +6,6 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-
 public class DetachResponse {
     private Long id;
     private String word;

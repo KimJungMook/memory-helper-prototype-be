@@ -7,7 +7,6 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-
 public class GetWordsBySetIdResponse {
     private Long id;
     private String word;
@@ -16,9 +15,10 @@ public class GetWordsBySetIdResponse {
     private List<String> adjective;
     private List<String> adverb;
     private Instant createdAt;
+    private boolean isGpt;
 
     public GetWordsBySetIdResponse(Long id, String word, List<String> noun, List<String> verb,
-    List<String> adjective, List<String> adverb, Instant createdAt){
+    List<String> adjective, List<String> adverb, Instant createdAt, boolean isGpt){
         this.id = id;
         this.word = word;
         this.noun = noun;
@@ -26,5 +26,6 @@ public class GetWordsBySetIdResponse {
         this.adjective = adjective;
         this.adverb = adverb;
         this.createdAt = createdAt;
+        this.isGpt = isGpt;
     }
 }

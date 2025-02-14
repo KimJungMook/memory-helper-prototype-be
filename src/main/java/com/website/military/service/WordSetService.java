@@ -83,12 +83,19 @@ public class WordSetService {
         Long userId = authService.getUserId(request);
         Optional<User> existingUser = userRepository.findById(userId);
         if (existingUser.isPresent()) {
-            List<WordSetMapping> mappings = wordSetsMappingRepository.findAllByWordsets_SetId(id);
+            List<WordSetMapping> wordSetsMappings = wordSetsMappingRepository.findAllByWordsets_SetId(id);
+            List<GptWordSetMapping> gptWordSetMappings = gptWordSetMappingRepository.findAllByWordsets_SetId(id);
             List<GetWordsBySetIdResponse> words = new ArrayList<>();
-            for(WordSetMapping mapping : mappings){
+            for(WordSetMapping mapping : wordSetsMappings){
                 Word response = mapping.getWord();
                 GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getWordId(), response.getWord(), response.getNoun(), 
-                response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt());
+                response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt(), false);
+                words.add(responses);
+            }
+            for(GptWordSetMapping mapping : gptWordSetMappings){
+                GptWord response = mapping.getGptword();
+                GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getGptWordId(), response.getWord(), response.getNoun(), 
+                response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt(), true);
                 words.add(responses);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", words));

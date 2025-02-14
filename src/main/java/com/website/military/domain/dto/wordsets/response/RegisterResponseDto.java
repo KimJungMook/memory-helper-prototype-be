@@ -4,7 +4,6 @@ package com.website.military.domain.dto.wordsets.response;
 import lombok.Data;
 
 @Data
-
 public class RegisterResponseDto {
     private Long setId;
     private String setName;
