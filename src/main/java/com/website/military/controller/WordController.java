@@ -90,7 +90,7 @@ public class WordController {
         @ApiResponse(responseCode = "401", description = "단어를 만든 사람과 사용하는 사용자가 다릅니다."),
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
-    @PatchMapping("/{id}")
+    @PatchMapping("/gpt/{id}")
     public ResponseEntity<?> updateGptMeaning(
     @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("id") Long id,
@@ -108,7 +108,7 @@ public class WordController {
         @ApiResponse(responseCode = "401", description = "단어를 만든 사람과 삭제하는 사용자가 다릅니다."),
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteWord(
     @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("id") Long id, HttpServletRequest request){
@@ -125,7 +125,7 @@ public class WordController {
         @ApiResponse(responseCode = "401", description = "단어를 만든 사람과 삭제하는 사용자가 다릅니다."),
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
-    @DeleteMapping("{id}")
+    @DeleteMapping("/gpt/{id}")
     public ResponseEntity<?> deleteGptWord(
     @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("id") Long id, HttpServletRequest request){
