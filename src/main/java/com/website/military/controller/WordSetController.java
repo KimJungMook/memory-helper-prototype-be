@@ -113,7 +113,7 @@ public class WordSetController {
     @PathVariable("setId") Long setId, 
     @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("wordId") Long wordId, HttpServletRequest request ){
-        return wordSetService.assignWordToSet(setId, wordId, request);
+        return wordSetService.assignWordToSet(setId, wordId, request, false);
     }
 
     @Operation(summary = "이미 존재한 Gpt단어 단어세트에 넣기", description = "이미 존재한 Gpt단어 단어장에 넣어주는 api")
@@ -131,7 +131,7 @@ public class WordSetController {
     @PathVariable("setId") Long setId, 
     @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("wordId") Long wordId, HttpServletRequest request ){
-        return wordSetService.assignGptWordToSet(setId, wordId, request);
+        return wordSetService.assignWordToSet(setId, wordId, request, true);
     }
 
     @Operation(summary = "유저가 만든 단어 단어세트에 넣기", description = "존재하지 않는 단어를 단어장에 넣는 api")
@@ -149,7 +149,7 @@ public class WordSetController {
     @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("setId") Long setId, 
     @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
-        return wordSetService.addWordToWordSet(setId, dto, request);
+        return wordSetService.addWordToWordSet(setId, dto, request, false);
     }
 
 
@@ -168,7 +168,7 @@ public class WordSetController {
     @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("setId") Long setId, 
     @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
-        return wordSetService.addGptWordToWordSet(setId, dto, request);
+        return wordSetService.addWordToWordSet(setId, dto, request, true);
     }
 
 
@@ -223,9 +223,26 @@ public class WordSetController {
     @PathVariable("setId") Long setId, 
     @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("wordId")Long wordId, HttpServletRequest request){
-        return wordSetService.detachWordFromSet(setId, wordId, request);
+        return wordSetService.detachWordFromSet(setId, wordId, request, false);
     }
 
+    @Operation(summary = "Gpt단어 단어장에서 삭제", description = "Gpt단어를 단어장에서 없애주는 api")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "DELETE",
+            content = {@Content(schema = @Schema(implementation = DetachResponse.class))}),
+        @ApiResponse(responseCode = "400", description = "잘못된 접근입니다."),
+        @ApiResponse(responseCode = "400", description = "존재하지 않는 세트입니다."),
+        @ApiResponse(responseCode = "401", description = "존재하지 않는 유저입니다."),
+        @ApiResponse(responseCode = "500", description = "서버 에러")
+    })
+    @DeleteMapping("/{setId}/gpt/word/{wordId}")
+    public ResponseEntity<?> detachGptWordFromSet(
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64"))     
+    @PathVariable("setId") Long setId, 
+    @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("wordId")Long wordId, HttpServletRequest request){
+        return wordSetService.detachWordFromSet(setId, wordId, request, true);
+    }
     
 
 }
