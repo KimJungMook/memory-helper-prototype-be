@@ -69,10 +69,7 @@ public class AuthService {
             User user = new User(dto.getUsername(), dto.getEmail(), password);
             user.setCreatedAt(Instant.now());
             userRepository.save(user);
-            SignUpResponseDto response = SignUpResponseDto.builder()
-            .email(user.getEmail())
-            .username(user.getUsername())
-            .build();
+            SignUpResponseDto response = new SignUpResponseDto(user.getEmail(), user.getUsername());
         return ResponseEntity.ok(ResponseDataDto.set("OK", response));
         }catch(Exception e){
             e.printStackTrace();
@@ -92,11 +89,7 @@ public class AuthService {
                 RefreshToken.removeUserRefreshToken(userId);
                 String refreshToken = jwtProvider.generateRefreshToken(userId);
                 RefreshToken.putRefreshToken(refreshToken, userId);
-                LoginResponseDto response = LoginResponseDto.builder()
-                .username(username)
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+                LoginResponseDto response = new LoginResponseDto(username, accessToken, refreshToken);
                 return ResponseEntity.status(HttpStatus.OK)
                 .body(ResponseDataDto.set("OK", response));
             }
@@ -110,11 +103,15 @@ public class AuthService {
 
     public ResponseEntity<?> logout(HttpServletRequest request){
         final String token = request.getHeader("Authorization");
+        if(token == null || !token.startsWith("Bearer ")){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+        }
         String jwtToken = token.substring(7);
+
         if(!jwtProvider.validateToken(jwtToken)){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "이미 로그아웃"));
         }
-        redisUtil.setBlackList(token, "accessToken", 5);
+        redisUtil.setBlackList(jwtToken, "accessToken", 5);
         return ResponseEntity.status(HttpStatus.OK).body(ResponseMessageDto.set("logout", "로그아웃 완료"));
     }
 
@@ -123,10 +120,7 @@ public class AuthService {
         Optional<User> existingUser = userRepository.findById(loginUserId);
         if(existingUser.isPresent()){
                 User user = existingUser.get();
-                DeleteUserResponse response = DeleteUserResponse.builder()
-                .email(user.getEmail())
-                .username(user.getUsername())
-                .build();
+                DeleteUserResponse response = new DeleteUserResponse(user.getEmail(), user.getUsername());
                 userRepository.deleteById(loginUserId);
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
             }
@@ -144,10 +138,8 @@ public class AuthService {
         }
         Optional<User> existingUser = userRepository.findById(Long.parseLong(id));
         if (existingUser.isPresent()) {
-            GetUserInfoFromUsernameResponseDto response = GetUserInfoFromUsernameResponseDto.builder()
-            .email(existingUser.get().getEmail())
-            .username(existingUser.get().getUsername())
-            .build();
+            User user = existingUser.get();
+            GetUserInfoFromUsernameResponseDto response = new GetUserInfoFromUsernameResponseDto(user.getEmail(), user.getUsername());
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

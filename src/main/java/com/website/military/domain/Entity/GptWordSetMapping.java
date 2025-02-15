@@ -16,21 +16,21 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "wordsetmapping")
+@Table(name = "gptwordsetmapping")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class WordSetMapping {
+public class GptWordSetMapping {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable=false)
     private Long id;
-
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference // 중복 순환 해결.
-    @JoinColumn(name = "word_id", nullable = false)
-    private Word word;
+    @JoinColumn(name = "gpt_word_id", nullable = false)
+    private GptWord gptword;  
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference // 중복 순환 해결.

@@ -2,13 +2,17 @@ package com.website.military.domain.dto.wordsets.response;
 
 
 import java.time.Instant;
-import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder
 public class WordSetsResponseDto {
     private Long setId;
     private String setName;
     private Instant createdAt;
+
+    public WordSetsResponseDto(Long setId, String setName, Instant createdAt){
+        this.setId = setId;
+        this.setName = setName;
+        this.createdAt = createdAt;
+    }
 }

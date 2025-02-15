@@ -52,7 +52,6 @@ public class GptWord {
 
     private Instant createAt;
     private Instant updatedAt;
-    private boolean isPublic; 
     
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
@@ -61,7 +60,7 @@ public class GptWord {
 
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "gptword")
-    private List<WordSetMapping> wordsetmapping;
+    private List<GptWordSetMapping> gptWordSetMappings;
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")
     private List<TestProblems> testproblems;
@@ -77,6 +76,5 @@ public class GptWord {
         this.adverb = adverb;
         this.user = user;
         this.createAt = Instant.now();
-        this.isPublic = false;
     }
 }

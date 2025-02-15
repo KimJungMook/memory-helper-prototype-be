@@ -36,11 +36,11 @@ public class WordSets {
     private String setName;
     private Instant createdAt;
     @JsonBackReference // 중복 순환 해결.
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user; // 외래키
     @JsonManagedReference // 중복 순환 해결.
-    @OneToMany(mappedBy="wordsets", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy="wordsets", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WordSetMapping> wordsetmapping;
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "wordsets")
