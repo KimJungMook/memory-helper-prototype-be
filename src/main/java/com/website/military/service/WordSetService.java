@@ -83,23 +83,26 @@ public class WordSetService {
         Long userId = authService.getUserId(request);
         Optional<User> existingUser = userRepository.findById(userId);
         if (existingUser.isPresent()) {
-            List<WordSetMapping> wordSetsMappings = wordSetsMappingRepository.findAllByWordsets_SetId(id);
-            List<GptWordSetMapping> gptWordSetMappings = gptWordSetMappingRepository.findAllByWordsets_SetId(id);
-            List<GetWordsBySetIdResponse> words = new ArrayList<>();
-            for(WordSetMapping mapping : wordSetsMappings){
-                Word response = mapping.getWord();
-                GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getWordId(), response.getWord(), response.getNoun(), 
-                response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt(), false);
-                words.add(responses);
+            Optional<WordSets> wordsets = wordSetsRepository.findById(id);
+            if(wordsets.isPresent()){
+                List<WordSetMapping> wordSetsMappings = wordSetsMappingRepository.findAllByWordsets_SetId(id);
+                List<GptWordSetMapping> gptWordSetMappings = gptWordSetMappingRepository.findAllByWordsets_SetId(id);
+                List<GetWordsBySetIdResponse> words = new ArrayList<>();
+                for(WordSetMapping mapping : wordSetsMappings){
+                    Word response = mapping.getWord();
+                    GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getWordId(), response.getWord(), response.getNoun(), 
+                    response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt(), false);
+                    words.add(responses);
+                }
+                for(GptWordSetMapping mapping : gptWordSetMappings){
+                    GptWord response = mapping.getGptword();
+                    GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getGptWordId(), response.getWord(), response.getNoun(), 
+                    response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt(), true);
+                    words.add(responses);
+                }
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", words));
             }
-            for(GptWordSetMapping mapping : gptWordSetMappings){
-                GptWord response = mapping.getGptword();
-                GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getGptWordId(), response.getWord(), response.getNoun(), 
-                response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt(), true);
-                words.add(responses);
-            }
-            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", words));
-
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
     }
@@ -134,7 +137,7 @@ public class WordSetService {
         Long userId = authService.getUserId(request);
         Optional<User> existingUser = userRepository.findById(userId);
         if(existingUser.isPresent()){
-            Optional<WordSets> existingWordSets = wordSetsRepository.findBySetId(setId);
+            Optional<WordSets> existingWordSets = wordSetsRepository.findById(setId);
             if(existingWordSets.isPresent()){
                 if(isGpt){
                     Optional<Word> existingWord = wordRepository.findById(wordId);
@@ -178,7 +181,7 @@ public class WordSetService {
         List<String> verb = dto.getVerb();
         List<String> adjective = dto.getAdjective();
         List<String> adverb = dto.getAdverb();
-        Optional<WordSets> existingWordSets = wordSetsRepository.findBySetId(setId);
+        Optional<WordSets> existingWordSets = wordSetsRepository.findById(setId);
 
         if(existingWordSets.isPresent()){
             Long userId = authService.getUserId(request);
