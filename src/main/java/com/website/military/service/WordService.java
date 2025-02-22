@@ -142,22 +142,19 @@ public class WordService {
                 Optional<GptWord> existingWord = gptWordRepository.findById(id);
                 if(existingWord.isPresent()){
                     GptWord words = existingWord.get();
-                    if(userId.equals(words.getUser().getUserId())){
-                        Optional.ofNullable(dto.getNoun())
-                        .ifPresent(words::setNoun);
-                        Optional.ofNullable(dto.getVerb())
-                        .ifPresent(words::setVerb);
-                        Optional.ofNullable(dto.getAdjective())
-                        .ifPresent(words::setAdjective);
-                        Optional.ofNullable(dto.getAdverb())
-                        .ifPresent(words::setAdverb);
-                        words.setUpdatedAt(Instant.now());
-                        gptWordRepository.save(words);
-                        UpdateMeaningResponseDto response = new UpdateMeaningResponseDto(words.getGptWordId(), words.getNoun(), words.getVerb(),
-                        words.getAdjective(), words.getAdverb());           
-                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
-                    }
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어를 만든 사람과 사용하는 사용자가 다릅니다."));
+                    Optional.ofNullable(dto.getNoun())
+                    .ifPresent(words::setNoun);
+                    Optional.ofNullable(dto.getVerb())
+                    .ifPresent(words::setVerb);
+                    Optional.ofNullable(dto.getAdjective())
+                    .ifPresent(words::setAdjective);
+                    Optional.ofNullable(dto.getAdverb())
+                    .ifPresent(words::setAdverb);
+                    words.setUpdatedAt(Instant.now());
+                    gptWordRepository.save(words);
+                    UpdateMeaningResponseDto response = new UpdateMeaningResponseDto(words.getGptWordId(), words.getNoun(), words.getVerb(),
+                    words.getAdjective(), words.getAdverb());           
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                 }
             }else{
                 Optional<Word> existingWord = wordRepository.findById(id);
@@ -207,15 +204,11 @@ public class WordService {
             }else{
                 Optional<GptWord> existingWord = gptWordRepository.findById(id);
                 if(existingWord.isPresent()){
-                    User user = existingUser.get();
                     GptWord words = existingWord.get();
-                    if(user.equals(words.getUser())){
-                        gptWordRepository.deleteById(id);
-                        DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
-                        words.getAdjective(), words.getAdverb());
-                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
-                    }
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어를 만든 사람과 삭제하는 사용자가 다릅니다."));
+                    gptWordRepository.deleteById(id);
+                    DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
+                    words.getAdjective(), words.getAdverb());
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
                 } 
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "해당하는 단어가 없습니다."));

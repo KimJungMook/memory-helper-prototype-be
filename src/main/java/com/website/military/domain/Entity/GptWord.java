@@ -2,7 +2,6 @@ package com.website.military.domain.Entity;
 import java.time.Instant;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.website.military.config.converter.StringListConverter;
 
@@ -14,8 +13,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -53,11 +50,6 @@ public class GptWord {
     private Instant createAt;
     private Instant updatedAt;
     
-    @JsonBackReference // 중복 순환 해결.
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user; // 외래키
-
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "gptword")
     private List<GptWordSetMapping> gptWordSetMappings;
@@ -68,13 +60,12 @@ public class GptWord {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")
     private List<Mistakes> mistakes;
 
-    public GptWord(String word, List<String> noun, List<String> verb, List<String> adjective, List<String> adverb, User user){
+    public GptWord(String word, List<String> noun, List<String> verb, List<String> adjective, List<String> adverb){
         this.word = word;
         this.noun = noun;
         this.verb = verb;
         this.adjective = adjective;
         this.adverb = adverb;
-        this.user = user;
         this.createAt = Instant.now();
     }
 }
