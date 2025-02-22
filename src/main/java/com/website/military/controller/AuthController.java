@@ -63,7 +63,7 @@ public class AuthController {
     @Operation(summary = "아이디 체크 ", description = "아이디 중복확인 하는데에 사용하는 api")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "성공",
-            content = {@Content(schema = @Schema(implementation = GetUserInfoFromUsernameResponseDto.class))}),
+            content = {@Content(schema = @Schema(implementation = String.class))}),
         @ApiResponse(responseCode = "400", description = "존재하는 아이디가 있습니다."),
         @ApiResponse(responseCode = "500", description = "서버 에러")
     })
