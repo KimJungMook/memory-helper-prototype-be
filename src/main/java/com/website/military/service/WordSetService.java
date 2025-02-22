@@ -194,7 +194,7 @@ public class WordSetService {
                     if(isGpt){
                         Optional<GptWord> existingWord = gptWordRepository.findByWord(word);
                         if(!existingWord.isPresent()){
-                            GptWord Word = new GptWord(word, noun, verb, adjective, adverb, existingUser);
+                            GptWord Word = new GptWord(word, noun, verb, adjective, adverb);
                             gptWordRepository.save(Word);
                             GptWordSetMapping mapping = new GptWordSetMapping();
                             mapping.setGptword(Word);

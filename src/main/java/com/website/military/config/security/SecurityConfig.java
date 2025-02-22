@@ -49,7 +49,8 @@ public class SecurityConfig {
             mvc.pattern("/v3/api-docs/**"),  // Swagger API 문서
             mvc.pattern("/swagger-resources/**"),  // Swagger 자원들
             mvc.pattern("/api-docs/**"),  // Swagger API 문서들
-            mvc.pattern("/api-docs")  // Swagger API 문서 경로
+            mvc.pattern("/api-docs"),  // Swagger API 문서 경로
+            mvc.pattern("/"),  // Swagger UI 메인 페이지
         };
 
         http.authorizeHttpRequests(authorize -> authorize
