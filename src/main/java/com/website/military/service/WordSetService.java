@@ -85,6 +85,9 @@ public class WordSetService {
         if (existingUser.isPresent()) {
             Optional<WordSets> wordsets = wordSetsRepository.findById(id);
             if(wordsets.isPresent()){
+                if(!wordsets.get().getUser().equals(existingUser.get())){
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "해당하는 세트가 없습니다."));
+                }
                 List<WordSetMapping> wordSetsMappings = wordSetsMappingRepository.findAllByWordsets_SetId(id);
                 List<GptWordSetMapping> gptWordSetMappings = gptWordSetMappingRepository.findAllByWordsets_SetId(id);
                 List<GetWordsBySetIdResponse> words = new ArrayList<>();
