@@ -57,8 +57,8 @@ public class WordService {
 
     @Value("${gemini.api_key}")
     private String apiKey;
-    @
-    Value("${error.INTERNAL_SERVER_ERROR}")
+    
+    @Value("${error.INTERNAL_SERVER_ERROR}")
     private String internalError;
 
     @Value("${error.BAD_REQUEST_ERROR}")

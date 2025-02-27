@@ -141,35 +141,40 @@ public class WordSetService {
         Optional<User> existingUser = userRepository.findById(userId);
         if(existingUser.isPresent()){
             Optional<WordSets> existingWordSets = wordSetsRepository.findById(setId);
+            Optional<WordSetMapping> existingWordSetMaapings = wordSetsMappingRepository.findByWord_WordIdAndWordsets_SetId(wordId, setId);
             if(existingWordSets.isPresent()){
-                if(isGpt){
-                    Optional<Word> existingWord = wordRepository.findById(wordId);
-                    if(existingWord.isPresent()){
-                        Word word = existingWord.get();
-                        WordSets sets = existingWordSets.get();
-                        WordSetMapping mapping = new WordSetMapping();
-                        mapping.setWord(word);
-                        mapping.setWordsets(sets);
-                        wordSetsMappingRepository.save(mapping);
-                        ExistWordResponseDto response = new ExistWordResponseDto(word.getWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
-                        word.getAdjective(), word.getAdverb(), false);
-                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
-                    }
+                if(existingWordSetMaapings.isPresent()){
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어가 단어셋에 존재합니다."));
                 }else{
-                    Optional<GptWord> existingGptWord = gptWordRepository.findById(wordId);
-                    if(existingGptWord.isPresent()){
-                        GptWord word = existingGptWord.get();
-                        WordSets sets = existingWordSets.get();
-                        GptWordSetMapping mapping = new GptWordSetMapping();
-                        mapping.setGptword(word);
-                        mapping.setWordsets(sets);
-                        gptWordSetMappingRepository.save(mapping);
-                        ExistWordResponseDto response = new ExistWordResponseDto(word.getGptWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
-                        word.getAdjective(), word.getAdverb(), true);
-                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+                    if(isGpt){
+                        Optional<GptWord> existingGptWord = gptWordRepository.findById(wordId);
+                        if(existingGptWord.isPresent()){
+                            GptWord word = existingGptWord.get();
+                            WordSets sets = existingWordSets.get();
+                            GptWordSetMapping mapping = new GptWordSetMapping();
+                            mapping.setGptword(word);
+                            mapping.setWordsets(sets);
+                            gptWordSetMappingRepository.save(mapping);
+                            ExistWordResponseDto response = new ExistWordResponseDto(word.getGptWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
+                            word.getAdjective(), word.getAdverb(), true);
+                            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+                        }
+                    }
+                    else{
+                        Optional<Word> existingWord = wordRepository.findById(wordId);
+                        if(existingWord.isPresent()){
+                            Word word = existingWord.get();
+                            WordSets sets = existingWordSets.get();
+                            WordSetMapping mapping = new WordSetMapping();
+                            mapping.setWord(word);
+                            mapping.setWordsets(sets);
+                            wordSetsMappingRepository.save(mapping);
+                            ExistWordResponseDto response = new ExistWordResponseDto(word.getWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
+                            word.getAdjective(), word.getAdverb(), false);
+                            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+                        }
                     }
                 }
-
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어가 없습니다."));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어셋이 없습니다."));
