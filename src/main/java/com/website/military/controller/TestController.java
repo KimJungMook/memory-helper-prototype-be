@@ -20,9 +20,9 @@ public class TestController {
 
 
 
-    // POST 
+    // POST
     @PostMapping("/{setId}")
-    public ResponseEntity<?> generateExamList(HttpServletRequest request, @PathVariable("setId") Long setId) {
+    public ResponseEntity<?> generateExamList(HttpServletRequest request,@PathVariable("setId") Long setId) {
         return testService.generateExamList(request, setId);
     }
 }

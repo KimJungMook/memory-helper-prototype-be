@@ -53,9 +53,9 @@ public class GptWord {
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "gptword")
     private List<GptWordSetMapping> gptWordSetMappings;
-    @JsonManagedReference // 중복 순환 해결.
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")
-    private List<TestProblems> testproblems;
+//    @JsonManagedReference // 중복 순환 해결.
+//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")
+//    private List<TestProblems> testproblems;
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")
     private List<Mistakes> mistakes;

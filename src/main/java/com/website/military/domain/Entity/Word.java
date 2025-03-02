@@ -36,16 +36,16 @@
         
         @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
         @Column(columnDefinition = "JSON")
-
         private List<String> noun;
+
         @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
         @Column(columnDefinition = "JSON")
-
         private List<String> verb;
+
         @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
         @Column(columnDefinition = "JSON")
-
         private List<String> adjective;
+
         @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
         @Column(columnDefinition = "JSON")
         private List<String> adverb;
@@ -61,9 +61,9 @@
         @JsonManagedReference // 중복 순환 해결.
         @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "word")
         private List<WordSetMapping> wordsetmapping;
-        @JsonManagedReference // 중복 순환 해결.
-        @OneToMany(fetch = FetchType.LAZY, mappedBy = "word")
-        private List<TestProblems> testproblems;
+     //   @JsonManagedReference // 중복 순환 해결.
+     //   @OneToMany(fetch = FetchType.LAZY, mappedBy = "word")
+     //   private List<TestProblems> testproblems;
         @JsonManagedReference // 중복 순환 해결.
         @OneToMany(fetch = FetchType.LAZY, mappedBy = "word")
         private List<Mistakes> mistakes;
