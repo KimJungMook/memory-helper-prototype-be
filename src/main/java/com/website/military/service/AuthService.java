@@ -39,6 +39,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
 
     private final RedisUtil redisUtil;
+    
     @Value("${error.INTERNAL_SERVER_ERROR}")
     private String internalError;
 
@@ -78,13 +79,14 @@ public class AuthService {
         }
     }
 
-    // 로그인하는데 사용하는 메서드
+    // 로그인하는데 사용하는 메서드 -> 아직 로그아웃을 하고 재 로그인을 했을 때, 이 전 껄로 했을 때, 인증이 되고 있음. 
     public ResponseEntity<?> logIn(LogInDto dto){
         Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
         if(existingUser.isPresent()){
-            if(passwordEncoder.matches(dto.getPassword(), existingUser.get().getPassword())){
-                Long userId = existingUser.get().getUserId();
-                String username = existingUser.get().getUsername();
+            User user = existingUser.get();
+            if(passwordEncoder.matches(dto.getPassword(), user.getPassword())){
+                Long userId = user.getUserId();
+                String username = user.getUsername();
                 String accessToken = jwtProvider.generateAccessToken(userId);
                 RefreshToken.removeUserRefreshToken(userId);
                 String refreshToken = jwtProvider.generateRefreshToken(userId);
@@ -128,15 +130,10 @@ public class AuthService {
     }
 
 
-    // 이름을 통해서 사용자의 정보를 알아내는 메서드
+    // 이름을 통해서 사용자의 정보를 알아내는 메서드 
     public ResponseEntity<?> getUserInfoFromToken(HttpServletRequest request){
-        final String token = request.getHeader("Authorization");
-        String id = null;
-        if(token != null && !token.isEmpty()){
-            String jwtToken = token.substring(7);
-            id = jwtProvider.getUserIdFromToken(jwtToken);
-        }
-        Optional<User> existingUser = userRepository.findById(Long.parseLong(id));
+        Long userId = getUserId(request);
+        Optional<User> existingUser = userRepository.findById(userId);
         if (existingUser.isPresent()) {
             User user = existingUser.get();
             GetUserInfoFromUsernameResponseDto response = new GetUserInfoFromUsernameResponseDto(user.getEmail(), user.getUsername());
@@ -158,3 +155,5 @@ public class AuthService {
     }
 
 }
+
+// refreshToken으로 해도 로그인을 한 것과 같은 효과가 나고 있음.

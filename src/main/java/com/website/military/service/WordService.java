@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.website.military.domain.Entity.GptWord;
-import com.website.military.domain.Entity.User;
 import com.website.military.domain.Entity.Word;
 import com.website.military.domain.dto.gemini.request.GeminiRequestDto;
 import com.website.military.domain.dto.gemini.response.GeminiResponseDto;
@@ -29,7 +28,6 @@ import com.website.military.domain.dto.word.response.ExistWordResponseDto;
 import com.website.military.domain.dto.word.response.GptWordResponseDto;
 import com.website.military.domain.dto.word.response.UpdateMeaningResponseDto;
 import com.website.military.repository.GptWordRepository;
-import com.website.military.repository.UserRepository;
 import com.website.military.repository.WordRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,9 +36,6 @@ import jakarta.servlet.http.HttpServletRequest;
 public class WordService {
     @Autowired
     private WordRepository wordRepository;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private GptWordRepository gptWordRepository;
@@ -78,18 +73,18 @@ public class WordService {
              return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("EXIST", response));      
         }else{
             Optional<GptWord> existingGptWord = gptWordRepository.findByWord(word);  // gpt는 단어만 체크해서 다른사람이 결과를 중복해서 얻어도 같이 나오게 만들기.
-            if(existingWord.isPresent()){ // Gpt 단어 존재하는 지 체크
+            if(existingGptWord.isPresent()){ // Gpt 단어 존재하는 지 체크
                     GptWord words = existingGptWord.get();
                     ExistWordResponseDto response = new ExistWordResponseDto(words.getGptWordId(), words.getWord(), words.getNoun(),
                     words.getVerb(), words.getAdjective(), words.getAdverb(), true);
-                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("EXIST", response));                
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("EXIST", response));                
             }else{ // 없으니까, gpt 돌려서 단어 만들어서 주기.
                 try {
                     String s = getAIDescription(word);
                     String cleanJson = s.replaceAll("^```json\\s*", "").replaceAll("\\s*```$", ""); // 불필요한 json이런게 들어감.
                     JSONObject object = new JSONObject(cleanJson);
                     JSONObject newObject = object.getJSONObject(word);
-                    List<List<String>> meanings = new ArrayList<>(); // List의 List를 넣는게 맞는지 02-02에 체크하기.
+                    List<List<String>> meanings = new ArrayList<>(); 
                     meanings.add(new ArrayList<>());
                     meanings.add(new ArrayList<>());
                     meanings.add(new ArrayList<>());
@@ -133,87 +128,59 @@ public class WordService {
         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", returnWord));
     }
 
-    // QA 테스트 미흡 ( 2.3.) -> 수정하면 시간 변경하도록. -> (2. 5) 시간 변경 완료
-    public ResponseEntity<?> updateMeaning(Long id, UpdateMeaningDto dto,HttpServletRequest request, boolean isGpt){ // word(유저가 쓴)가 만든거 변경
+    // QA 테스트 미흡 ( 2.3.) -> 수정하면 시간 변경하도록. -> (2. 5) 시간 변경 완료 -> (3.3) 유저가 쓴거만 고칠 수 있게 변경
+    public ResponseEntity<?> updateMeaning(Long id, UpdateMeaningDto dto,HttpServletRequest request){ // word(유저가 쓴)가 만든거 변경
         Long userId = authService.getUserId(request);
-        Optional<User> existingUser = userRepository.findById(userId);
-        if(existingUser.isPresent()){
-            if(isGpt){
-                Optional<GptWord> existingWord = gptWordRepository.findById(id);
-                if(existingWord.isPresent()){
-                    GptWord words = existingWord.get();
-                    Optional.ofNullable(dto.getNoun())
-                    .ifPresent(words::setNoun);
-                    Optional.ofNullable(dto.getVerb())
-                    .ifPresent(words::setVerb);
-                    Optional.ofNullable(dto.getAdjective())
-                    .ifPresent(words::setAdjective);
-                    Optional.ofNullable(dto.getAdverb())
-                    .ifPresent(words::setAdverb);
-                    words.setUpdatedAt(Instant.now());
-                    gptWordRepository.save(words);
-                    UpdateMeaningResponseDto response = new UpdateMeaningResponseDto(words.getGptWordId(), words.getNoun(), words.getVerb(),
-                    words.getAdjective(), words.getAdverb());           
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
-                }
+        String word = dto.getWord();
+        Optional<Word> existingWord = wordRepository.findByWordIdAndUser_UserId(id, userId);
+        if(existingWord.isPresent()){
+                Word words = existingWord.get();
+                if(word.equals(words.getWord())){
+                Optional.ofNullable(dto.getNoun())
+                .ifPresent(words::setNoun);
+                Optional.ofNullable(dto.getVerb())
+                .ifPresent(words::setVerb);
+                Optional.ofNullable(dto.getAdjective())
+                .ifPresent(words::setAdjective);
+                Optional.ofNullable(dto.getAdverb())
+                .ifPresent(words::setAdverb);
+                words.setUpdatedAt(Instant.now());
+                wordRepository.save(words);
+                UpdateMeaningResponseDto response = new UpdateMeaningResponseDto(words.getWordId(), words.getNoun(), words.getVerb(),
+                words.getAdjective(), words.getAdverb());           
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
             }else{
-                Optional<Word> existingWord = wordRepository.findById(id);
-                if(existingWord.isPresent()){
-                    Word words = existingWord.get();
-                    if(userId.equals(words.getUser().getUserId())){
-                        Optional.ofNullable(dto.getNoun())
-                        .ifPresent(words::setNoun);
-                        Optional.ofNullable(dto.getVerb())
-                        .ifPresent(words::setVerb);
-                        Optional.ofNullable(dto.getAdjective())
-                        .ifPresent(words::setAdjective);
-                        Optional.ofNullable(dto.getAdverb())
-                        .ifPresent(words::setAdverb);
-                        words.setUpdatedAt(Instant.now());
-                        wordRepository.save(words);
-                        UpdateMeaningResponseDto response = new UpdateMeaningResponseDto(words.getWordId(), words.getNoun(), words.getVerb(),
-                        words.getAdjective(), words.getAdverb());           
-                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
-                    }
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어를 만든 사람과 사용하는 사용자가 다릅니다."));
-                }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "바꾸려는 단어를 잘못 넣었습니다."));
             }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "해당하는 단어가 없습니다."));
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
     }
 
-    //  유저가 만든 단어 삭제하기. 
+    //  유저가 만든 단어 삭제하기. -> 로직 변경
     public ResponseEntity<?> deleteWord(Long id, HttpServletRequest request, boolean isGpt){
         Long userId = authService.getUserId(request);
-        Optional<User> existingUser = userRepository.findById(userId);
-        if(existingUser.isPresent()){
-            if(isGpt){
-                Optional<Word> existingWord = wordRepository.findById(id);
-                if(existingWord.isPresent()){
-                    User user = existingUser.get();
-                    Word words = existingWord.get();
-                    if(user.equals(words.getUser())){
-                        wordRepository.deleteById(id);
-                        DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
-                        words.getAdjective(), words.getAdverb());
-                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
-                    }
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "단어를 만든 사람과 삭제하는 사용자가 다릅니다."));
-                }
+        if(isGpt){
+            Optional<Word> existingWord = wordRepository.findByWordIdAndUser_UserId(id, userId);
+            if(existingWord.isPresent()){
+                Word words = existingWord.get();
+                wordRepository.deleteById(id);
+                DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
+                words.getAdjective(), words.getAdverb());
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
             }else{
-                Optional<GptWord> existingWord = gptWordRepository.findById(id);
-                if(existingWord.isPresent()){
-                    GptWord words = existingWord.get();
-                    gptWordRepository.deleteById(id);
-                    DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
-                    words.getAdjective(), words.getAdverb());
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
-                } 
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
             }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "해당하는 단어가 없습니다."));
+        }else{
+            Optional<GptWord> existingWord = gptWordRepository.findById(id);
+            if(existingWord.isPresent()){
+                GptWord words = existingWord.get();
+                gptWordRepository.deleteById(id);
+                DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
+                words.getAdjective(), words.getAdverb());
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
+            } 
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "해당하는 단어가 없습니다."));
     }
     
 
@@ -221,7 +188,16 @@ public class WordService {
         String requestUrl = apiUrl + "?key=" + apiKey;
         GeminiRequestDto request = new GeminiRequestDto();
  // 형식 다시 조금 수정하기.
-        String processedSentence = word + " 뜻을 json형식으로 보여줘. 품사는 명사, 동사, 형용사, 부사 순서로 알려주면 돼. 뜻이 없으면 빈칸으로 만들어줘. 각각의 개수는 2~3개로 해줘.";
+        String processedSentence = word + " 뜻을 json형식으로 보여줘. 품사는 명사, 동사, 형용사, 부사 순서로 알려주면 돼. 뜻이 없으면 빈칸으로 만들어줘. 각각의 개수는 2~3개로 해줘."
+        + "예시 출력(word가 'sleep'일 경우):\n" +
+        "{\n" +
+        "  \"sleep\": {\n" +
+        "    \"adjective\": [\"\"],\n" +
+        "    \"verb\": [\"자다\", \"잠자다\", \"수면을 취하다\"],\n" +
+        "    \"noun\": [\"수면\", \"잠\", \"휴식\"],\n" +
+        "    \"adverb\": [\"\"]\n" +
+        "  }\n" +
+        "}";
         request.createGeminiReqDto(processedSentence);
         String description = "";
         try {
@@ -240,7 +216,9 @@ public class WordService {
     public String correctWordCheck(String word){
         String requestUrl = apiUrl + "?key=" + apiKey;
         GeminiRequestDto request = new GeminiRequestDto();
-        String processedSentence = word + " 의 철자가 틀리지 않으면 그 단어를 그대로 대답하고 틀렸으면, 가장 비슷한 단어를 단어만 대답해줘.";
+        String processedSentence = word + " 의 단어 뜻이 있으면" + word + "그대로 대답하고 없으면, 단어의 뜻이 아닌 형태가 가장 비슷한 단어를 영단어 하나만 대답해줘." + 
+        "다른 첨언은 없어도 돼. 단어만 얘기해줘." +
+        "예시출력(word가 'word'일경우) : word";
         request.createGeminiReqDto(processedSentence);
         String description = "";
         try {

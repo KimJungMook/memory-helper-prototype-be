@@ -86,13 +86,13 @@ public class TestService {
             int length = mapping.size() + gptmapping.size();
 
             if(length < 20){
-                Collections.shuffle(mapping);
+                Collections.shuffle(mapping); // 매핑 된거 먼저 셔플을 해야 넣은 순서대로 문제가 나오지 않음.
                 Collections.shuffle(gptmapping);
                 List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
-                Long problemNumber = 1L;             
+                Long problemNumber = 1L;             // 문제를 response로 낼 때는 몇번이지 알려줘야하기에.
                 for(WordSetMapping tmp : mapping){
                     Word tmpWord = tmp.getWord();
-                    GenerateExamListResponseDto responseDto = parsingData(tmpWord);
+                    GenerateExamListResponseDto responseDto = parsingData(tmpWord, problemNumber);
                     Collections.shuffle(responseDto.getList());
                     List<QuestionRequest> words = new ArrayList<>();
                     for(GenerateExamListResponse list : responseDto.getList()){
@@ -116,7 +116,7 @@ public class TestService {
 
                 for(GptWordSetMapping tmp : gptmapping){
                     GptWord tmpWord = tmp.getGptword();
-                    GenerateExamListResponseDto responseDto = parsingData(tmpWord);
+                    GenerateExamListResponseDto responseDto = parsingData(tmpWord, problemNumber);
                     Collections.shuffle(responseDto.getList());
                     List<QuestionRequest> words = new ArrayList<>();
                     for(GenerateExamListResponse list : responseDto.getList()){
@@ -157,6 +157,7 @@ public class TestService {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
     }
+
     // AI 이용해서 문제 만들어내는 메서드
     public String getAIDescription(String word, String meaning){
         String requestUrl = apiUrl + "?key=" + apiKey;
@@ -220,8 +221,8 @@ public class TestService {
         }
     }
 
-    // gpt가 쓴 단어 단어를 골라주는 메서드
-    private GenerateExamListResponseDto parsingData(GptWord word){
+    // gpt가 쓴 단어 단어를 골라주는 메서드 -> 아직 모두 가져오는건 못함. get(0)만 가능.
+    private GenerateExamListResponseDto parsingData(GptWord word, Long problemNumber){
         List<GenerateExamListResponse> responses = new ArrayList<>();
         Long id = wordPOS(word);
         String meaning = "";
@@ -250,12 +251,12 @@ public class TestService {
             GenerateExamListResponse response = new GenerateExamListResponse(jsonObj.getString("id"), jsonObj.getString("text"));
             responses.add(response);
         }
-        GenerateExamListResponseDto responseDto = new GenerateExamListResponseDto(responses, question, answer);
+        GenerateExamListResponseDto responseDto = new GenerateExamListResponseDto(problemNumber, responses, question, answer);
         return responseDto;
     }
 
     // 유저가 쓴 단어 단어를 골라주는 메서드
-    private GenerateExamListResponseDto parsingData(Word word){
+    private GenerateExamListResponseDto parsingData(Word word, Long problemNumber){
         List<GenerateExamListResponse> responses = new ArrayList<>();
         Long id = wordPOS(word);
         String meaning = "";
@@ -284,7 +285,7 @@ public class TestService {
             GenerateExamListResponse response = new GenerateExamListResponse(jsonObj.getString("id"), jsonObj.getString("text"));
             responses.add(response);
         }
-        GenerateExamListResponseDto responseDto = new GenerateExamListResponseDto(responses, question, answer);
+        GenerateExamListResponseDto responseDto = new GenerateExamListResponseDto(problemNumber, responses, question, answer);
         return responseDto;
     }
 

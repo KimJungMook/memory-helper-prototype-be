@@ -78,25 +78,25 @@ public class WordController {
     @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("id") Long id,
     @RequestBody UpdateMeaningDto dto,HttpServletRequest request){
-        return wordService.updateMeaning(id, dto, request, false);
+        return wordService.updateMeaning(id, dto, request);
     }
     
-    @Operation(summary = "Gpt단어 의미 변경", description = "Gpt단어의 의미를 바꾸고 싶을 때 사용하는 메서드")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "OK",
-            content = {@Content(schema = @Schema(implementation = UpdateMeaningResponseDto.class))}),
-        @ApiResponse(responseCode = "200", description = "해당하는 단어가 없습니다."),
-        @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
-        @ApiResponse(responseCode = "401", description = "단어를 만든 사람과 사용하는 사용자가 다릅니다."),
-        @ApiResponse(responseCode = "500", description = "서버 에러")
-    })
-    @PatchMapping("/gpt/{id}")
-    public ResponseEntity<?> updateGptMeaning(
-    @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
-    @PathVariable("id") Long id,
-    @RequestBody UpdateMeaningDto dto,HttpServletRequest request){
-        return wordService.updateMeaning(id, dto, request, true);
-    }
+    // @Operation(summary = "Gpt단어 의미 변경", description = "Gpt단어의 의미를 바꾸고 싶을 때 사용하는 메서드")
+    // @ApiResponses(value = {
+    //     @ApiResponse(responseCode = "200", description = "OK",
+    //         content = {@Content(schema = @Schema(implementation = UpdateMeaningResponseDto.class))}),
+    //     @ApiResponse(responseCode = "200", description = "해당하는 단어가 없습니다."),
+    //     @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
+    //     @ApiResponse(responseCode = "401", description = "단어를 만든 사람과 사용하는 사용자가 다릅니다."),
+    //     @ApiResponse(responseCode = "500", description = "서버 에러")
+    // })
+    // @PatchMapping("/gpt/{id}")
+    // public ResponseEntity<?> updateGptMeaning(
+    // @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
+    // @PathVariable("id") Long id,
+    // @RequestBody UpdateMeaningDto dto,HttpServletRequest request){
+    //     return wordService.updateMeaning(id, dto, request, true);
+    // }
 
     // DELETE
     @Operation(summary = "단어 삭제", description = "단어를 DB에서 삭제하고 싶을 때 사용하는 메서드")
