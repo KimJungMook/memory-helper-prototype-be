@@ -47,21 +47,21 @@ public class JwtAuthFilter extends OncePerRequestFilter{
         String jwtToken = token.substring(7);
     
         //  1. 블랙리스트에 있는지 먼저 확인 (로그아웃된 토큰 차단)
-        if (redisUtil.haskeyBlackList(jwtToken)) {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            // ObjectMapper를 사용해 JSON 변환
-            ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("status", HttpStatus.UNAUTHORIZED.value());
-            errorResponse.put("message", "이미 로그아웃된 계정입니다.");
+        // if (redisUtil.haskeyBlackList(jwtToken)) {
+        //     response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        //     response.setContentType("application/json");
+        //     response.setCharacterEncoding("UTF-8");
+        //     // ObjectMapper를 사용해 JSON 변환
+        //     ObjectMapper objectMapper = new ObjectMapper();
+        //     Map<String, Object> errorResponse = new HashMap<>();
+        //     errorResponse.put("status", HttpStatus.UNAUTHORIZED.value());
+        //     errorResponse.put("message", "이미 로그아웃된 계정입니다.");
         
-            // JSON 형식으로 응답 전송
-            String jsonResponse = objectMapper.writeValueAsString(errorResponse);
-            response.getWriter().write(jsonResponse);
-            return;
-        }
+        //     // JSON 형식으로 응답 전송
+        //     String jsonResponse = objectMapper.writeValueAsString(errorResponse);
+        //     response.getWriter().write(jsonResponse);
+        //     return;
+        // }
     
         //  2. 토큰 유효성 검사
         if (!jwtProvider.validateToken(jwtToken)) {

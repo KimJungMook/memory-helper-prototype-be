@@ -1,5 +1,4 @@
 package com.website.military.domain.Entity;
-import java.util.ArrayList;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
@@ -11,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -19,7 +17,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "testproblems")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class TestProblems {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,15 +28,18 @@ public class TestProblems {
     @JoinColumn(name = "test_id")
     private Tests tests; // 외래키
 
-    @JsonBackReference // 중복 순환 해결.
-    @ManyToOne
-    @JoinColumn(name = "word_id")
-    private Word word; // 외래키
 
-    @JsonBackReference // 중복 순환 해결.
-    @ManyToOne
-    @JoinColumn(name = "gpt_word_id")
-    private GptWord gptword; // 외래키
-    private String correctOption;
-    private ArrayList<String> options;
+    @Column(columnDefinition = "json")
+    private String question;
+
+    private Long problemNumber;
+
+    private String answer;
+    public TestProblems(Tests tests, String question, Long problemNumber, String answer){
+        this.tests = tests;
+        this.question = question;
+        this.problemNumber = problemNumber;
+        this.answer = answer;
+    }
+    
 }

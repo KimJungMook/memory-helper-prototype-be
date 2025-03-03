@@ -97,7 +97,13 @@ public class AuthController {
         return authService.logIn(dto);
     }
     
-
+    @Operation(summary = "토큰 재발급 하기", description = "리프레쉬 토큰을 이용해서 토큰 재발급")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "성공",
+            content = {@Content(schema = @Schema(implementation = RefreshTokenResponseDto.class))}),
+        @ApiResponse(responseCode = "400", description = "토큰이 만료됐습니다."),
+        @ApiResponse(responseCode = "500", description = "서버 에러")
+    })
     @PostMapping("/token-refresh")
     public ResponseEntity<?> tokenRefresh(@RequestBody RefreshTokenDto dto){
         RefreshTokenResponseDto response = refreshTokenService.refreshToken(dto.getRefreshToken());
