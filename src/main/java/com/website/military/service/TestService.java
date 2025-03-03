@@ -1,6 +1,7 @@
 package com.website.military.service;
 
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +30,7 @@ import com.website.military.domain.dto.gemini.response.GeminiResponseDto;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.test.request.QuestionRequest;
+import com.website.military.domain.dto.test.response.DeleteExamResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponseDto;
 import com.website.military.repository.TestProblemsRepository;
@@ -82,11 +84,11 @@ public class TestService {
             List<WordSetMapping> mapping = wordSets.getWordsetmapping();
             List<GptWordSetMapping> gptmapping = wordSets.getGptwordsetMappings();
             int length = mapping.size() + gptmapping.size();
+
             if(length < 20){
                 Collections.shuffle(mapping);
                 Collections.shuffle(gptmapping);
                 List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
-                // 정답도 testproblem에 넣기. 
                 Long problemNumber = 1L;             
                 for(WordSetMapping tmp : mapping){
                     Word tmpWord = tmp.getWord();
@@ -100,8 +102,9 @@ public class TestService {
                     }
                     try {
                         ObjectMapper objectMapper = new ObjectMapper();   
-                        String jsonString = objectMapper.writeValueAsString(words);  
-                        TestProblems testProblems = new TestProblems(tests, jsonString, problemNumber);
+                        String jsonString = objectMapper.writeValueAsString(words);
+                        String answer = responseDto.getAnswer();
+                        TestProblems testProblems = new TestProblems(tests, jsonString, problemNumber, answer);
                         testProblemsRepository.save(testProblems);
                         problemNumber = problemNumber + 1;   
                         responseDtos.add(responseDto); 
@@ -110,6 +113,7 @@ public class TestService {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
                     }  
                 }
+
                 for(GptWordSetMapping tmp : gptmapping){
                     GptWord tmpWord = tmp.getGptword();
                     GenerateExamListResponseDto responseDto = parsingData(tmpWord);
@@ -123,7 +127,8 @@ public class TestService {
                     try {
                         ObjectMapper objectMapper = new ObjectMapper();   
                         String jsonString = objectMapper.writeValueAsString(words);  
-                        TestProblems testProblems = new TestProblems(tests, jsonString, problemNumber);
+                        String answer = responseDto.getAnswer();
+                        TestProblems testProblems = new TestProblems(tests, jsonString, problemNumber, answer);
                         testProblemsRepository.save(testProblems);
                         problemNumber = problemNumber + 1;   
                         responseDtos.add(responseDto); 
@@ -131,13 +136,28 @@ public class TestService {
                         e.printStackTrace();
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
                     }  
+
                 }
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responseDtos));
+            }else{
+                // 20개 넘으면 20개를 고르는 알고리즘 존재.
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
     }
 
+    public ResponseEntity<?> deleteTest(HttpServletRequest request, Long testId){
+        Long userId = authService.getUserId(request);
+        Optional<Tests> existingWordSets = testsRepository.findByUser_UserIdAndTestId(userId, testId);
+        if(existingWordSets.isPresent()){
+            Tests tests = existingWordSets.get();
+            DeleteExamResponse response = new DeleteExamResponse(testId, tests.getWordsets().getSetName(), Instant.now());
+            testsRepository.deleteById(testId);
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
+    }
+    // AI 이용해서 문제 만들어내는 메서드
     public String getAIDescription(String word, String meaning){
         String requestUrl = apiUrl + "?key=" + apiKey;
         GeminiRequestDto request = new GeminiRequestDto();
@@ -166,14 +186,17 @@ public class TestService {
         return description;
     }
 
+    // 유저가 만든 단어 품사 골라주는 메서드 
     private Long wordPOS(Word word) {
         return getRandomPOS(word.getNoun(), word.getVerb(), word.getAdjective(), word.getAdverb());
     }
     
+    // gpt가 만든 단어 품사 골라주는 메서드 
     private Long wordPOS(GptWord word) {
         return getRandomPOS(word.getNoun(), word.getVerb(), word.getAdjective(), word.getAdverb());
     }
     
+    // 품사 랜덤으로 고르는 메서드
     private Long getRandomPOS(List<String> noun, List<String> verb, List<String> adjective, List<String> adverb) {
         List<Long> indexList = new ArrayList<>();
     
@@ -197,6 +220,7 @@ public class TestService {
         }
     }
 
+    // gpt가 쓴 단어 단어를 골라주는 메서드
     private GenerateExamListResponseDto parsingData(GptWord word){
         List<GenerateExamListResponse> responses = new ArrayList<>();
         Long id = wordPOS(word);
@@ -223,7 +247,6 @@ public class TestService {
         String answer = object.getString("answer");
         for(Object obj : newObject){
             JSONObject jsonObj = (JSONObject) obj;
-            System.out.println(jsonObj.toString());
             GenerateExamListResponse response = new GenerateExamListResponse(jsonObj.getString("id"), jsonObj.getString("text"));
             responses.add(response);
         }
@@ -231,6 +254,7 @@ public class TestService {
         return responseDto;
     }
 
+    // 유저가 쓴 단어 단어를 골라주는 메서드
     private GenerateExamListResponseDto parsingData(Word word){
         List<GenerateExamListResponse> responses = new ArrayList<>();
         Long id = wordPOS(word);
@@ -252,7 +276,6 @@ public class TestService {
         String s = getAIDescription(word.getWord(), meaning);
         String cleanJson = s.replaceAll("^```json\\s*", "").replaceAll("\\s*```$", ""); // 불필요한 json이런게 들어감.
         JSONObject object = new JSONObject(cleanJson);
-        System.out.println(object);
         JSONArray newObject = object.getJSONArray("options"); // options에 나오는거까지 찍힘.
         String question = object.getString("question");
         String answer = object.getString("answer");

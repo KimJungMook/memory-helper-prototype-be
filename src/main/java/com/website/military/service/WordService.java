@@ -220,7 +220,7 @@ public class WordService {
     public String getAIDescription(String word){
         String requestUrl = apiUrl + "?key=" + apiKey;
         GeminiRequestDto request = new GeminiRequestDto();
-
+ // 형식 다시 조금 수정하기.
         String processedSentence = word + " 뜻을 json형식으로 보여줘. 품사는 명사, 동사, 형용사, 부사 순서로 알려주면 돼. 뜻이 없으면 빈칸으로 만들어줘. 각각의 개수는 2~3개로 해줘.";
         request.createGeminiReqDto(processedSentence);
         String description = "";

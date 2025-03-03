@@ -34,10 +34,12 @@ public class TestProblems {
 
     private Long problemNumber;
 
-    public TestProblems(Tests tests, String question, Long problemNumber){
+    private String answer;
+    public TestProblems(Tests tests, String question, Long problemNumber, String answer){
         this.tests = tests;
         this.question = question;
         this.problemNumber = problemNumber;
+        this.answer = answer;
     }
     
 }

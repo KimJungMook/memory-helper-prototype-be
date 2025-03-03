@@ -182,7 +182,7 @@ public class WordSetService {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
     }
 
-    // 단어를 단어장에 넣기 (유저가 만든 단어)
+    // 단어를 단어장에 넣기 (아직 존재하지 않는 단어)
     public ResponseEntity<?> addWordToWordSet(Long setId, AddWordToWordSetDto dto, HttpServletRequest request, boolean isGpt){
         String word = dto.getWord();
         List<String> noun = dto.getNoun();
