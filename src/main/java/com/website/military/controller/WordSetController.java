@@ -3,6 +3,7 @@ package com.website.military.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
 import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
 import com.website.military.domain.dto.word.response.ExistWordResponseDto;
@@ -19,6 +20,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -50,20 +52,36 @@ public class WordSetController {
     @Operation(summary = "단어세트 찾기", description = "내가 만든 단어세트 찾아주는 메서드")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(
+            content = {@Content(
                 mediaType = "application/json",
                 array = @ArraySchema(
                     schema = @Schema(implementation=WordSetsResponseDto.class)
-                )
-            ) ),
-        @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
-        @ApiResponse(responseCode = "500", description = "서버 에러")
+                ),
+                examples = @ExampleObject(value = "[{"
+                + "\"setId\": 1,"
+                + "\"setName\": \"세트1\","
+                + "\"createdAt\": \"2025-03-05T14:43:12.031Z\""
+                + "},"
+                + "{"
+                + "\"setId\": 2,"
+                + "\"setName\": \"세트2\","
+                + "\"createdAt\": \"2025-03-05T14:44:12.031Z\""
+                + "}]")
+            )}),
+       @ApiResponse(responseCode = "400", description = "잘못된 접근입니다.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
+                ))}),
+        @ApiResponse(responseCode = "500", description = "서버 에러",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+                ))})
     })
     @GetMapping("")
     public ResponseEntity<?> getWordSets(HttpServletRequest request) {
         return wordSetService.getWordSets(request);
     }
-
+    // 여기서부터 예시 다시 만들어야함.
     @Operation(summary = "단어세트안에있는 단어 리스트", description = "단어 세트안에 있는 단어 리스트를 불러오는 메서드")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "OK",
@@ -73,8 +91,14 @@ public class WordSetController {
                     schema = @Schema(implementation=GetWordsBySetIdResponse.class)
                 )
             ) ),
-        @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
-        @ApiResponse(responseCode = "500", description = "서버 에러")
+        @ApiResponse(responseCode = "400", description = "잘못된 접근입니다.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
+                ))}),
+        @ApiResponse(responseCode = "500", description = "서버 에러",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+                ))})
     })
     @GetMapping("/{id}")
     public ResponseEntity<?> getWordsBySetId(    

@@ -185,3 +185,6 @@ public class AuthController {
     }
 
 }
+
+
+// auth만 예시 들어감 나머지 Controller도 하기.

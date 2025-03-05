@@ -150,7 +150,7 @@ public class WordService {
                 words.getAdjective(), words.getAdverb());           
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
             }else{
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "바꾸려는 단어를 잘못 넣었습니다."));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "바꾸려는 단어를 잘못 넣었습니다."));
             }
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));

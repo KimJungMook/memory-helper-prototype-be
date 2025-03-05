@@ -74,8 +74,10 @@ public class WordSetService {
                 WordSetsResponseDto response = new WordSetsResponseDto(sets.getSetId(), sets.getSetName(), sets.getCreatedAt());
                 responses.add(response);
             }
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
+        }else{
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }
-        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
     }
 
     // 단어세트에 있는 단어 불러오는 메서드
