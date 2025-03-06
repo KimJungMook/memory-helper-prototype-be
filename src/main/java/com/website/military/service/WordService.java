@@ -70,14 +70,14 @@ public class WordService {
             Word words = existingWord.get();
             ExistWordResponseDto response = new ExistWordResponseDto(words.getWordId(), words.getWord(), words.getNoun(),
             words.getVerb(), words.getAdjective(), words.getAdverb(), false);
-             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("EXIST", response));      
+             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));      
         }else{
             Optional<GptWord> existingGptWord = gptWordRepository.findByWord(word);  // gpt는 단어만 체크해서 다른사람이 결과를 중복해서 얻어도 같이 나오게 만들기.
             if(existingGptWord.isPresent()){ // Gpt 단어 존재하는 지 체크
                     GptWord words = existingGptWord.get();
                     ExistWordResponseDto response = new ExistWordResponseDto(words.getGptWordId(), words.getWord(), words.getNoun(),
                     words.getVerb(), words.getAdjective(), words.getAdverb(), true);
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("EXIST", response));                
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));                
             }else{ // 없으니까, gpt 돌려서 단어 만들어서 주기.
                 try {
                     String s = getAIDescription(word);
@@ -112,7 +112,7 @@ public class WordService {
                         meanings.get(3).add(adverb.getString(i));    
                     }
                     GptWordResponseDto response = new GptWordResponseDto(meanings, true);
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response)); 
+                    return ResponseEntity.status(HttpStatus.CREATED).body(ResponseDataDto.set("CREATE", response)); 
                 } catch (Exception e) {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

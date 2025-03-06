@@ -109,7 +109,7 @@ public class WordSetService {
     public ResponseEntity<?> registerWordSets(WordSetsDto dto, HttpServletRequest request){
         Optional<WordSets> existingWordSets = wordSetsRepository.findBysetName(dto.getSetName());
         if(existingWordSets.isPresent()){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "이미 존재한 세트 이름"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }
         WordSets wordSets = new WordSets(dto.getSetName());
         try{
@@ -122,7 +122,7 @@ public class WordSetService {
                 RegisterResponseDto response = new RegisterResponseDto(wordSets.getSetId(), wordSets.getSetName());
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response)); // 여기서부터 다시.
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "토큰에 해당하는 사용자가 없습니다."));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
         }catch(Exception e){
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -138,7 +138,7 @@ public class WordSetService {
             Optional<WordSetMapping> existingWordSetMappings = wordSetsMappingRepository.findByWord_WordIdAndWordsets_SetId(wordId, setId);
             Optional<GptWordSetMapping> existingGptWordSetMappings = gptWordSetMappingRepository.findByGptword_GptWordIdAndWordsets_SetId(wordId, setId);
             if(existingWordSetMappings.isPresent() || existingGptWordSetMappings.isPresent()){ // gpt단어가 단어장에 매핑이 되어져 있는지, 유저 단어가 단어장에 매핑이 되어져 있는지 체크
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어가 단어셋에 존재합니다."));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
             }else{
                 if(isGpt){
                     Optional<GptWord> existingGptWord = gptWordRepository.findById(wordId);
@@ -168,9 +168,9 @@ public class WordSetService {
                     }
                 }
             }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어가 없습니다."));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하는 단어셋이 없습니다."));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
 
     // 단어를 단어장에 넣기 (아직 존재하지 않는 단어)
@@ -213,7 +213,7 @@ public class WordSetService {
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                 }
             }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "단어가 이미 존재합니다."));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }else{
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
         }
@@ -230,7 +230,7 @@ public class WordSetService {
             RegisterResponseDto response = new RegisterResponseDto(id, setName);
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
 
     // 단어 Set를 없애는 메서드
@@ -243,7 +243,7 @@ public class WordSetService {
             DeleteResponseDto response = new DeleteResponseDto(id, sets.getSetName());
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
 
     // 단어장에 있는 단어를 없애고 싶을 때 사용하는 메서드

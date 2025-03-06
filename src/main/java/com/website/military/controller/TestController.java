@@ -42,29 +42,23 @@ public class TestController {
                 array = @ArraySchema(
                     schema = @Schema(implementation=GenerateExamListResponseDto.class)
                 ),
-                examples = @ExampleObject(value = "[{"
-                + "\"problemNumber\": 1,"
-                + "\"list\": ["
-                + "  {"
-                + "    \"id\": \"'A'\","
-                + "    \"meaning\": \"생각\""
-                + "  },"
-                + "  {"
-                + "    \"id\": \"'B'\","
-                + "    \"meaning\": \"생수\""
-                + "  },"
-                + "  {"
-                + "    \"id\": \"'C'\","
-                + "    \"meaning\": \"우유\""
-                + "  },"
-                + "  {"
-                + "    \"id\": \"'D'\","
-                + "    \"meaning\": \"마음\""
-                + "  }"
-                + "],"
-                + "\"question\": \"다음 중 'milk'의 의미와 가장 가까운 것은 무엇입니까?\","
-                + "\"answer\": \"C\""
-                + "}]"))}),
+                examples = @ExampleObject(value = "{"
+                + "\"code\": \"OK\","
+                + "\"data\": ["
+                + "    {"
+                + "      \"problemNumber\": 1,"
+                + "      \"list\": ["
+                + "        {\"id\": \"A\", \"meaning\": \"생각\"},"
+                + "        {\"id\": \"B\", \"meaning\": \"생수\"},"
+                + "        {\"id\": \"C\", \"meaning\": \"우유\"},"
+                + "        {\"id\": \"D\", \"meaning\": \"마음\"}"
+                + "      ],"
+                + "      \"question\": \"다음 중 'milk'의 의미와 가장 가까운 것은 무엇입니까?\"," 
+                + "      \"answer\": \"C\""
+                + "    }"
+                + "  ]"
+                + "}")
+            )}),
         @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
                     examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"

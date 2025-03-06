@@ -43,14 +43,35 @@ public class WordController {
     // POST
     @Operation(summary = "단어 존재 체크", description = "단어가 있는지 체크를 해주는 메서드")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "EXIST",
+        @ApiResponse(responseCode = "200", description = "OK",
             content = {@Content(schema = @Schema(implementation = ExistWordResponseDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"EXIST\", \"data\": { \"id\": \"1\", \"word\": \"word\", \"noun\": \"[\"단어\"]\", \"verb\": \"[]\", \"adjective\": \"[]\", \"adverb\": \"[\"\"]\"}}"
-                ))}),
-        @ApiResponse(responseCode = "200", description = "해당하는 단어가 DB에 없습니다.",
+                    examples = @ExampleObject(value = "{\n"
+                    + "\"code\": \"OK\",\n"
+                    + "\"data\": {\n"
+                    + "  \"wordId\": \"1\",\n"
+                    + "  \"word\": \"word\",\n"
+                    + "  \"noun\": \"[\"단어\"]\",\n"
+                    + "  \"verb\": \"[]\",\n"
+                    + "  \"adjective\": \"[]\",\n"
+                    + "  \"adverb\": \"[\"\"]\"\n"
+                    + "}\n"
+                    + "}")
+                )}),
+        @ApiResponse(responseCode = "201", description = "해당하는 단어가 DB에 없으므로, GPT에 해당하는 결과를 불러줌.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                    examples = @ExampleObject(value = "{\"code\": \"OK\", \"data\": { \"message\": \"해당하는 단어가 DB에 없습니다.\" } }"
-                    ))}),
+                    examples = @ExampleObject(value = "{"
+                    + "\"code\": \"CREATE\","
+                    + "\"data\": {"
+                    + "  \"meanings\": ["
+                    + "    [\"사자\", \"맹수\", \"사자자리\"],"
+                    + "    [\"\"],"
+                    + "    [\"\"],"
+                    + "    [\"\"]"
+                    + "  ],"
+                    + "  \"gpt\": true"
+                    + "}"
+                    + "}")
+                )}),
         @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
                 examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"토큰에 해당하는 사용자가 없습니다.\" } }"
@@ -69,8 +90,11 @@ public class WordController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "OK",
             content = {@Content(schema = @Schema(implementation = String.class),
-                examples = @ExampleObject(value = "word"
-                ))}),
+                examples = @ExampleObject(value = "{"
+                + "\"code\": \"OK\","
+                + "\"data\": \"word\""
+                + "}")
+            )}),
         @ApiResponse(responseCode = "500", description = "서버 에러",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
                 examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
@@ -86,8 +110,17 @@ public class WordController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "OK",
             content = {@Content(schema = @Schema(implementation = UpdateMeaningResponseDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"OK\", \"data\": { \"word\": \"word\", \"noun\": \"[\"단어\"]\", \"verb\": \"[]\", \"adjective\": \"[]\", \"adverb\": \"[\"\"]\"}}"
-                ))}),
+                examples = @ExampleObject(value = "{\n"
+                + "\"code\": \"OK\",\n"
+                + "\"data\": {\n"
+                + "  \"wordId\": \"1\",\n"
+                + "  \"noun\": \"[\"단어\"]\",\n"
+                + "  \"verb\": \"[]\",\n"
+                + "  \"adjective\": \"[]\",\n"
+                + "  \"adverb\": \"[\"\"]\"\n"
+                + "}\n"
+                + "}")
+                )}),
         @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
                 examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
@@ -114,8 +147,18 @@ public class WordController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "DELETE",
             content = {@Content(schema = @Schema(implementation = DeleteWordResponseDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"OK\", \"data\": {\"id\": \"1\",\"word\": \"word\", \"noun\": \"[\"단어\"]\", \"verb\": \"[]\", \"adjective\": \"[]\", \"adverb\": \"[\"\"]\"}}"
-                ))}),
+                examples = @ExampleObject(value = "{\n"
+                + "\"code\": \"OK\",\n"
+                + "\"data\": {\n"
+                + "  \"wordId\": \"1\",\n"
+                + "  \"word\": \"word\",\n"
+                + "  \"noun\": \"[\"단어\"]\",\n"
+                + "  \"verb\": \"[]\",\n"
+                + "  \"adjective\": \"[]\",\n"
+                + "  \"adverb\": \"[\"\"]\"\n"
+                + "}\n"
+                + "}")
+                )}),
         @ApiResponse(responseCode = "400", description = "해당하는 단어가 없습니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
                 examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"해당하는 단어가 없습니다.\" } }"
@@ -141,8 +184,18 @@ public class WordController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "DELETE",
             content = {@Content(schema = @Schema(implementation = DeleteWordResponseDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"OK\", \"data\": {\"id\": \"1\",\"word\": \"word\", \"noun\": \"[\"단어\"]\", \"verb\": \"[]\", \"adjective\": \"[]\", \"adverb\": \"[\"\"]\"}}"
-                ))}),
+                examples = @ExampleObject(value = "{\n"
+                + "\"code\": \"OK\",\n"
+                + "\"data\": {\n"
+                + "  \"wordId\": \"1\",\n"
+                + "  \"word\": \"word\",\n"
+                + "  \"noun\": \"[\"단어\"]\",\n"
+                + "  \"verb\": \"[]\",\n"
+                + "  \"adjective\": \"[]\",\n"
+                + "  \"adverb\": \"[\"\"]\"\n"
+                + "}\n"
+                + "}")
+                )}),
         @ApiResponse(responseCode = "400", description = "해당하는 단어가 없습니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
                 examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"BAD_REQUEST\": { \"message\": \"해당하는 단어가 없습니다.\" } }"

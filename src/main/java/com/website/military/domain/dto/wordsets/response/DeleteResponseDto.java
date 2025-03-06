@@ -4,11 +4,11 @@ import lombok.Data;
 
 @Data
 public class DeleteResponseDto {
-    private Long id;
+    private Long setId;
     private String setName;
 
-    public DeleteResponseDto(Long id, String setName){
-        this.id = id;
+    public DeleteResponseDto(Long setId, String setName){
+        this.setId = setId;
         this.setName = setName;
     }
 }
