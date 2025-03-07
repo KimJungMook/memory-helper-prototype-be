@@ -7,16 +7,16 @@ import lombok.Data;
 
 @Data
 public class ExistWordResponseDto {
-    private Long id;
+    private Long wordId;
     private String word;
     private List<String> noun;
     private List<String> verb;
     private List<String> adjective;
     private List<String> adverb;
     private boolean isGpt;
-    public ExistWordResponseDto(Long id, String word, List<String> noun, List<String> verb, 
+    public ExistWordResponseDto(Long wordId, String word, List<String> noun, List<String> verb, 
     List<String> adjective, List<String> adverb, boolean isGpt){
-        this.id = id;
+        this.wordId = wordId;
         this.word = word;
         this.noun = noun;
         this.verb = verb;

@@ -8,7 +8,8 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class GenerateExamListResponseDto {
-    List<GenerateExamListResponse> list;
-    String question;
-    String answer;
+    private Long problemNumber;
+    private List<GenerateExamListResponse> list;
+    private String question;
+    private String answer;
 }

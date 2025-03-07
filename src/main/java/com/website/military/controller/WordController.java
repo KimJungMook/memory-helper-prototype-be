@@ -3,6 +3,7 @@ package com.website.military.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.word.request.ExistWordDto;
 import com.website.military.domain.dto.word.request.UpdateMeaningDto;
 import com.website.military.domain.dto.word.response.DeleteWordResponseDto;
@@ -13,6 +14,7 @@ import com.website.military.service.WordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -41,11 +43,44 @@ public class WordController {
     // POST
     @Operation(summary = "단어 존재 체크", description = "단어가 있는지 체크를 해주는 메서드")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "EXIST",
-            content = {@Content(schema = @Schema(implementation = ExistWordResponseDto.class))}),
-        @ApiResponse(responseCode = "200", description = "해당하는 단어가 DB에 없습니다."),
-        @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
-        @ApiResponse(responseCode = "500", description = "서버 에러")
+        @ApiResponse(responseCode = "200", description = "OK",
+            content = {@Content(schema = @Schema(implementation = ExistWordResponseDto.class),
+                    examples = @ExampleObject(value = "{\n"
+                    + "\"code\": \"OK\",\n"
+                    + "\"data\": {\n"
+                    + "  \"wordId\": 1,\n"
+                    + "  \"word\": \"word\",\n"
+                    + "  \"noun\": \"[\"단어\"]\",\n"
+                    + "  \"verb\": \"[]\",\n"
+                    + "  \"adjective\": \"[]\",\n"
+                    + "  \"adverb\": \"[\"\"]\"\n"
+                    + "    \"gpt\": true"
+                    + "}\n"
+                    + "}")
+                )}),
+        @ApiResponse(responseCode = "201", description = "해당하는 단어가 DB에 없으므로, GPT에 해당하는 결과를 불러줌.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                    examples = @ExampleObject(value = "{"
+                    + "\"code\": \"CREATE\","
+                    + "\"data\": {"
+                    + "  \"meanings\": ["
+                    + "    [\"사자\", \"맹수\", \"사자자리\"],"
+                    + "    [\"\"],"
+                    + "    [\"\"],"
+                    + "    [\"\"]"
+                    + "  ],"
+                    + "  \"gpt\": true"
+                    + "}"
+                    + "}")
+                )}),
+        @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
+                ))}),
+        @ApiResponse(responseCode = "500", description = "서버 에러",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+                ))})
     })
     @PostMapping("/exists")
     public ResponseEntity<?> existWord(@RequestBody ExistWordDto dto, HttpServletRequest request) {
@@ -55,8 +90,16 @@ public class WordController {
     @Operation(summary = "스펠링 체크", description = "스펠링을 체크를 해주는 메서드, 정확도가 조금 낮음.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "OK",
-            content = {@Content(schema = @Schema(implementation = String.class))}),
-        @ApiResponse(responseCode = "500", description = "서버 에러")
+            content = {@Content(schema = @Schema(implementation = String.class),
+                examples = @ExampleObject(value = "{"
+                + "\"code\": \"OK\","
+                + "\"data\": \"word\""
+                + "}")
+            )}),
+        @ApiResponse(responseCode = "500", description = "서버 에러",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+                ))})
     })
     @PostMapping("/spelling-error")
     public ResponseEntity<?> correctSpelling(@RequestBody ExistWordDto dto ){
@@ -67,46 +110,68 @@ public class WordController {
     @Operation(summary = "단어 의미 변경", description = "단어의 의미를 바꾸고 싶을 때 사용하는 메서드")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "OK",
-            content = {@Content(schema = @Schema(implementation = UpdateMeaningResponseDto.class))}),
-        @ApiResponse(responseCode = "200", description = "해당하는 단어가 없습니다."),
-        @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
-        @ApiResponse(responseCode = "401", description = "단어를 만든 사람과 사용하는 사용자가 다릅니다."),
-        @ApiResponse(responseCode = "500", description = "서버 에러")
+            content = {@Content(schema = @Schema(implementation = UpdateMeaningResponseDto.class),
+                examples = @ExampleObject(value = "{\n"
+                + "\"code\": \"OK\",\n"
+                + "\"data\": {\n"
+                + "  \"wordId\": 1,\n"
+                + "  \"noun\": \"[\"단어\"]\",\n"
+                + "  \"verb\": \"[]\",\n"
+                + "  \"adjective\": \"[]\",\n"
+                + "  \"adverb\": \"[\"\"]\"\n"
+                + "}\n"
+                + "}")
+                )}),
+        @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
+                ))}),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
+                ))}),
+        @ApiResponse(responseCode = "500", description = "서버 에러",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+                ))})
     })
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateMeaning(
     @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("id") Long id,
     @RequestBody UpdateMeaningDto dto,HttpServletRequest request){
-        return wordService.updateMeaning(id, dto, request, false);
+        return wordService.updateMeaning(id, dto, request);
     }
     
-    @Operation(summary = "Gpt단어 의미 변경", description = "Gpt단어의 의미를 바꾸고 싶을 때 사용하는 메서드")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "OK",
-            content = {@Content(schema = @Schema(implementation = UpdateMeaningResponseDto.class))}),
-        @ApiResponse(responseCode = "200", description = "해당하는 단어가 없습니다."),
-        @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
-        @ApiResponse(responseCode = "401", description = "단어를 만든 사람과 사용하는 사용자가 다릅니다."),
-        @ApiResponse(responseCode = "500", description = "서버 에러")
-    })
-    @PatchMapping("/gpt/{id}")
-    public ResponseEntity<?> updateGptMeaning(
-    @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
-    @PathVariable("id") Long id,
-    @RequestBody UpdateMeaningDto dto,HttpServletRequest request){
-        return wordService.updateMeaning(id, dto, request, true);
-    }
-
     // DELETE
     @Operation(summary = "단어 삭제", description = "단어를 DB에서 삭제하고 싶을 때 사용하는 메서드")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "DELETE",
-            content = {@Content(schema = @Schema(implementation = DeleteWordResponseDto.class))}),
-        @ApiResponse(responseCode = "200", description = "해당하는 단어가 없습니다."),
-        @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
-        @ApiResponse(responseCode = "401", description = "단어를 만든 사람과 삭제하는 사용자가 다릅니다."),
-        @ApiResponse(responseCode = "500", description = "서버 에러")
+            content = {@Content(schema = @Schema(implementation = DeleteWordResponseDto.class),
+                examples = @ExampleObject(value = "{\n"
+                + "\"code\": \"OK\",\n"
+                + "\"data\": {\n"
+                + "  \"wordId\": 1,\n"
+                + "  \"word\": \"word\",\n"
+                + "  \"noun\": \"[\"단어\"]\",\n"
+                + "  \"verb\": \"[]\",\n"
+                + "  \"adjective\": \"[]\",\n"
+                + "  \"adverb\": \"[\"\"]\"\n"
+                + "}\n"
+                + "}")
+                )}),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
+                ))}),
+        @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
+                ))}),
+        @ApiResponse(responseCode = "500", description = "서버 에러",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+                ))})
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteWord(
@@ -119,11 +184,31 @@ public class WordController {
     @Operation(summary = "Gpt단어 삭제", description = "Gpt단어를 DB에서 삭제하고 싶을 때 사용하는 메서드")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "DELETE",
-            content = {@Content(schema = @Schema(implementation = DeleteWordResponseDto.class))}),
-        @ApiResponse(responseCode = "200", description = "해당하는 단어가 없습니다."),
-        @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다."),
-        @ApiResponse(responseCode = "401", description = "단어를 만든 사람과 삭제하는 사용자가 다릅니다."),
-        @ApiResponse(responseCode = "500", description = "서버 에러")
+            content = {@Content(schema = @Schema(implementation = DeleteWordResponseDto.class),
+                examples = @ExampleObject(value = "{\n"
+                + "\"code\": \"OK\",\n"
+                + "\"data\": {\n"
+                + "  \"wordId\": 1,\n"
+                + "  \"word\": \"word\",\n"
+                + "  \"noun\": \"[\"단어\"]\",\n"
+                + "  \"verb\": \"[]\",\n"
+                + "  \"adjective\": \"[]\",\n"
+                + "  \"adverb\": \"[\"\"]\"\n"
+                + "}\n"
+                + "}")
+                )}),
+        @ApiResponse(responseCode = "400", description = "해당하는 단어가 없습니다.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"BAD_REQUEST\": { \"message\": \"잘못된 요청입니다.\" } }"
+                ))}),
+        @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
+                ))}),
+        @ApiResponse(responseCode = "500", description = "서버 에러",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+                ))})
     })
     @DeleteMapping("/gpt/{id}")
     public ResponseEntity<?> deleteGptWord(

@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Data
 public class GetWordsBySetIdResponse {
-    private Long id;
+    private Long wordId;
     private String word;
     private List<String> noun;
     private List<String> verb;
@@ -17,9 +17,9 @@ public class GetWordsBySetIdResponse {
     private Instant createdAt;
     private boolean isGpt;
 
-    public GetWordsBySetIdResponse(Long id, String word, List<String> noun, List<String> verb,
+    public GetWordsBySetIdResponse(Long wordId, String word, List<String> noun, List<String> verb,
     List<String> adjective, List<String> adverb, Instant createdAt, boolean isGpt){
-        this.id = id;
+        this.wordId = wordId;
         this.word = word;
         this.noun = noun;
         this.verb = verb;

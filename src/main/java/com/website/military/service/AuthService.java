@@ -39,12 +39,15 @@ public class AuthService {
     private final JwtProvider jwtProvider;
 
     private final RedisUtil redisUtil;
+    
     @Value("${error.INTERNAL_SERVER_ERROR}")
     private String internalError;
 
     @Value("${error.BAD_REQUEST_ERROR}")
     private String badRequestError;
- 
+
+    @Value("${error.UNAUTHORIZE}")
+    private String unAuthorize;
     // 아이디 있는지 체크하는데 사용하는 메서드
     public ResponseEntity<?> idValidate(String email){
         Optional<User> existingUser = userRepository.findByEmail(email);
@@ -61,7 +64,7 @@ public class AuthService {
         Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
         if(existingUser.isPresent()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(ResponseMessageDto.set(badRequestError, "해당 ID의 유저가 존재합니다."));
+            .body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }
         
         try{
@@ -78,13 +81,14 @@ public class AuthService {
         }
     }
 
-    // 로그인하는데 사용하는 메서드
+    // 로그인하는데 사용하는 메서드 -> 아직 로그아웃을 하고 재 로그인을 했을 때, 이 전 껄로 했을 때, 인증이 되고 있음. 
     public ResponseEntity<?> logIn(LogInDto dto){
         Optional<User> existingUser = userRepository.findByEmail(dto.getEmail());
         if(existingUser.isPresent()){
-            if(passwordEncoder.matches(dto.getPassword(), existingUser.get().getPassword())){
-                Long userId = existingUser.get().getUserId();
-                String username = existingUser.get().getUsername();
+            User user = existingUser.get();
+            if(passwordEncoder.matches(dto.getPassword(), user.getPassword())){
+                Long userId = user.getUserId();
+                String username = user.getUsername();
                 String accessToken = jwtProvider.generateAccessToken(userId);
                 RefreshToken.removeUserRefreshToken(userId);
                 String refreshToken = jwtProvider.generateRefreshToken(userId);
@@ -94,11 +98,11 @@ public class AuthService {
                 .body(ResponseDataDto.set("OK", response));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(ResponseMessageDto.set(badRequestError, "아이디와 비밀번호가 일치하지않습니다."));
+            .body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(ResponseMessageDto.set(badRequestError, "아이디가 존재하지 않습니다."));
+        .body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
 
     public ResponseEntity<?> logout(HttpServletRequest request){
@@ -109,7 +113,7 @@ public class AuthService {
         String jwtToken = token.substring(7);
 
         if(!jwtProvider.validateToken(jwtToken)){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "이미 로그아웃"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "이미 로그아웃"));
         }
         redisUtil.setBlackList(jwtToken, "accessToken", 5);
         return ResponseEntity.status(HttpStatus.OK).body(ResponseMessageDto.set("logout", "로그아웃 완료"));
@@ -124,26 +128,21 @@ public class AuthService {
                 userRepository.deleteById(loginUserId);
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
             }
-         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "존재하지않는 유저입니다."));
+         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
 
 
-    // 이름을 통해서 사용자의 정보를 알아내는 메서드
+    // 이름을 통해서 사용자의 정보를 알아내는 메서드 
     public ResponseEntity<?> getUserInfoFromToken(HttpServletRequest request){
-        final String token = request.getHeader("Authorization");
-        String id = null;
-        if(token != null && !token.isEmpty()){
-            String jwtToken = token.substring(7);
-            id = jwtProvider.getUserIdFromToken(jwtToken);
-        }
-        Optional<User> existingUser = userRepository.findById(Long.parseLong(id));
+        Long userId = getUserId(request);
+        Optional<User> existingUser = userRepository.findById(userId);
         if (existingUser.isPresent()) {
             User user = existingUser.get();
             GetUserInfoFromUsernameResponseDto response = new GetUserInfoFromUsernameResponseDto(user.getEmail(), user.getUsername());
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(ResponseMessageDto.set(badRequestError, "해당하는 정보가 없습니다."));
+        .body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
 
    // 인증관련 유저의 id 알아내는 메서드
@@ -158,3 +157,5 @@ public class AuthService {
     }
 
 }
+
+// refreshToken으로 해도 로그인을 한 것과 같은 효과가 나고 있음.
