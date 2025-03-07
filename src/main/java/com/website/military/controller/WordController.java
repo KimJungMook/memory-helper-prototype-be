@@ -54,6 +54,7 @@ public class WordController {
                     + "  \"verb\": \"[]\",\n"
                     + "  \"adjective\": \"[]\",\n"
                     + "  \"adverb\": \"[\"\"]\"\n"
+                    + "    \"gpt\": true"
                     + "}\n"
                     + "}")
                 )}),
@@ -72,9 +73,9 @@ public class WordController {
                     + "}"
                     + "}")
                 )}),
-        @ApiResponse(responseCode = "401", description = "토큰에 해당하는 사용자가 없습니다.",
+        @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"토큰에 해당하는 사용자가 없습니다.\" } }"
+                examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
                 ))}),
         @ApiResponse(responseCode = "500", description = "서버 에러",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
@@ -125,9 +126,9 @@ public class WordController {
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
                 examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
                 ))}),
-        @ApiResponse(responseCode = "401", description = "바꾸려는 단어를 잘못 넣었습니다.",
+        @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"바꾸려는 단어를 잘못 넣었습니다.\" } }"
+                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
                 ))}),
         @ApiResponse(responseCode = "500", description = "서버 에러",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
@@ -159,13 +160,13 @@ public class WordController {
                 + "}\n"
                 + "}")
                 )}),
-        @ApiResponse(responseCode = "400", description = "해당하는 단어가 없습니다.",
+        @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"해당하는 단어가 없습니다.\" } }"
+                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
                 ))}),
         @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
+                examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
                 ))}),
         @ApiResponse(responseCode = "500", description = "서버 에러",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
@@ -198,7 +199,7 @@ public class WordController {
                 )}),
         @ApiResponse(responseCode = "400", description = "해당하는 단어가 없습니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"BAD_REQUEST\": { \"message\": \"해당하는 단어가 없습니다.\" } }"
+                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"BAD_REQUEST\": { \"message\": \"잘못된 요청입니다.\" } }"
                 ))}),
         @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),

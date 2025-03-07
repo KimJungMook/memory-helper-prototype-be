@@ -150,7 +150,7 @@ public class WordService {
                 words.getAdjective(), words.getAdverb());           
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
             }else{
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "바꾸려는 단어를 잘못 넣었습니다."));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
             }
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
@@ -180,7 +180,7 @@ public class WordService {
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
             } 
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "해당하는 단어가 없습니다."));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
     
 

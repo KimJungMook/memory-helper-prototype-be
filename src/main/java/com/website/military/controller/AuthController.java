@@ -54,9 +54,9 @@ public class AuthController {
             content = {@Content(schema = @Schema(implementation = GetUserInfoFromUsernameResponseDto.class),
                 examples = @ExampleObject(value = "{\"code\": \"OK\", \"data\": { \"username\": \"묵\", \"email\": \"wjdanr@naver.com\" } }"
                 ))}),
-        @ApiResponse(responseCode = "400", description = "해당하는 정보가 없습니다.",
+        @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                    examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"해당하는 정보가 없습니다.\" } }"
+                    examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
                     ))}),
         @ApiResponse(responseCode = "500", description = "서버 에러",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
@@ -96,9 +96,9 @@ public class AuthController {
             content = {@Content(schema = @Schema(implementation = SignUpResponseDto.class),
                 examples = @ExampleObject(value = "{\"code\": \"OK\", \"data\": { \"username\": \"묵\", \"email\": \"wjdanr@naver.com\" } }"
                 ))}),
-        @ApiResponse(responseCode = "400", description = "해당 ID의 유저가 존재합니다.",
+        @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"해당 ID의 유저가 존재합니다.\" } }"
+                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
                 ))}),
         @ApiResponse(responseCode = "500", description = "서버 에러",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
@@ -116,14 +116,14 @@ public class AuthController {
             content = {@Content(schema = @Schema(implementation = LoginResponseDto.class),
                 examples = @ExampleObject(value = "{\"code\": \"OK\", \"data\": { \"username\": \"묵\", \"accessToken\": \"eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIxIiwiaWF0IjoxNzQxMDExODI0LCJleHAiOjE3NDEwMTM2MjR9.HNuSK7iiYKQ_W7x6jUxAPcwnHolTodPpQfXtND-H0lI\", \"refreshToken\": \"eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIxIiwiaWF0IjoxNzQxMDExODI0LCJleHAiOjE3NDEwMTM2MjR9.HNuSK7iiYKQ_W7x6jUxAPcwnHolTodPpQfXtND-H0lI\"} }"
                 ))}),
-        @ApiResponse(responseCode = "400", description = "아이디와 비밀번호가 일치하지않습니다.",
+        @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"아이디와 비밀번호가 일치하지 않습니다.\" } }"
+                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
                 ))}),
-        @ApiResponse(responseCode = "400", description = "아이디가 존재하지 않습니다.",
-            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"아이디가 존재하지 않습니다.\" } }"
-                ))}),
+        // @ApiResponse(responseCode = "400", description = "아이디가 존재하지 않습니다.",
+        //     content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+        //         examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"아이디가 존재하지 않습니다.\" } }"
+        //         ))}),
         @ApiResponse(responseCode = "500", description = "서버 에러",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
                 examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
@@ -140,9 +140,9 @@ public class AuthController {
             content = {@Content(schema = @Schema(implementation = RefreshTokenResponseDto.class),
                 examples = @ExampleObject(value = "{\"code\": \"OK\", \"data\": { \"accessToken\": \"eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIxIiwiaWF0IjoxNzQxMDExODI0LCJleHAiOjE3NDEwMTM2MjR9.HNuSK7iiYKQ_W7x6jUxAPcwnHolTodPpQfXtND-H0lI\", \"refreshToken\": \"eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIxIiwiaWF0IjoxNzQxMDExODI0LCJleHAiOjE3NDEwMTM2MjR9.HNuSK7iiYKQ_W7x6jUxAPcwnHolTodPpQfXtND-H0lI\"} }"
                 ))}),
-        @ApiResponse(responseCode = "401", description = "잘못된 JWT 토큰입니다.",
+        @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
         content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-            examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"잘못된 JWT 토큰입니다.\" } }"
+            examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
             ))}),
         @ApiResponse(responseCode = "500", description = "서버 에러",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
@@ -170,9 +170,9 @@ public class AuthController {
             content = {@Content(schema = @Schema(implementation = DeleteUserResponse.class),
                 examples = @ExampleObject(value = "{\"code\": \"OK\", \"data\": { \"username\": \"묵\", \"email\": \"wjdanr@naver.com\" } }"
                 ))}),
-        @ApiResponse(responseCode = "400", description = "존재하지않는 유저입니다.",
+        @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"존재하지 않는 유저입니다.\" } }"
+                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
                 ))}),
         @ApiResponse(responseCode = "500", description = "서버 에러",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
