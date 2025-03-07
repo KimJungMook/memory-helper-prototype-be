@@ -105,13 +105,3 @@ public class TestController {
         return testService.deleteTest(request, testId);
     }
 }
-
-
-// {
-//     "code": "OK",
-//     "data": {
-//       "testId": 6,
-//       "setName": "베델기우스",
-//       "deletedAt": "2025-03-05T14:18:10.164746581Z"
-//     }
-//   }
