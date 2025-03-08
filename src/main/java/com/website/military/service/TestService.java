@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -83,11 +84,14 @@ public class TestService {
             testsRepository.save(tests); // test 생성
             List<WordSetMapping> mapping = wordSets.getWordsetmapping();
             List<GptWordSetMapping> gptmapping = wordSets.getGptwordsetMappings();
-            int length = mapping.size() + gptmapping.size();
+            int mappingSize = mapping.size();
+            int gptMappingSize = gptmapping.size();
+            int length = mappingSize + gptMappingSize;
+
+            Collections.shuffle(mapping); // 매핑 된거 먼저 셔플을 해야 넣은 순서대로 문제가 나오지 않음.
+            Collections.shuffle(gptmapping);
 
             if(length < 20){
-                Collections.shuffle(mapping); // 매핑 된거 먼저 셔플을 해야 넣은 순서대로 문제가 나오지 않음.
-                Collections.shuffle(gptmapping);
                 List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
                 Long problemNumber = 1L;             // 문제를 response로 낼 때는 몇번이지 알려줘야하기에.
                 for(WordSetMapping tmp : mapping){
@@ -136,11 +140,14 @@ public class TestService {
                         e.printStackTrace();
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
                     }  
-
+                    
                 }
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responseDtos));
             }else{
-                // 20개 넘으면 20개를 고르는 알고리즘 존재.
+                int randomNumber = ThreadLocalRandom.current().nextInt(0, mappingSize + 1); // 1부터 size까지
+                List<WordSetMapping> randomSelection = mapping.subList(0, randomNumber);
+                List<GptWordSetMapping> gptRandomSelection = gptmapping.subList(0, 20-randomNumber);
+                // 이후부터는 다시 하기
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
@@ -293,3 +300,7 @@ public class TestService {
 }
 
 
+
+// TEST 결과 알려주기. -> Mistake랑 연결해서 할 수 있게.
+// 로직적으로 나한테 id만 보내준다. Test랑 비교해서 틀린거랑 틀린 문제 수 찾기. 
+// 
