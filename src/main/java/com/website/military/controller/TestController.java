@@ -1,8 +1,10 @@
 package com.website.military.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.server.MimeMappings.Mapping;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,7 +36,16 @@ public class TestController {
     @Autowired
     private TestService testService;
 
+    // GET
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllExamList(HttpServletRequest request) {
+        return testService.getAllExamList(request);
+    }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getTestProblems(HttpServletRequest request, @PathVariable("id") Long id){
+        return testService.getTestProblems(request, id);
+    }
 
     // POST
     @Operation(summary = "시험을 생성하는 API", description = "AI 이용해서 시험 생성하는 API")
@@ -50,7 +61,7 @@ public class TestController {
                 + "\"data\": ["
                 + "    {"
                 + "      \"problemNumber\": 1,"
-                + "      \"list\": ["
+                + "      \"multipleChoice\": ["
                 + "        {\"id\": \"A\", \"meaning\": \"생각\"},"
                 + "        {\"id\": \"B\", \"meaning\": \"생수\"},"
                 + "        {\"id\": \"C\", \"meaning\": \"우유\"},"
@@ -61,7 +72,7 @@ public class TestController {
                 + "    },"
                 + "    {"
                 + "      \"problemNumber\": 2,"
-                + "      \"list\": ["
+                + "      \"multipleChoice\": ["
                 + "        {\"id\": \"A\", \"meaning\": \"생각\"},"
                 + "        {\"id\": \"B\", \"meaning\": \"생수\"},"
                 + "        {\"id\": \"C\", \"meaning\": \"우유\"},"
@@ -87,9 +98,9 @@ public class TestController {
         return testService.generateExamList(request, setId);
     }
 
-    @PostMapping("/check/{testId}")
+    @PostMapping("/check/{testId}") // -> 채점을 할 때 result는 생성됌.
     public ResponseEntity<?> checkAnswers(HttpServletRequest request, @PathVariable("testId")Long testId, @RequestBody CheckRequest dto) {
-        return testService.checkAnswers(request, testId, dto.getLists());
+        return testService.checkAnswers(request, testId, dto.getCheckedAnswers());
     }
     
     // DELETE

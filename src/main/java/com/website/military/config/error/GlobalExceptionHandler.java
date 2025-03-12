@@ -15,8 +15,12 @@ import io.jsonwebtoken.MalformedJwtException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     @Value("${error.UNAUTHORIZE}")
     private String unAuthorize;
+
+    @Value("${error.BAD_REQUEST_ERROR}")
+    private String badRequestError;
 
     @ExceptionHandler(MalformedJwtException.class)
     public ResponseEntity<?> handleMalformedJwtException(MalformedJwtException e){
@@ -25,7 +29,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRunTimeJwtException(RuntimeException e){
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize,  "잘못된 JWT 토큰입니다."));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError,  "잘못된 요청입니다."));
     }
 
     @ExceptionHandler(CustomException.class)

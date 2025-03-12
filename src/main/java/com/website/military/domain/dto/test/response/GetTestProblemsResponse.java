@@ -9,11 +9,14 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class CheckResponse {
-
+public class GetTestProblemsResponse {
+    private Long problemId;
+    
     private Long problemNumber;
 
     private List<QuestionRequest> multipleChoice; // 문제에 해당하는 질문
 
+    private String question;
+    
     private char answer; // 정답
 }

@@ -23,9 +23,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.website.military.domain.Entity.GptWord;
 import com.website.military.domain.Entity.GptWordSetMapping;
 import com.website.military.domain.Entity.Mistakes;
+import com.website.military.domain.Entity.Results;
 import com.website.military.domain.Entity.SolvedProblems;
 import com.website.military.domain.Entity.TestProblems;
 import com.website.military.domain.Entity.Tests;
+import com.website.military.domain.Entity.User;
 import com.website.military.domain.Entity.Word;
 import com.website.military.domain.Entity.WordSetMapping;
 import com.website.military.domain.Entity.WordSets;
@@ -33,13 +35,18 @@ import com.website.military.domain.dto.gemini.request.GeminiRequestDto;
 import com.website.military.domain.dto.gemini.response.GeminiResponseDto;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
+import com.website.military.domain.dto.test.request.CheckRequest;
 import com.website.military.domain.dto.test.request.QuestionRequest;
 import com.website.military.domain.dto.test.response.CheckListResponse;
 import com.website.military.domain.dto.test.response.CheckResponse;
 import com.website.military.domain.dto.test.response.DeleteExamResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponseDto;
+import com.website.military.domain.dto.test.response.GetAllExamListResponse;
+import com.website.military.domain.dto.test.response.GetTestProblemsResponse;
+import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
 import com.website.military.repository.MistakesRepository;
+import com.website.military.repository.ResultsRepository;
 import com.website.military.repository.SolvedProblemRepository;
 import com.website.military.repository.TestProblemsRepository;
 import com.website.military.repository.TestsRepository;
@@ -68,6 +75,9 @@ public class TestService {
     @Autowired
     private MistakesRepository mistakesRepository;
 
+    @Autowired
+    private ResultsRepository resultsRepository;
+
     @Value("${error.INTERNAL_SERVER_ERROR}")
     private String internalError;
 
@@ -86,6 +96,38 @@ public class TestService {
 
     @Value("${gemini.api_key}")
     private String apiKey;
+
+    public ResponseEntity<?> getAllExamList(HttpServletRequest request){ // 시험이 뭐뭐 있었는지를 체크하는 리스트
+        Long userId = authService.getUserId(request);
+        List<Tests> testsList = testsRepository.findByUser_UserId(userId);
+        List<GetAllExamListResponse> responses = new ArrayList<>();
+        if(testsList.isEmpty()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+        }else{
+            for(Tests test : testsList){
+                GetAllExamListResponse response = new GetAllExamListResponse(test.getTestId(), test.getCreatedAt(), test.getTestType());
+                responses.add(response);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
+        }
+    }
+
+    public ResponseEntity<?> getTestProblems(HttpServletRequest request, Long id){
+        Long userId = authService.getUserId(request);
+        Optional<Tests> existingTests = testsRepository.findByUser_UserIdAndTestId(userId, id);
+        if(existingTests.isPresent()){
+            List<TestProblems> problems = existingTests.get().getTestproblems();
+            List<GetTestProblemsResponse> responses = new ArrayList<>();
+            for(TestProblems problem : problems){
+                List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
+                GetTestProblemsResponse response = new GetTestProblemsResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList,
+                problem.getQuestion(), problem.getAnswer());
+                responses.add(response);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+    }
 
     // 시험 문제 만드는 메서드 
     public ResponseEntity<?> generateExamList(HttpServletRequest request, Long setId){
@@ -116,9 +158,9 @@ public class TestService {
                         e.printStackTrace();
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
                     }
-                    Collections.shuffle(responseDto.getList());
+                    Collections.shuffle(responseDto.getMultipleChoice());
                     List<QuestionRequest> words = new ArrayList<>();
-                    for(GenerateExamListResponse list : responseDto.getList()){
+                    for(GenerateExamListResponse list : responseDto.getMultipleChoice()){
                         String id = list.getId();
                         String meaning = list.getMeaning();
                         words.add(new QuestionRequest(id, meaning));
@@ -141,9 +183,9 @@ public class TestService {
                 for(GptWordSetMapping tmp : gptmapping){
                     GptWord tmpWord = tmp.getGptword();
                     GenerateExamListResponseDto responseDto = parsingData(tmpWord, problemNumber);
-                    Collections.shuffle(responseDto.getList());
+                    Collections.shuffle(responseDto.getMultipleChoice());
                     List<QuestionRequest> words = new ArrayList<>();
-                    for(GenerateExamListResponse list : responseDto.getList()){
+                    for(GenerateExamListResponse list : responseDto.getMultipleChoice()){
                         String id = list.getId();
                         String meaning = list.getMeaning();
                         words.add(new QuestionRequest(id, meaning));
@@ -174,31 +216,49 @@ public class TestService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
     }
 
-    public ResponseEntity<?> checkAnswers(HttpServletRequest request, Long testId, List<Character> list){
+
+    public ResponseEntity<?> checkAnswers(HttpServletRequest request, Long testId, List<Character> checkedAnswers){
         Long userId = authService.getUserId(request);
         Optional<Tests> existingTests = testsRepository.findByUser_UserIdAndTestId(userId, testId);
         CheckListResponse responses = new CheckListResponse();
         List<CheckResponse> correctList = new ArrayList<>();
+        List<SolvedProblems> solvedProblemsList = new ArrayList<>();
+        List<Mistakes> mistakesList = new ArrayList<>();
         List<CheckResponse> incorrectList = new ArrayList<>();
         if(existingTests.isPresent()){
             Tests tests = existingTests.get();
             List<TestProblems> problems = tests.getTestproblems();
             int index = 0;
+            int mistakeIndex = 0;
             for(TestProblems problem : problems){
-                if(list.get(index).equals(problem.getAnswer())){
+                List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
+                if(checkedAnswers.get(index).equals(problem.getAnswer())){
                     SolvedProblems solvedProblems = new SolvedProblems(problem);
                     solvedProblemRepository.save(solvedProblems);
-                    CheckResponse response = new CheckResponse(problem.getProblemNumber(), problem.getMultipleChoice(), problem.getAnswer()); 
+                    solvedProblemsList.add(solvedProblems);
+                    CheckResponse response = new CheckResponse(problem.getProblemNumber(), multipleChoiceList, problem.getAnswer()); 
                     correctList.add(response);
                 }else{
                     Mistakes mistakesProblems = new Mistakes(problem);
                     mistakesRepository.save(mistakesProblems);
-                    CheckResponse response = new CheckResponse(problem.getProblemNumber(), problem.getMultipleChoice(), problem.getAnswer()); 
+                    mistakesList.add(mistakesProblems);
+                    CheckResponse response = new CheckResponse(problem.getProblemNumber(), multipleChoiceList, problem.getAnswer()); 
                     incorrectList.add(response);
+                    mistakeIndex++;
                 }
                 index++; // Result에 저장하기. 채점을 했으니까. 여기서부터 다시하기. 25.03.08 (23:23)
             }
-            // result 만들어내기 03.11 (23:33)
+            Results results = new Results(tests.getUser(), tests, (index-mistakeIndex)*100/index, mistakesList, solvedProblemsList);
+
+            for (Mistakes mistake : mistakesList) {
+                mistake.setResults(results);
+            }
+            for (SolvedProblems solvedProblem : solvedProblemsList) {
+                solvedProblem.setResults(results);
+            }
+
+            resultsRepository.save(results);
+            // result 만들어내기 03.11 (23:33) -> result 저장후, mistake solvedproblem 연결 완료 -> QA 부족 체크하기.
             responses.setCorrectList(correctList);
             responses.setIncorrectList(incorrectList);
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responses));
@@ -356,6 +416,15 @@ public class TestService {
         return responseDto;
     }
 
+    public List<QuestionRequest> parseMultipleChoice(String multipleChoiceJson) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(multipleChoiceJson, objectMapper.getTypeFactory().constructCollectionType(List.class, QuestionRequest.class));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 }
 

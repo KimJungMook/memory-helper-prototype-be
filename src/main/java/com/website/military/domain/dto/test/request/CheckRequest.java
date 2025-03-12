@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CheckRequest {
-    private List<Character> lists;
+    private List<Character> checkedAnswers;
 }

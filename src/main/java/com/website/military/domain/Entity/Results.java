@@ -5,6 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -43,10 +44,19 @@ public class Results {
     private Instant submittedAt;
 
     @JsonManagedReference // 중복 순환 해결.
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "results")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "results", cascade = CascadeType.PERSIST)
     private List<Mistakes> mistakes;
 
     @JsonManagedReference // 중복 순환 해결.
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "results")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "results", cascade = CascadeType.PERSIST)
     private List<SolvedProblems> solvedProblems;
+
+    public Results(User user, Tests tests, int score, List<Mistakes> mistakes, List<SolvedProblems> solvedProblems){
+        this.user = user;
+        this.tests = tests;
+        this.score = score;
+        this.submittedAt = Instant.now();
+        this.mistakes = mistakes;
+        this.solvedProblems = solvedProblems;
+    }
 }
