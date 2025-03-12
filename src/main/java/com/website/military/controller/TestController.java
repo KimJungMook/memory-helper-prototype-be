@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.website.military.domain.dto.response.ResponseMessageDto;
+import com.website.military.domain.dto.test.request.CheckRequest;
 import com.website.military.domain.dto.test.response.DeleteExamResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponseDto;
 import com.website.military.service.TestService;
@@ -22,6 +23,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @RestController
 @RequestMapping("/api/exam")
@@ -84,6 +87,11 @@ public class TestController {
         return testService.generateExamList(request, setId);
     }
 
+    @PostMapping("/check/{testId}")
+    public ResponseEntity<?> checkAnswers(HttpServletRequest request, @PathVariable("testId")Long testId, @RequestBody CheckRequest dto) {
+        return testService.checkAnswers(request, testId, dto.getLists());
+    }
+    
     // DELETE
     @Operation(summary = "시험 삭제하는 API", description = "시험 ID를 이용해 삭제하는 API")
     @ApiResponses(value = {

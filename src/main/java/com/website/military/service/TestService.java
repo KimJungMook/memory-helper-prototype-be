@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.json.JSONArray;
@@ -21,6 +22,8 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.website.military.domain.Entity.GptWord;
 import com.website.military.domain.Entity.GptWordSetMapping;
+import com.website.military.domain.Entity.Mistakes;
+import com.website.military.domain.Entity.SolvedProblems;
 import com.website.military.domain.Entity.TestProblems;
 import com.website.military.domain.Entity.Tests;
 import com.website.military.domain.Entity.Word;
@@ -31,9 +34,13 @@ import com.website.military.domain.dto.gemini.response.GeminiResponseDto;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.test.request.QuestionRequest;
+import com.website.military.domain.dto.test.response.CheckListResponse;
+import com.website.military.domain.dto.test.response.CheckResponse;
 import com.website.military.domain.dto.test.response.DeleteExamResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponseDto;
+import com.website.military.repository.MistakesRepository;
+import com.website.military.repository.SolvedProblemRepository;
 import com.website.military.repository.TestProblemsRepository;
 import com.website.military.repository.TestsRepository;
 import com.website.military.repository.WordSetsRepository;
@@ -55,6 +62,12 @@ public class TestService {
     @Autowired
     private TestsRepository testsRepository;
 
+    @Autowired
+    private SolvedProblemRepository solvedProblemRepository;
+
+    @Autowired
+    private MistakesRepository mistakesRepository;
+
     @Value("${error.INTERNAL_SERVER_ERROR}")
     private String internalError;
 
@@ -74,7 +87,7 @@ public class TestService {
     @Value("${gemini.api_key}")
     private String apiKey;
 
-
+    // 시험 문제 만드는 메서드 
     public ResponseEntity<?> generateExamList(HttpServletRequest request, Long setId){
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
@@ -96,7 +109,13 @@ public class TestService {
                 Long problemNumber = 1L;             // 문제를 response로 낼 때는 몇번이지 알려줘야하기에.
                 for(WordSetMapping tmp : mapping){
                     Word tmpWord = tmp.getWord();
-                    GenerateExamListResponseDto responseDto = parsingData(tmpWord, problemNumber);
+                    GenerateExamListResponseDto responseDto = null;
+                    try {
+                        responseDto = parsingData(tmpWord, problemNumber);   
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
+                    }
                     Collections.shuffle(responseDto.getList());
                     List<QuestionRequest> words = new ArrayList<>();
                     for(GenerateExamListResponse list : responseDto.getList()){
@@ -106,9 +125,10 @@ public class TestService {
                     }
                     try {
                         ObjectMapper objectMapper = new ObjectMapper();   
+                        String question = responseDto.getQuestion();
                         String jsonString = objectMapper.writeValueAsString(words);
-                        String answer = responseDto.getAnswer();
-                        TestProblems testProblems = new TestProblems(tests, jsonString, problemNumber, answer);
+                        char answer = responseDto.getAnswer().charAt(0);
+                        TestProblems testProblems = new TestProblems(tests, jsonString, question, problemNumber, answer);
                         testProblemsRepository.save(testProblems);
                         problemNumber = problemNumber + 1;   
                         responseDtos.add(responseDto); 
@@ -129,10 +149,11 @@ public class TestService {
                         words.add(new QuestionRequest(id, meaning));
                     }
                     try {
-                        ObjectMapper objectMapper = new ObjectMapper();   
+                        ObjectMapper objectMapper = new ObjectMapper();  
+                        String question = responseDto.getQuestion();
                         String jsonString = objectMapper.writeValueAsString(words);  
-                        String answer = responseDto.getAnswer();
-                        TestProblems testProblems = new TestProblems(tests, jsonString, problemNumber, answer);
+                        char answer = responseDto.getAnswer().charAt(0);
+                        TestProblems testProblems = new TestProblems(tests, jsonString ,question, problemNumber, answer);
                         testProblemsRepository.save(testProblems);
                         problemNumber = problemNumber + 1;   
                         responseDtos.add(responseDto); 
@@ -153,6 +174,41 @@ public class TestService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
     }
 
+    public ResponseEntity<?> checkAnswers(HttpServletRequest request, Long testId, List<Character> list){
+        Long userId = authService.getUserId(request);
+        Optional<Tests> existingTests = testsRepository.findByUser_UserIdAndTestId(userId, testId);
+        CheckListResponse responses = new CheckListResponse();
+        List<CheckResponse> correctList = new ArrayList<>();
+        List<CheckResponse> incorrectList = new ArrayList<>();
+        if(existingTests.isPresent()){
+            Tests tests = existingTests.get();
+            List<TestProblems> problems = tests.getTestproblems();
+            int index = 0;
+            for(TestProblems problem : problems){
+                if(list.get(index).equals(problem.getAnswer())){
+                    SolvedProblems solvedProblems = new SolvedProblems(problem);
+                    solvedProblemRepository.save(solvedProblems);
+                    CheckResponse response = new CheckResponse(problem.getProblemNumber(), problem.getMultipleChoice(), problem.getAnswer()); 
+                    correctList.add(response);
+                }else{
+                    Mistakes mistakesProblems = new Mistakes(problem);
+                    mistakesRepository.save(mistakesProblems);
+                    CheckResponse response = new CheckResponse(problem.getProblemNumber(), problem.getMultipleChoice(), problem.getAnswer()); 
+                    incorrectList.add(response);
+                }
+                index++; // Result에 저장하기. 채점을 했으니까. 여기서부터 다시하기. 25.03.08 (23:23)
+            }
+            // result 만들어내기 03.11 (23:33)
+            responses.setCorrectList(correctList);
+            responses.setIncorrectList(incorrectList);
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responses));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
+
+
+    }
+
+    // 시험 연결된거 삭제하기. 
     public ResponseEntity<?> deleteTest(HttpServletRequest request, Long testId){
         Long userId = authService.getUserId(request);
         Optional<Tests> existingWordSets = testsRepository.findByUser_UserIdAndTestId(userId, testId);
@@ -169,12 +225,16 @@ public class TestService {
     public String getAIDescription(String word, String meaning){
         String requestUrl = apiUrl + "?key=" + apiKey;
         GeminiRequestDto request = new GeminiRequestDto();
-        String processedSentence = word + "에 대한 의미를 묻는 객관식 문제를 만들어줘." + word + "의 의미를 " + meaning + "를 정답으로 해서 만들어줘. " +
-        "다른 보기는 " + word + "와는 전혀 관련이 없는 단어의 뜻으로 만들어줘. " +
-        "선택지의 품사는 '" + meaning + "'와 똑같이 맞춰줘. " +
-        "JSON 형식으로 다음과 같이 만들어줘."+
+        String[] choices = {"A", "B", "C", "D"};
+        String correctAnswer = choices[new Random().nextInt(choices.length)]; // 랜덤 선택
+        String processedSentence = word + "에 대한 의미를 묻는 객관식 문제를 만들어줘." + 
+        word + "의 의미를 '" + meaning + "'로 하고, 이를 정답으로 설정해줘. " +
+        "나머지 보기는 " + word + "와 관련 없는 단어의 뜻으로 만들어줘. " +
+        "선택지의 품사는 '" + meaning + "'와 동일하게 맞춰줘. " +  
+        "정답 선택지의 ID 값은 " + correctAnswer + "로 설정해줘. " +  // 정답 ID를 명확하게 전달  
+        "JSON 형식으로 다음과 같이 만들어줘: " +
         "{\"question\":\"객관식 문제의 질문 내용\", " +
-        "\"answer\":\"정답 선택지의 ID 값\", " +
+        "\"answer\":\"" + correctAnswer + "\", " +
         "\"options\":[{\"id\":\"A\",\"text\":\"보기1\"}, " +
         "{\"id\":\"B\",\"text\":\"보기2\"}, " +
         "{\"id\":\"C\",\"text\":\"보기3\"}, " +

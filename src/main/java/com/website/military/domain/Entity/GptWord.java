@@ -56,9 +56,9 @@ public class GptWord {
 //    @JsonManagedReference // 중복 순환 해결.
 //    @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")
 //    private List<TestProblems> testproblems;
-    @JsonManagedReference // 중복 순환 해결.
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")
-    private List<Mistakes> mistakes;
+//    @JsonManagedReference // 중복 순환 해결.
+//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")
+//    private List<Mistakes> mistakes;
 
     public GptWord(String word, List<String> noun, List<String> verb, List<String> adjective, List<String> adverb){
         this.word = word;

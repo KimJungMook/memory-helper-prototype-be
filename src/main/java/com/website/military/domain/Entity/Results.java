@@ -33,13 +33,20 @@ public class Results {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user; // 외래키
+
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "test_id")
     private Tests tests; // 외래키
+
     private int score;
     private Instant submittedAt;
+
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "results")
     private List<Mistakes> mistakes;
+
+    @JsonManagedReference // 중복 순환 해결.
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "results")
+    private List<SolvedProblems> solvedProblems;
 }

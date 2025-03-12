@@ -64,9 +64,9 @@
      //   @JsonManagedReference // 중복 순환 해결.
      //   @OneToMany(fetch = FetchType.LAZY, mappedBy = "word")
      //   private List<TestProblems> testproblems;
-        @JsonManagedReference // 중복 순환 해결.
-        @OneToMany(fetch = FetchType.LAZY, mappedBy = "word")
-        private List<Mistakes> mistakes;
+     //   @JsonManagedReference // 중복 순환 해결.
+     //   @OneToMany(fetch = FetchType.LAZY, mappedBy = "word")
+     //   private List<Mistakes> mistakes;
 
         public Word(String word, List<String> noun, List<String> verb, List<String> adjective, List<String> adverb, User user){
             this.word = word;
