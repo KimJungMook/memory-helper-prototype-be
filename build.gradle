@@ -41,6 +41,7 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
 	implementation 'org.json:json:20190722'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'com.vladmihalcea:hibernate-types-52:2.10.4'
 }
 
 tasks.named('test') {
