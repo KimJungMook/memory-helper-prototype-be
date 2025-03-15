@@ -27,7 +27,6 @@ import com.website.military.domain.Entity.Results;
 import com.website.military.domain.Entity.SolvedProblems;
 import com.website.military.domain.Entity.TestProblems;
 import com.website.military.domain.Entity.Tests;
-import com.website.military.domain.Entity.User;
 import com.website.military.domain.Entity.Word;
 import com.website.military.domain.Entity.WordSetMapping;
 import com.website.military.domain.Entity.WordSets;
@@ -35,16 +34,15 @@ import com.website.military.domain.dto.gemini.request.GeminiRequestDto;
 import com.website.military.domain.dto.gemini.response.GeminiResponseDto;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
-import com.website.military.domain.dto.test.request.CheckRequest;
 import com.website.military.domain.dto.test.request.QuestionRequest;
 import com.website.military.domain.dto.test.response.CheckListResponse;
 import com.website.military.domain.dto.test.response.CheckResponse;
 import com.website.military.domain.dto.test.response.DeleteExamResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponseDto;
+import com.website.military.domain.dto.test.response.GenerateExamListTestIdResponse;
 import com.website.military.domain.dto.test.response.GetAllExamListResponse;
 import com.website.military.domain.dto.test.response.GetTestProblemsResponse;
-import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
 import com.website.military.repository.MistakesRepository;
 import com.website.military.repository.ResultsRepository;
 import com.website.military.repository.SolvedProblemRepository;
@@ -135,18 +133,19 @@ public class TestService {
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
         if(existingWordSets.isPresent()){
             WordSets wordSets = existingWordSets.get();
-            Tests tests = new Tests(wordSets.getUser(), wordSets, 0);
-            testsRepository.save(tests); // test 생성
             List<WordSetMapping> mapping = wordSets.getWordsetmapping();
             List<GptWordSetMapping> gptmapping = wordSets.getGptwordsetMappings();
             int mappingSize = mapping.size();
             int gptMappingSize = gptmapping.size();
             int length = mappingSize + gptMappingSize;
+            Tests tests = new Tests(wordSets.getUser(), wordSets, 0);
 
             Collections.shuffle(mapping); // 매핑 된거 먼저 셔플을 해야 넣은 순서대로 문제가 나오지 않음.
             Collections.shuffle(gptmapping);
 
             if(length < 20){
+                tests.setTestCount(length);
+                testsRepository.save(tests); // test 생성
                 List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
                 Long problemNumber = 1L;             // 문제를 response로 낼 때는 몇번이지 알려줘야하기에.
                 for(WordSetMapping tmp : mapping){
@@ -205,12 +204,14 @@ public class TestService {
                     }  
                     
                 }
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responseDtos));
+                GenerateExamListTestIdResponse response = new GenerateExamListTestIdResponse(tests.getTestId(), responseDtos);
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
             }else{
                 int randomNumber = ThreadLocalRandom.current().nextInt(0, mappingSize + 1); // 1부터 size까지
                 List<WordSetMapping> randomSelection = mapping.subList(0, randomNumber);
                 List<GptWordSetMapping> gptRandomSelection = gptmapping.subList(0, 20-randomNumber);
                 // 이후부터는 다시 하기
+                // testsRepository.save(tests); // test 생성
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));

@@ -149,6 +149,7 @@ public class WordSetService {
                         mapping.setGptword(gptWord);
                         mapping.setWordsets(sets);
                         gptWordSetMappingRepository.save(mapping);
+                        wordSetsRepository.incrementWordCount(setId);
                         ExistWordResponseDto response = new ExistWordResponseDto(gptWord.getGptWordId(), gptWord.getWord(), gptWord.getNoun(), gptWord.getVerb(), 
                         gptWord.getAdjective(), gptWord.getAdverb(), true);
                         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
@@ -162,6 +163,7 @@ public class WordSetService {
                         mapping.setWord(word);
                         mapping.setWordsets(sets);
                         wordSetsMappingRepository.save(mapping);
+                        wordSetsRepository.incrementWordCount(setId);
                         ExistWordResponseDto response = new ExistWordResponseDto(word.getWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
                         word.getAdjective(), word.getAdverb(), false);
                         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
@@ -195,6 +197,7 @@ public class WordSetService {
                     mapping.setGptword(Word);
                     mapping.setWordsets(wordSets);
                     gptWordSetMappingRepository.save(mapping);
+                    wordSetsRepository.incrementWordCount(setId);
                     AddWordToWordSetResponseDto response = new AddWordToWordSetResponseDto(Word.getGptWordId(), Word.getWord(), Word.getNoun(), 
                     Word.getVerb(), Word.getAdjective(), Word.getAdverb());
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
@@ -208,6 +211,7 @@ public class WordSetService {
                     mapping.setWord(Word);
                     mapping.setWordsets(wordSets);
                     wordSetsMappingRepository.save(mapping);
+                    wordSetsRepository.incrementWordCount(setId);
                     AddWordToWordSetResponseDto response = new AddWordToWordSetResponseDto(Word.getWordId(), Word.getWord(), Word.getNoun(), 
                     Word.getVerb(), Word.getAdjective(), Word.getAdverb());
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));

@@ -40,13 +40,13 @@ public class Tests {
     private WordSets wordsets;  // 외래키
     private int testType; // 0번 객관식, 1번 주관식, 2번 빈칸뚫기 
     private Instant createdAt;
+    private int testCount;
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "tests", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TestProblems> testproblems;
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "tests",  cascade = CascadeType.ALL)
     private List<Results> results;
-
     public Tests(User user, WordSets wordsets,int testType){
         this.user = user;
         this.wordsets = wordsets;
