@@ -71,7 +71,7 @@ public class WordSetService {
         List<WordSetsResponseDto> responses = new ArrayList<>();
         if(!existingWordSets.isEmpty()){
             for(WordSets sets : existingWordSets){
-                WordSetsResponseDto response = new WordSetsResponseDto(sets.getSetId(), sets.getSetName(), sets.getCreatedAt());
+                WordSetsResponseDto response = new WordSetsResponseDto(sets.getSetId(), sets.getSetName(), sets.getCreatedAt(), sets.getTests().size());
                 responses.add(response);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
@@ -88,7 +88,7 @@ public class WordSetService {
             List<WordSetMapping> wordSetsMappings = wordSetsMappingRepository.findAllByWordsets_SetId(id);
             List<GptWordSetMapping> gptWordSetMappings = gptWordSetMappingRepository.findAllByWordsets_SetId(id);
             List<GetWordsBySetIdResponse> words = new ArrayList<>();
-            for(WordSetMapping mapping : wordSetsMappings){
+            for(WordSetMapping mapping : wordSetsMappings){ // 둘다 비어져 있을 때는 어떻게 하는게좋을지.
                 Word response = mapping.getWord();
                 GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getWordId(), response.getWord(), response.getNoun(), 
                 response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt(), false);
@@ -151,7 +151,7 @@ public class WordSetService {
                         gptWordSetMappingRepository.save(mapping);
                         wordSetsRepository.incrementWordCount(setId);
                         ExistWordResponseDto response = new ExistWordResponseDto(gptWord.getGptWordId(), gptWord.getWord(), gptWord.getNoun(), gptWord.getVerb(), 
-                        gptWord.getAdjective(), gptWord.getAdverb(), true);
+                        gptWord.getAdjective(), gptWord.getAdverb(), isGpt);
                         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                     }
                 }else{
@@ -165,7 +165,7 @@ public class WordSetService {
                         wordSetsMappingRepository.save(mapping);
                         wordSetsRepository.incrementWordCount(setId);
                         ExistWordResponseDto response = new ExistWordResponseDto(word.getWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
-                        word.getAdjective(), word.getAdverb(), false);
+                        word.getAdjective(), word.getAdverb(), isGpt);
                         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                     }
                 }
@@ -199,7 +199,7 @@ public class WordSetService {
                     gptWordSetMappingRepository.save(mapping);
                     wordSetsRepository.incrementWordCount(setId);
                     AddWordToWordSetResponseDto response = new AddWordToWordSetResponseDto(Word.getGptWordId(), Word.getWord(), Word.getNoun(), 
-                    Word.getVerb(), Word.getAdjective(), Word.getAdverb());
+                    Word.getVerb(), Word.getAdjective(), Word.getAdverb(), isGpt);
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                 }
             }else{
@@ -213,7 +213,7 @@ public class WordSetService {
                     wordSetsMappingRepository.save(mapping);
                     wordSetsRepository.incrementWordCount(setId);
                     AddWordToWordSetResponseDto response = new AddWordToWordSetResponseDto(Word.getWordId(), Word.getWord(), Word.getNoun(), 
-                    Word.getVerb(), Word.getAdjective(), Word.getAdverb());
+                    Word.getVerb(), Word.getAdjective(), Word.getAdverb(), isGpt);
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                 }
             }
