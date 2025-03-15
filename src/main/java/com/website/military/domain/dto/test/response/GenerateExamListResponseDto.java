@@ -9,7 +9,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class GenerateExamListResponseDto {
     private Long problemNumber;
-    private List<GenerateExamListResponse> list;
+    private List<GenerateExamListResponse> multipleChoice;
     private String question;
     private String answer;
 }

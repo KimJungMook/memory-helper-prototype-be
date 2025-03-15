@@ -64,20 +64,20 @@ public class JwtAuthFilter extends OncePerRequestFilter{
         // }
     
         //  2. 토큰 유효성 검사
-        if (!jwtProvider.validateToken(jwtToken)) {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("status", HttpStatus.UNAUTHORIZED.value());
-            errorResponse.put("message", "유효하지 않은 토큰입니다.");
+        // if (!jwtProvider.validateToken(jwtToken)) {
+        //     response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        //     response.setContentType("application/json");
+        //     response.setCharacterEncoding("UTF-8");
+        //     ObjectMapper objectMapper = new ObjectMapper();
+        //     Map<String, Object> errorResponse = new HashMap<>();
+        //     errorResponse.put("status", HttpStatus.UNAUTHORIZED.value());
+        //     errorResponse.put("message", "유효하지 않은 토큰입니다.");
         
-            // JSON 형식으로 응답 전송
-            String jsonResponse = objectMapper.writeValueAsString(errorResponse);
-            response.getWriter().write(jsonResponse);
-            return;
-        }
+        //     // JSON 형식으로 응답 전송
+        //     String jsonResponse = objectMapper.writeValueAsString(errorResponse);
+        //     response.getWriter().write(jsonResponse);
+        //     return;
+        // }
     
         //  3. 토큰이 유효하면 사용자 정보 추출
         String username = jwtProvider.getUserIdFromToken(jwtToken);

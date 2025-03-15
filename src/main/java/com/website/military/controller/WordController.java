@@ -53,8 +53,8 @@ public class WordController {
                     + "  \"noun\": \"[\"단어\"]\",\n"
                     + "  \"verb\": \"[]\",\n"
                     + "  \"adjective\": \"[]\",\n"
-                    + "  \"adverb\": \"[\"\"]\"\n"
-                    + "    \"gpt\": true"
+                    + "  \"adverb\": \"[\"\"]\",\n"
+                    + "  \"gpt\": true\n" 
                     + "}\n"
                     + "}")
                 )}),
@@ -63,16 +63,30 @@ public class WordController {
                     examples = @ExampleObject(value = "{"
                     + "\"code\": \"CREATE\","
                     + "\"data\": {"
-                    + "  \"meanings\": ["
-                    + "    [\"사자\", \"맹수\", \"사자자리\"],"
-                    + "    [\"\"],"
-                    + "    [\"\"],"
-                    + "    [\"\"]"
+                    + "  \"noun\": ["
+                    + "    \"\","
+                    + "    \"\""
+                    + "  ],"
+                    + "  \"verb\": ["
+                    + "    \"치우다\","
+                    + "    \"없애다\","
+                    + "    \"제거하다\""
+                    + "  ],"
+                    + "  \"adjective\": ["
+                    + "    \"맑은\","
+                    + "    \"투명한\","
+                    + "    \"분명한\""
+                    + "  ],"
+                    + "  \"adverb\": ["
+                    + "    \"명확하게\","
+                    + "    \"완전히\","
+                    + "    \"분명히\""
                     + "  ],"
                     + "  \"gpt\": true"
                     + "}"
                     + "}")
-                )}),
+                )}
+                ),
         @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
             content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
                 examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"

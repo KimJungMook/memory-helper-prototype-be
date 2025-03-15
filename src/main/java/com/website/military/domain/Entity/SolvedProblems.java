@@ -16,15 +16,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "mistakes")
+@Table(name = "solvedproblems")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Mistakes {
+public class SolvedProblems {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "mistake_id", updatable = false)
-    private Long mistakesId;
+    @Column(name = "solved_problem_id", updatable = false)
+    private Long solvedProblemId;
 
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
@@ -35,9 +35,9 @@ public class Mistakes {
     @JoinColumn(name = "problem_id", unique = true) // 1대1 관계
     private TestProblems testProblem;
 
-    public Mistakes(TestProblems testProblems){
-        this.testProblem = testProblems;
+
+    public SolvedProblems(TestProblems testProblem) {
+        this.testProblem = testProblem;
         testProblem.setSolvedProblem(this); // 양방향 자동 설정
     }
-
 }

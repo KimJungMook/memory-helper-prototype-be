@@ -25,6 +25,7 @@ import com.website.military.domain.dto.word.request.ExistWordDto;
 import com.website.military.domain.dto.word.request.UpdateMeaningDto;
 import com.website.military.domain.dto.word.response.DeleteWordResponseDto;
 import com.website.military.domain.dto.word.response.ExistWordResponseDto;
+import com.website.military.domain.dto.word.response.GptExistWordResponse;
 import com.website.military.domain.dto.word.response.GptWordResponseDto;
 import com.website.military.domain.dto.word.response.UpdateMeaningResponseDto;
 import com.website.military.repository.GptWordRepository;
@@ -84,11 +85,10 @@ public class WordService {
                     String cleanJson = s.replaceAll("^```json\\s*", "").replaceAll("\\s*```$", ""); // 불필요한 json이런게 들어감.
                     JSONObject object = new JSONObject(cleanJson);
                     JSONObject newObject = object.getJSONObject(word);
-                    List<List<String>> meanings = new ArrayList<>(); 
-                    meanings.add(new ArrayList<>());
-                    meanings.add(new ArrayList<>());
-                    meanings.add(new ArrayList<>());
-                    meanings.add(new ArrayList<>());
+                    List<String> nounList = new ArrayList<>();
+                    List<String> verbList = new ArrayList<>();
+                    List<String> adjectiveList = new ArrayList<>();
+                    List<String> adverbList = new ArrayList<>();
                     JSONArray noun = newObject.getJSONArray("noun");
                     JSONArray verb = newObject.getJSONArray("verb");
                     JSONArray adjective = newObject.getJSONArray("adjective");
@@ -98,20 +98,20 @@ public class WordService {
                     int adjectiveLength = adjective.length();
                     int adverbLength = adverb.length();
                     for(int i=0;i<nounLength;i++){
-                        meanings.get(0).add(noun.getString(i));    
+                        nounList.add(noun.getString(i));    
                     }
 
                     for(int i=0;i<verbLength;i++){
-                        meanings.get(1).add(verb.getString(i));    
+                        verbList.add(verb.getString(i));    
                     }
 
                     for(int i=0;i<adjectiveLength;i++){
-                        meanings.get(2).add(adjective.getString(i));    
+                        adjectiveList.add(adjective.getString(i));    
                     }
                     for(int i=0;i<adverbLength;i++){
-                        meanings.get(3).add(adverb.getString(i));    
+                        adverbList.add(adverb.getString(i));    
                     }
-                    GptWordResponseDto response = new GptWordResponseDto(meanings, true);
+                    GptWordResponseDto response = new GptWordResponseDto(nounList, verbList, adjectiveList, adverbList,true);
                     return ResponseEntity.status(HttpStatus.CREATED).body(ResponseDataDto.set("CREATE", response)); 
                 } catch (Exception e) {
                 e.printStackTrace();

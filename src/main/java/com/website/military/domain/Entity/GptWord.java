@@ -9,7 +9,6 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -53,12 +52,13 @@ public class GptWord {
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "gptword")
     private List<GptWordSetMapping> gptWordSetMappings;
+
 //    @JsonManagedReference // 중복 순환 해결.
 //    @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")
 //    private List<TestProblems> testproblems;
-    @JsonManagedReference // 중복 순환 해결.
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")
-    private List<Mistakes> mistakes;
+//    @JsonManagedReference // 중복 순환 해결.
+//    @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")
+//    private List<Mistakes> mistakes;
 
     public GptWord(String word, List<String> noun, List<String> verb, List<String> adjective, List<String> adverb){
         this.word = word;

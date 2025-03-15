@@ -82,7 +82,7 @@ public class WordSetController {
                 examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
                 ))})
     })
-    @GetMapping("")
+    @GetMapping("/all")
     public ResponseEntity<?> getWordSets(HttpServletRequest request) {
         return wordSetService.getWordSets(request);
     }

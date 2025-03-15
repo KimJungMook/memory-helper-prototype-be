@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.json.JSONArray;
@@ -21,6 +22,9 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.website.military.domain.Entity.GptWord;
 import com.website.military.domain.Entity.GptWordSetMapping;
+import com.website.military.domain.Entity.Mistakes;
+import com.website.military.domain.Entity.Results;
+import com.website.military.domain.Entity.SolvedProblems;
 import com.website.military.domain.Entity.TestProblems;
 import com.website.military.domain.Entity.Tests;
 import com.website.military.domain.Entity.Word;
@@ -31,9 +35,17 @@ import com.website.military.domain.dto.gemini.response.GeminiResponseDto;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.test.request.QuestionRequest;
+import com.website.military.domain.dto.test.response.CheckListResponse;
+import com.website.military.domain.dto.test.response.CheckResponse;
 import com.website.military.domain.dto.test.response.DeleteExamResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponseDto;
+import com.website.military.domain.dto.test.response.GenerateExamListTestIdResponse;
+import com.website.military.domain.dto.test.response.GetAllExamListResponse;
+import com.website.military.domain.dto.test.response.GetTestProblemsResponse;
+import com.website.military.repository.MistakesRepository;
+import com.website.military.repository.ResultsRepository;
+import com.website.military.repository.SolvedProblemRepository;
 import com.website.military.repository.TestProblemsRepository;
 import com.website.military.repository.TestsRepository;
 import com.website.military.repository.WordSetsRepository;
@@ -55,6 +67,15 @@ public class TestService {
     @Autowired
     private TestsRepository testsRepository;
 
+    @Autowired
+    private SolvedProblemRepository solvedProblemRepository;
+
+    @Autowired
+    private MistakesRepository mistakesRepository;
+
+    @Autowired
+    private ResultsRepository resultsRepository;
+
     @Value("${error.INTERNAL_SERVER_ERROR}")
     private String internalError;
 
@@ -74,41 +95,81 @@ public class TestService {
     @Value("${gemini.api_key}")
     private String apiKey;
 
+    public ResponseEntity<?> getAllExamList(HttpServletRequest request){ // 시험이 뭐뭐 있었는지를 체크하는 리스트
+        Long userId = authService.getUserId(request);
+        List<Tests> testsList = testsRepository.findByUser_UserId(userId);
+        List<GetAllExamListResponse> responses = new ArrayList<>();
+        if(testsList.isEmpty()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+        }else{
+            for(Tests test : testsList){
+                GetAllExamListResponse response = new GetAllExamListResponse(test.getTestId(), test.getCreatedAt(), test.getTestType());
+                responses.add(response);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
+        }
+    }
 
+    public ResponseEntity<?> getTestProblems(HttpServletRequest request, Long id){
+        Long userId = authService.getUserId(request);
+        Optional<Tests> existingTests = testsRepository.findByUser_UserIdAndTestId(userId, id);
+        if(existingTests.isPresent()){
+            List<TestProblems> problems = existingTests.get().getTestproblems();
+            List<GetTestProblemsResponse> responses = new ArrayList<>();
+            for(TestProblems problem : problems){
+                List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
+                GetTestProblemsResponse response = new GetTestProblemsResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList,
+                problem.getQuestion(), problem.getAnswer());
+                responses.add(response);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+    }
+
+    // 시험 문제 만드는 메서드 
     public ResponseEntity<?> generateExamList(HttpServletRequest request, Long setId){
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
         if(existingWordSets.isPresent()){
             WordSets wordSets = existingWordSets.get();
-            Tests tests = new Tests(wordSets.getUser(), wordSets, 0);
-            testsRepository.save(tests); // test 생성
             List<WordSetMapping> mapping = wordSets.getWordsetmapping();
             List<GptWordSetMapping> gptmapping = wordSets.getGptwordsetMappings();
             int mappingSize = mapping.size();
             int gptMappingSize = gptmapping.size();
             int length = mappingSize + gptMappingSize;
+            Tests tests = new Tests(wordSets.getUser(), wordSets, 0);
 
             Collections.shuffle(mapping); // 매핑 된거 먼저 셔플을 해야 넣은 순서대로 문제가 나오지 않음.
             Collections.shuffle(gptmapping);
 
             if(length < 20){
+                tests.setTestCount(length);
+                testsRepository.save(tests); // test 생성
                 List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
                 Long problemNumber = 1L;             // 문제를 response로 낼 때는 몇번이지 알려줘야하기에.
                 for(WordSetMapping tmp : mapping){
                     Word tmpWord = tmp.getWord();
-                    GenerateExamListResponseDto responseDto = parsingData(tmpWord, problemNumber);
-                    Collections.shuffle(responseDto.getList());
+                    GenerateExamListResponseDto responseDto = null;
+                    try {
+                        responseDto = parsingData(tmpWord, problemNumber);   
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
+                    }
+                    Collections.shuffle(responseDto.getMultipleChoice());
                     List<QuestionRequest> words = new ArrayList<>();
-                    for(GenerateExamListResponse list : responseDto.getList()){
+                    for(GenerateExamListResponse list : responseDto.getMultipleChoice()){
                         String id = list.getId();
                         String meaning = list.getMeaning();
                         words.add(new QuestionRequest(id, meaning));
                     }
                     try {
                         ObjectMapper objectMapper = new ObjectMapper();   
+                        String question = responseDto.getQuestion();
                         String jsonString = objectMapper.writeValueAsString(words);
-                        String answer = responseDto.getAnswer();
-                        TestProblems testProblems = new TestProblems(tests, jsonString, problemNumber, answer);
+                        char answer = responseDto.getAnswer().charAt(0);
+                        TestProblems testProblems = new TestProblems(tests, jsonString, question, problemNumber, answer);
                         testProblemsRepository.save(testProblems);
                         problemNumber = problemNumber + 1;   
                         responseDtos.add(responseDto); 
@@ -121,18 +182,19 @@ public class TestService {
                 for(GptWordSetMapping tmp : gptmapping){
                     GptWord tmpWord = tmp.getGptword();
                     GenerateExamListResponseDto responseDto = parsingData(tmpWord, problemNumber);
-                    Collections.shuffle(responseDto.getList());
+                    Collections.shuffle(responseDto.getMultipleChoice());
                     List<QuestionRequest> words = new ArrayList<>();
-                    for(GenerateExamListResponse list : responseDto.getList()){
+                    for(GenerateExamListResponse list : responseDto.getMultipleChoice()){
                         String id = list.getId();
                         String meaning = list.getMeaning();
                         words.add(new QuestionRequest(id, meaning));
                     }
                     try {
-                        ObjectMapper objectMapper = new ObjectMapper();   
+                        ObjectMapper objectMapper = new ObjectMapper();  
+                        String question = responseDto.getQuestion();
                         String jsonString = objectMapper.writeValueAsString(words);  
-                        String answer = responseDto.getAnswer();
-                        TestProblems testProblems = new TestProblems(tests, jsonString, problemNumber, answer);
+                        char answer = responseDto.getAnswer().charAt(0);
+                        TestProblems testProblems = new TestProblems(tests, jsonString ,question, problemNumber, answer);
                         testProblemsRepository.save(testProblems);
                         problemNumber = problemNumber + 1;   
                         responseDtos.add(responseDto); 
@@ -142,17 +204,72 @@ public class TestService {
                     }  
                     
                 }
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responseDtos));
+                GenerateExamListTestIdResponse response = new GenerateExamListTestIdResponse(tests.getTestId(), responseDtos);
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
             }else{
                 int randomNumber = ThreadLocalRandom.current().nextInt(0, mappingSize + 1); // 1부터 size까지
                 List<WordSetMapping> randomSelection = mapping.subList(0, randomNumber);
                 List<GptWordSetMapping> gptRandomSelection = gptmapping.subList(0, 20-randomNumber);
                 // 이후부터는 다시 하기
+                // testsRepository.save(tests); // test 생성
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
     }
 
+
+    public ResponseEntity<?> checkAnswers(HttpServletRequest request, Long testId, List<Character> checkedAnswers){
+        Long userId = authService.getUserId(request);
+        Optional<Tests> existingTests = testsRepository.findByUser_UserIdAndTestId(userId, testId);
+        CheckListResponse responses = new CheckListResponse();
+        List<CheckResponse> correctList = new ArrayList<>();
+        List<SolvedProblems> solvedProblemsList = new ArrayList<>();
+        List<Mistakes> mistakesList = new ArrayList<>();
+        List<CheckResponse> incorrectList = new ArrayList<>();
+        if(existingTests.isPresent()){
+            Tests tests = existingTests.get();
+            List<TestProblems> problems = tests.getTestproblems();
+            int index = 0;
+            int mistakeIndex = 0;
+            for(TestProblems problem : problems){
+                List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
+                if(checkedAnswers.get(index).equals(problem.getAnswer())){
+                    SolvedProblems solvedProblems = new SolvedProblems(problem);
+                    solvedProblemRepository.save(solvedProblems);
+                    solvedProblemsList.add(solvedProblems);
+                    CheckResponse response = new CheckResponse(problem.getProblemNumber(), multipleChoiceList, problem.getAnswer()); 
+                    correctList.add(response);
+                }else{
+                    Mistakes mistakesProblems = new Mistakes(problem);
+                    mistakesRepository.save(mistakesProblems);
+                    mistakesList.add(mistakesProblems);
+                    CheckResponse response = new CheckResponse(problem.getProblemNumber(), multipleChoiceList, problem.getAnswer()); 
+                    incorrectList.add(response);
+                    mistakeIndex++;
+                }
+                index++; // Result에 저장하기. 채점을 했으니까. 여기서부터 다시하기. 25.03.08 (23:23)
+            }
+            Results results = new Results(tests.getUser(), tests, (index-mistakeIndex)*100/index, mistakesList, solvedProblemsList);
+
+            for (Mistakes mistake : mistakesList) {
+                mistake.setResults(results);
+            }
+            for (SolvedProblems solvedProblem : solvedProblemsList) {
+                solvedProblem.setResults(results);
+            }
+
+            resultsRepository.save(results);
+            // result 만들어내기 03.11 (23:33) -> result 저장후, mistake solvedproblem 연결 완료 -> QA 부족 체크하기.
+            responses.setCorrectList(correctList);
+            responses.setIncorrectList(incorrectList);
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responses));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
+
+
+    }
+
+    // 시험 연결된거 삭제하기. 
     public ResponseEntity<?> deleteTest(HttpServletRequest request, Long testId){
         Long userId = authService.getUserId(request);
         Optional<Tests> existingWordSets = testsRepository.findByUser_UserIdAndTestId(userId, testId);
@@ -169,12 +286,16 @@ public class TestService {
     public String getAIDescription(String word, String meaning){
         String requestUrl = apiUrl + "?key=" + apiKey;
         GeminiRequestDto request = new GeminiRequestDto();
-        String processedSentence = word + "에 대한 의미를 묻는 객관식 문제를 만들어줘." + word + "의 의미를 " + meaning + "를 정답으로 해서 만들어줘. " +
-        "다른 보기는 " + word + "와는 전혀 관련이 없는 단어의 뜻으로 만들어줘. " +
-        "선택지의 품사는 '" + meaning + "'와 똑같이 맞춰줘. " +
-        "JSON 형식으로 다음과 같이 만들어줘."+
+        String[] choices = {"A", "B", "C", "D"};
+        String correctAnswer = choices[new Random().nextInt(choices.length)]; // 랜덤 선택
+        String processedSentence = word + "에 대한 의미를 묻는 객관식 문제를 만들어줘." + 
+        word + "의 의미를 '" + meaning + "'로 하고, 이를 정답으로 설정해줘. " +
+        "나머지 보기는 " + word + "와 관련 없는 단어의 뜻으로 만들어줘. " +
+        "선택지의 품사는 '" + meaning + "'와 동일하게 맞춰줘. " +  
+        "정답 선택지의 ID 값은 " + correctAnswer + "로 설정해줘. " +  // 정답 ID를 명확하게 전달  
+        "JSON 형식으로 다음과 같이 만들어줘: " +
         "{\"question\":\"객관식 문제의 질문 내용\", " +
-        "\"answer\":\"정답 선택지의 ID 값\", " +
+        "\"answer\":\"" + correctAnswer + "\", " +
         "\"options\":[{\"id\":\"A\",\"text\":\"보기1\"}, " +
         "{\"id\":\"B\",\"text\":\"보기2\"}, " +
         "{\"id\":\"C\",\"text\":\"보기3\"}, " +
@@ -296,6 +417,15 @@ public class TestService {
         return responseDto;
     }
 
+    public List<QuestionRequest> parseMultipleChoice(String multipleChoiceJson) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(multipleChoiceJson, objectMapper.getTypeFactory().constructCollectionType(List.class, QuestionRequest.class));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 }
 
