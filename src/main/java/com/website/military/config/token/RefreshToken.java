@@ -26,10 +26,11 @@ public class RefreshToken {
     }
 
     public static void removeUserRefreshToken(final long refreshToken){
-        for(Map.Entry<String, Long> entry : refreshTokens.entrySet()){
-            if(entry.getValue() == refreshToken){
-                removeRefreshToken(entry.getKey());
-            }
-        }
+        // for(Map.Entry<String, Long> entry : refreshTokens.entrySet()){
+        //     if(entry.getValue() == refreshToken){
+        //         removeRefreshToken(entry.getKey());
+        //     }
+        // }
+        refreshTokens.entrySet().removeIf(entry -> entry.getValue() == refreshToken);
     }
 }
