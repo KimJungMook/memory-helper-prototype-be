@@ -81,7 +81,7 @@ public class JwtProvider {
                 .setClaims(claims)
                 .setId(id)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+JWT_TOKEN_VALID)) // 30분
+                .setExpiration(new Date(System.currentTimeMillis()+(JWT_TOKEN_VALID*2)*3)) // 30분
                 .signWith(key)
                 .compact();
     }
