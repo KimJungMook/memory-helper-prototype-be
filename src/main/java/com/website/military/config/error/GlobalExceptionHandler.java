@@ -24,11 +24,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MalformedJwtException.class)
     public ResponseEntity<?> handleMalformedJwtException(MalformedJwtException e){
+        e.printStackTrace();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize,  "잘못된 JWT 토큰입니다."));
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRunTimeJwtException(RuntimeException e){
+        e.printStackTrace();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError,  "잘못된 요청입니다."));
     }
 
