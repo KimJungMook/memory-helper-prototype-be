@@ -68,6 +68,7 @@ public class SecurityConfig {
             mvc.pattern("/webjars/**"),  // Swagger API 문서 경로
             mvc.pattern("/swagger/**"),  // Swagger API 문서 경로
             mvc.pattern("/"),  // Swagger UI 메인 페이지
+            mvc.pattern("/api/auth/token-refresh"),  // 토큰 리프레쉬
         };  
 
         http.authorizeHttpRequests(authorize -> authorize
