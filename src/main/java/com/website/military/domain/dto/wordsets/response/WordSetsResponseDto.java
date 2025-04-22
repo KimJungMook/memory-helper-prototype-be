@@ -8,13 +8,15 @@ import lombok.Data;
 public class WordSetsResponseDto {
     private Long setId;
     private String setName;
-    private int problemSetsCount;
+    private int wordCount;
+    private int testSetsCount;
     private Instant createdAt;
 
-    public WordSetsResponseDto(Long setId, String setName, Instant createdAt, int problemSetsCount){
+    public WordSetsResponseDto(Long setId, String setName, Instant createdAt, int wordCount, int testSetsCount){
         this.setId = setId;
         this.setName = setName;
         this.createdAt = createdAt;
-        this.problemSetsCount = problemSetsCount;
+        this.wordCount = wordCount;
+        this.testSetsCount = testSetsCount;
     }
 }

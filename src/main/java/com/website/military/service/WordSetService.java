@@ -71,7 +71,7 @@ public class WordSetService {
         List<WordSetsResponseDto> responses = new ArrayList<>();
         if(!existingWordSets.isEmpty()){
             for(WordSets sets : existingWordSets){
-                WordSetsResponseDto response = new WordSetsResponseDto(sets.getSetId(), sets.getSetName(), sets.getCreatedAt(), sets.getTests().size());
+                WordSetsResponseDto response = new WordSetsResponseDto(sets.getSetId(), sets.getSetName(), sets.getCreatedAt(), sets.getWordCount() ,sets.getTests().size());
                 responses.add(response);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
@@ -135,40 +135,45 @@ public class WordSetService {
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
         if(existingWordSets.isPresent()){
-            Optional<WordSetMapping> existingWordSetMappings = wordSetsMappingRepository.findByWord_WordIdAndWordsets_SetId(wordId, setId);
-            Optional<GptWordSetMapping> existingGptWordSetMappings = gptWordSetMappingRepository.findByGptword_GptWordIdAndWordsets_SetId(wordId, setId);
-            if(existingWordSetMappings.isPresent() || existingGptWordSetMappings.isPresent()){ // gpt단어가 단어장에 매핑이 되어져 있는지, 유저 단어가 단어장에 매핑이 되어져 있는지 체크
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
-            }else{
-                if(isGpt){
-                    Optional<GptWord> existingGptWord = gptWordRepository.findById(wordId);
-                    if(existingGptWord.isPresent()){
-                        GptWord gptWord = existingGptWord.get();
-                        WordSets sets = existingWordSets.get();
-                        GptWordSetMapping mapping = new GptWordSetMapping();
-                        mapping.setGptword(gptWord);
-                        mapping.setWordsets(sets);
-                        gptWordSetMappingRepository.save(mapping);
-                        wordSetsRepository.incrementWordCount(setId);
-                        ExistWordResponseDto response = new ExistWordResponseDto(gptWord.getGptWordId(), gptWord.getWord(), gptWord.getNoun(), gptWord.getVerb(), 
-                        gptWord.getAdjective(), gptWord.getAdverb(), isGpt);
-                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
-                    }
-                }else{
-                    Optional<Word> existingWord = wordRepository.findById(wordId);
-                    if(existingWord.isPresent()){
-                        Word word = existingWord.get();
-                        WordSets sets = existingWordSets.get();
-                        WordSetMapping mapping = new WordSetMapping();
-                        mapping.setWord(word);
-                        mapping.setWordsets(sets);
-                        wordSetsMappingRepository.save(mapping);
-                        wordSetsRepository.incrementWordCount(setId);
-                        ExistWordResponseDto response = new ExistWordResponseDto(word.getWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
-                        word.getAdjective(), word.getAdverb(), isGpt);
-                        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
-                    }
+            if(isGpt){
+                Optional<GptWordSetMapping> existingGptWordSetMappings = gptWordSetMappingRepository.findByGptword_GptWordIdAndWordsets_SetId(wordId, setId);
+                if(existingGptWordSetMappings.isPresent()){ // gpt단어가 단어장에 매핑이 되어져 있는지, 유저 단어가 단어장에 매핑이 되어져 있는지 체크
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
                 }
+            }else{
+                Optional<WordSetMapping> existingWordSetMappings = wordSetsMappingRepository.findByWord_WordIdAndWordsets_SetId(wordId, setId);
+                if(existingWordSetMappings.isPresent()){ // gpt단어가 단어장에 매핑이 되어져 있는지, 유저 단어가 단어장에 매핑이 되어져 있는지 체크
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+                }
+            }
+            if(isGpt){
+                Optional<GptWord> existingGptWord = gptWordRepository.findById(wordId);
+                if(existingGptWord.isPresent()){
+                    GptWord gptWord = existingGptWord.get();
+                    WordSets sets = existingWordSets.get();
+                    GptWordSetMapping mapping = new GptWordSetMapping();
+                    mapping.setGptword(gptWord);
+                    mapping.setWordsets(sets);
+                    gptWordSetMappingRepository.save(mapping);
+                    wordSetsRepository.incrementWordCount(setId);
+                    ExistWordResponseDto response = new ExistWordResponseDto(gptWord.getGptWordId(), gptWord.getWord(), gptWord.getNoun(), gptWord.getVerb(), 
+                    gptWord.getAdjective(), gptWord.getAdverb(), isGpt);
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+                }
+            }else{
+                Optional<Word> existingWord = wordRepository.findByWordIdAndUser_UserId(wordId, userId);
+                if(existingWord.isPresent()){
+                    Word word = existingWord.get();
+                    WordSets sets = existingWordSets.get();
+                    WordSetMapping mapping = new WordSetMapping();
+                    mapping.setWord(word);
+                    mapping.setWordsets(sets);
+                    wordSetsMappingRepository.save(mapping);
+                    wordSetsRepository.incrementWordCount(setId);
+                    ExistWordResponseDto response = new ExistWordResponseDto(word.getWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
+                    word.getAdjective(), word.getAdverb(), isGpt);
+                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+                }   
             }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }

@@ -25,7 +25,6 @@ import com.website.military.domain.dto.word.request.ExistWordDto;
 import com.website.military.domain.dto.word.request.UpdateMeaningDto;
 import com.website.military.domain.dto.word.response.DeleteWordResponseDto;
 import com.website.military.domain.dto.word.response.ExistWordResponseDto;
-import com.website.military.domain.dto.word.response.GptExistWordResponse;
 import com.website.military.domain.dto.word.response.GptWordResponseDto;
 import com.website.military.domain.dto.word.response.UpdateMeaningResponseDto;
 import com.website.military.repository.GptWordRepository;
@@ -110,6 +109,9 @@ public class WordService {
                     }
                     for(int i=0;i<adverbLength;i++){
                         adverbList.add(adverb.getString(i));    
+                    }
+                    if(nounList.isEmpty() && verbList.isEmpty() && adjectiveList.isEmpty() && adverbList.isEmpty()){
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청"));
                     }
                     GptWordResponseDto response = new GptWordResponseDto(nounList, verbList, adjectiveList, adverbList,true);
                     return ResponseEntity.status(HttpStatus.CREATED).body(ResponseDataDto.set("CREATE", response)); 

@@ -36,7 +36,7 @@ public class WordSets {
     private String setName;
     private Instant createdAt;
     private int wordCount;
-
+    
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
