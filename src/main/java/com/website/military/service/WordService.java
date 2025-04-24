@@ -114,6 +114,14 @@ public class WordService {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청"));
                     }
                     GptWordResponseDto response = new GptWordResponseDto(nounList, verbList, adjectiveList, adverbList,true);
+                    try {
+                        GptWord Word = new GptWord(word, nounList, verbList, adjectiveList, adverbList);
+                        gptWordRepository.save(Word);                        
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                    }
                     return ResponseEntity.status(HttpStatus.CREATED).body(ResponseDataDto.set("CREATE", response)); 
                 } catch (Exception e) {
                 e.printStackTrace();

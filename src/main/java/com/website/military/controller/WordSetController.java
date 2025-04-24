@@ -182,11 +182,13 @@ public class WordSetController {
                 + "\"data\": {\n"
                 + "  \"wordId\": 1,\n"
                 + "  \"word\": \"word\",\n"
-                + "  \"noun\": [\"단어\"],\n"
-                + "  \"verb\": [],\n"
-                + "  \"adjective\": [],\n"
-                + "  \"adverb\": [\"\"]\n"
-                + "  \"isGpt\": false\n"
+                + "  \"meaning\": [\n"
+                + "    {\"type\": \"noun\", \"value\": [\"단어\"]},\n"
+                + "    {\"type\": \"verb\", \"value\": []},\n"
+                + "    {\"type\": \"adjective\", \"value\": []},\n"
+                + "    {\"type\": \"adverb\", \"value\": [\"\"]}\n"
+                + "  ],\n"
+                + "  \"gpt\": false\n"
                 + "}\n"
                 + "}")
             )}),
@@ -217,11 +219,13 @@ public class WordSetController {
                 + "\"data\": {\n"
                 + "  \"wordId\": 1,\n"
                 + "  \"word\": \"word\",\n"
-                + "  \"noun\": [\"단어\"],\n"
-                + "  \"verb\": [],\n"
-                + "  \"adjective\": [],\n"
-                + "  \"adverb\": [\"\"]\n"
-                + "  \"isGpt\": true\n"
+                + "  \"meaning\": [\n"
+                + "    {\"type\": \"noun\", \"value\": [\"단어\"]},\n"
+                + "    {\"type\": \"verb\", \"value\": []},\n"
+                + "    {\"type\": \"adjective\", \"value\": []},\n"
+                + "    {\"type\": \"adverb\", \"value\": [\"\"]}\n"
+                + "  ],\n"
+                + "  \"gpt\": true\n"
                 + "}\n"
                 + "}")
             )}),
@@ -252,10 +256,13 @@ public class WordSetController {
                 + "\"data\": {\n"
                 + "  \"wordId\": 1,\n"
                 + "  \"word\": \"word\",\n"
-                + "  \"noun\": [\"단어\"],\n"
-                + "  \"verb\": [],\n"
-                + "  \"adjective\": [],\n"
-                + "  \"adverb\": [\"\"]\n"
+                + "  \"meaning\": [\n"
+                + "    {\"type\": \"noun\", \"value\": [\"단어\"]},\n"
+                + "    {\"type\": \"verb\", \"value\": []},\n"
+                + "    {\"type\": \"adjective\", \"value\": []},\n"
+                + "    {\"type\": \"adverb\", \"value\": [\"\"]}\n"
+                + "  ],\n"
+                + "  \"gpt\": false\n"
                 + "}\n"
                 + "}")
                 )}),
@@ -277,47 +284,8 @@ public class WordSetController {
     @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("setId") Long setId, 
     @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
-        return wordSetService.addWordToWordSet(setId, dto, request, false);
+        return wordSetService.addWordToWordSet(setId, dto, request);
     }
-
-
-    @Operation(summary = "GPT 단어 단어세트에 넣기", description = "존재하지 않는 단어를 단어장에 넣는 api")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "OK",
-            content = {@Content(schema = @Schema(implementation = AddWordToWordSetResponseDto.class),
-                examples = @ExampleObject(value = "{\n"
-                + "\"code\": \"OK\",\n"
-                + "\"data\": {\n"
-                + "  \"wordId\": 1,\n"
-                + "  \"word\": \"word\",\n"
-                + "  \"noun\": [\"단어\"],\n"
-                + "  \"verb\": [],\n"
-                + "  \"adjective\": [],\n"
-                + "  \"adverb\": [\"\"]\n"
-                + "}\n"
-                + "}")
-                )}),
-        @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
-        content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-            examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
-            ))}),
-        @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
-        content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-            examples = @ExampleObject(value = "{\"code\": \"UNAUTHORIZE\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
-            ))}),
-        @ApiResponse(responseCode = "500", description = "서버 에러",
-        content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-            examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
-            ))})
-    })
-    @PostMapping("/gpt/{setId}")
-    public ResponseEntity<?> addGptWordToWordSet(
-    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
-    @PathVariable("setId") Long setId, 
-    @RequestBody AddWordToWordSetDto dto, HttpServletRequest request) {
-        return wordSetService.addWordToWordSet(setId, dto, request, true);
-    }
-
 
     // PUT(patch)
     @Operation(summary = "세트 이름 변경", description = "세트 이름을 바꿔주는 api")
@@ -388,10 +356,13 @@ public class WordSetController {
                 + "\"data\": {\n"
                 + "  \"wordId\": 1,\n"
                 + "  \"word\": \"word\",\n"
-                + "  \"noun\": [\"단어\"],\n"
-                + "  \"verb\": [],\n"
-                + "  \"adjective\": [],\n"
-                + "  \"adverb\": [\"\"]\n"
+                + "  \"meaning\": [\n"
+                + "    {\"type\": \"noun\", \"value\": [\"단어\"]},\n"
+                + "    {\"type\": \"verb\", \"value\": []},\n"
+                + "    {\"type\": \"adjective\", \"value\": []},\n"
+                + "    {\"type\": \"adverb\", \"value\": [\"\"]}\n"
+                + "  ],\n"
+                + "  \"gpt\": false\n"
                 + "}\n"
                 + "}")
             )}),
@@ -422,10 +393,13 @@ public class WordSetController {
                 + "\"data\": {\n"
                 + "  \"wordId\": 1,\n"
                 + "  \"word\": \"word\",\n"
-                + "  \"noun\": [\"단어\"],\n"
-                + "  \"verb\": [],\n"
-                + "  \"adjective\": [],\n"
-                + "  \"adverb\": [\"\"]\n"
+                + "  \"meaning\": [\n"
+                + "    {\"type\": \"noun\", \"value\": [\"단어\"]},\n"
+                + "    {\"type\": \"verb\", \"value\": []},\n"
+                + "    {\"type\": \"adjective\", \"value\": []},\n"
+                + "    {\"type\": \"adverb\", \"value\": [\"\"]}\n"
+                + "  ],\n"
+                + "  \"gpt\": true\n"
                 + "}\n"
                 + "}")
             )}),
