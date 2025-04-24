@@ -2,6 +2,8 @@ package com.website.military.domain.dto.word.request;
 
 import java.util.List;
 
+import com.website.military.domain.dto.response.WordClassResponse;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,4 +23,5 @@ public class AddWordToWordSetDto {
     private List<String> adjective;
     @Schema(description = "부사 뜻 입력", example = "[]")
     private List<String> adverb;
+    // private List<WordClassResponse> meaning;
 }

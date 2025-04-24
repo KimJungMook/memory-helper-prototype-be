@@ -92,10 +92,10 @@ public class WordService {
                     JSONArray verb = newObject.getJSONArray("verb");
                     JSONArray adjective = newObject.getJSONArray("adjective");
                     JSONArray adverb = newObject.getJSONArray("adverb");
-                    int nounLength = noun.length();
-                    int verbLength = verb.length();
-                    int adjectiveLength = adjective.length();
-                    int adverbLength = adverb.length();
+                    int nounLength = noun.getString(0) == "" ? 0 : noun.length();
+                    int verbLength = verb.getString(0) == "" ? 0 : verb.length();
+                    int adjectiveLength = adjective.getString(0) == "" ? 0 : adjective.length();
+                    int adverbLength = adverb.getString(0) == "" ? 0 : adverb.length();
                     for(int i=0;i<nounLength;i++){
                         nounList.add(noun.getString(i));    
                     }

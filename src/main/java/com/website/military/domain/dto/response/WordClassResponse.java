@@ -7,5 +7,5 @@ import lombok.Data;
 @Data
 public class WordClassResponse {
     private String type;
-    private List<String> meaning;
+    private List<String> value;
 }

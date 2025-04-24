@@ -10,8 +10,8 @@ import lombok.Data;
 
 @Data
 public class GptWordResponseDto {
-    List<WordClassResponse> meaning;
-    boolean isGpt;
+    private List<WordClassResponse> meaning;
+    private boolean isGpt;
 
     public GptWordResponseDto(List<String> noun,List<String> verb,List<String> adjective,List<String> adverb, boolean isGpt){
         List<WordClassResponse> responseList = CommonUtils.meaningResponse(noun, verb, adjective, adverb);

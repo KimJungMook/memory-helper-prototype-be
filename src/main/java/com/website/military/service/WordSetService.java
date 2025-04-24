@@ -187,6 +187,10 @@ public class WordSetService {
         List<String> verb = dto.getVerb();
         List<String> adjective = dto.getAdjective();
         List<String> adverb = dto.getAdverb();
+        // List<String> noun = dto.getMeaning().get(0).getValue();
+        // List<String> verb = dto.getMeaning().get(1).getValue();
+        // List<String> adjective = dto.getMeaning().get(2).getValue();
+        // List<String> adverb = dto.getMeaning().get(3).getValue();
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
 

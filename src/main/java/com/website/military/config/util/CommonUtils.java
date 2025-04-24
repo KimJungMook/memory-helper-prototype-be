@@ -12,13 +12,13 @@ public class CommonUtils {
             new WordClassResponse(), new WordClassResponse(), new WordClassResponse(), new WordClassResponse()
         ));
         responseList.get(0).setType("noun");
-        responseList.get(0).setMeaning(noun);
+        responseList.get(0).setValue(noun);
         responseList.get(1).setType("verb");
-        responseList.get(1).setMeaning(verb);
+        responseList.get(1).setValue(verb);
         responseList.get(2).setType("adjective");
-        responseList.get(2).setMeaning(adjective);
+        responseList.get(2).setValue(adjective);
         responseList.get(3).setType("adverb");
-        responseList.get(3).setMeaning(adverb);
+        responseList.get(3).setValue(adverb);
         return responseList;
     }
 
