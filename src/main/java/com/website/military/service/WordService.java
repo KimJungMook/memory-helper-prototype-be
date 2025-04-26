@@ -21,11 +21,11 @@ import com.website.military.domain.dto.gemini.request.GeminiRequestDto;
 import com.website.military.domain.dto.gemini.response.GeminiResponseDto;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
+import com.website.military.domain.dto.response.WordClassResponse;
 import com.website.military.domain.dto.word.request.ExistWordDto;
 import com.website.military.domain.dto.word.request.UpdateMeaningDto;
 import com.website.military.domain.dto.word.response.DeleteWordResponseDto;
 import com.website.military.domain.dto.word.response.ExistWordResponseDto;
-import com.website.military.domain.dto.word.response.GptExistWordResponse;
 import com.website.military.domain.dto.word.response.GptWordResponseDto;
 import com.website.military.domain.dto.word.response.UpdateMeaningResponseDto;
 import com.website.military.repository.GptWordRepository;
@@ -93,10 +93,10 @@ public class WordService {
                     JSONArray verb = newObject.getJSONArray("verb");
                     JSONArray adjective = newObject.getJSONArray("adjective");
                     JSONArray adverb = newObject.getJSONArray("adverb");
-                    int nounLength = noun.length();
-                    int verbLength = verb.length();
-                    int adjectiveLength = adjective.length();
-                    int adverbLength = adverb.length();
+                    int nounLength = noun.getString(0) == "" ? 0 : noun.length();
+                    int verbLength = verb.getString(0) == "" ? 0 : verb.length();
+                    int adjectiveLength = adjective.getString(0) == "" ? 0 : adjective.length();
+                    int adverbLength = adverb.getString(0) == "" ? 0 : adverb.length();
                     for(int i=0;i<nounLength;i++){
                         nounList.add(noun.getString(i));    
                     }
@@ -111,12 +111,23 @@ public class WordService {
                     for(int i=0;i<adverbLength;i++){
                         adverbList.add(adverb.getString(i));    
                     }
-                    GptWordResponseDto response = new GptWordResponseDto(nounList, verbList, adjectiveList, adverbList,true);
-                    return ResponseEntity.status(HttpStatus.CREATED).body(ResponseDataDto.set("CREATE", response)); 
+                    if(nounList.isEmpty() && verbList.isEmpty() && adjectiveList.isEmpty() && adverbList.isEmpty()){
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청"));
+                    }
+                    try {
+                        GptWord gptWord = new GptWord(word, nounList, verbList, adjectiveList, adverbList);
+                        gptWordRepository.save(gptWord);
+                        GptWordResponseDto response = new GptWordResponseDto(gptWord.getGptWordId(), gptWord.getWord(),nounList, verbList, adjectiveList, adverbList,true);
+                        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseDataDto.set("CREATE", response)); 
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                    }
                 } catch (Exception e) {
-                e.printStackTrace();
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                    e.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseMessageDto.set(internalError, "서버 에러"));
                 }
             }
         }
@@ -133,22 +144,39 @@ public class WordService {
         Long userId = authService.getUserId(request);
         String word = dto.getWord();
         Optional<Word> existingWord = wordRepository.findByWordIdAndUser_UserId(id, userId);
+        List<String> noun = new ArrayList<>();
+        List<String> verb = new ArrayList<>();
+        List<String> adjective = new ArrayList<>();
+        List<String> adverb = new ArrayList<>();
         if(existingWord.isPresent()){
-                Word words = existingWord.get();
-                if(word.equals(words.getWord())){
-                Optional.ofNullable(dto.getNoun())
-                .ifPresent(words::setNoun);
-                Optional.ofNullable(dto.getVerb())
-                .ifPresent(words::setVerb);
-                Optional.ofNullable(dto.getAdjective())
-                .ifPresent(words::setAdjective);
-                Optional.ofNullable(dto.getAdverb())
-                .ifPresent(words::setAdverb);
-                words.setUpdatedAt(Instant.now());
-                wordRepository.save(words);
-                UpdateMeaningResponseDto response = new UpdateMeaningResponseDto(words.getWordId(), words.getNoun(), words.getVerb(),
-                words.getAdjective(), words.getAdverb());           
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+            for(WordClassResponse r : dto.getMeaning()){
+                if(r.getType().equals("noun")){
+                    noun.add(r.getValue());
+                }else if(r.getType().equals("verb")){
+                    verb.add(r.getValue());
+                }else if(r.getType().equals("adjective")){
+                    adjective.add(r.getValue());
+                }else if(r.getType().equals("adverb")){
+                    adverb.add(r.getValue());
+                }else{
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+                }
+            }
+            Word words = existingWord.get();
+            if(word.equals(words.getWord())){
+            Optional.ofNullable(noun)
+            .ifPresent(words::setNoun);
+            Optional.ofNullable(verb)
+            .ifPresent(words::setVerb);
+            Optional.ofNullable(adjective)
+            .ifPresent(words::setAdjective);
+            Optional.ofNullable(adverb)
+            .ifPresent(words::setAdverb);
+            words.setUpdatedAt(Instant.now());
+            wordRepository.save(words);
+            UpdateMeaningResponseDto response = new UpdateMeaningResponseDto(words.getWordId(), noun, verb,
+            adjective, adverb);           
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
             }else{
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
             }

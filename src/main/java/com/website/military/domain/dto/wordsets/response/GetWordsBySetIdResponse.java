@@ -3,6 +3,8 @@ package com.website.military.domain.dto.wordsets.response;
 import java.time.Instant;
 import java.util.List;
 
+import com.website.military.config.util.CommonUtils;
+import com.website.military.domain.dto.response.WordClassResponse;
 
 import lombok.Data;
 
@@ -10,10 +12,7 @@ import lombok.Data;
 public class GetWordsBySetIdResponse {
     private Long wordId;
     private String word;
-    private List<String> noun;
-    private List<String> verb;
-    private List<String> adjective;
-    private List<String> adverb;
+    List<WordClassResponse> meaning;
     private Instant createdAt;
     private boolean isGpt;
 
@@ -21,10 +20,8 @@ public class GetWordsBySetIdResponse {
     List<String> adjective, List<String> adverb, Instant createdAt, boolean isGpt){
         this.wordId = wordId;
         this.word = word;
-        this.noun = noun;
-        this.verb = verb;
-        this.adjective = adjective;
-        this.adverb = adverb;
+        List<WordClassResponse> responseList = CommonUtils.meaningResponse(noun, verb, adjective, adverb);
+        this.meaning = responseList;
         this.createdAt = createdAt;
         this.isGpt = isGpt;
     }

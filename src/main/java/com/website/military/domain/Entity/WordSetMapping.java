@@ -36,4 +36,9 @@ public class WordSetMapping {
     @JsonBackReference // 중복 순환 해결.
     @JoinColumn(name = "set_id", nullable = false)
     private WordSets wordsets;
+
+    public WordSetMapping(Word word, WordSets wordsets){
+        this.word = word;
+        this.wordsets = wordsets;
+    }
 }

@@ -1,6 +1,8 @@
 package com.website.military.domain.Entity;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -69,10 +71,10 @@ public class Word {
 
     public Word(String word, List<String> noun, List<String> verb, List<String> adjective, List<String> adverb, User user){
         this.word = word;
-        this.noun = noun;
-        this.verb = verb;
-        this.adjective = adjective;
-        this.adverb = adverb;
+        this.noun = (noun == null || noun.isEmpty() || (noun.size() == 1 && noun.get(0).trim().isEmpty())) ? new ArrayList<>() : noun;
+        this.verb = (verb == null || verb.isEmpty() || (verb.size() == 1 && verb.get(0).trim().isEmpty())) ? new ArrayList<>() : verb;
+        this.adjective = (adjective == null || adjective.isEmpty() || (adjective.size() == 1 && adjective.get(0).trim().isEmpty())) ? new ArrayList<>() : adjective;
+        this.adverb = (adverb == null || adverb.isEmpty() || (adverb.size() == 1 && adverb.get(0).trim().isEmpty())) ? new ArrayList<>() : adverb;
         this.user = user;
         this.createAt = Instant.now();
     }

@@ -2,25 +2,23 @@ package com.website.military.domain.dto.word.response;
 
 import java.util.List;
 
+import com.website.military.config.util.CommonUtils;
+import com.website.military.domain.dto.response.WordClassResponse;
+
 import lombok.Data;
 
 @Data
 public class AddWordToWordSetResponseDto {
     private Long wordId;
     private String word;
-    private List<String> noun;
-    private List<String> verb;
-    private List<String> adjective;
-    private List<String> adverb;
+    private List<WordClassResponse> meaning;
     private boolean isGpt;
     public AddWordToWordSetResponseDto(Long wordId, String word, List<String> noun, List<String> verb, 
     List<String> adjective, List<String> adverb, boolean isGpt){
         this.wordId = wordId;
         this.word = word;
-        this.noun = noun;
-        this.verb = verb;
-        this.adjective = adjective;
-        this.adverb = adverb;
+        List<WordClassResponse> responseList = CommonUtils.meaningResponse(noun, verb, adjective, adverb);
+        this.meaning = responseList;
         this.isGpt = isGpt;
     }
 }
