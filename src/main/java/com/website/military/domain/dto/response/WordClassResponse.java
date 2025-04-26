@@ -1,7 +1,5 @@
 package com.website.military.domain.dto.response;
 
-import java.util.List;
-
 import lombok.Data;
 
 @Data

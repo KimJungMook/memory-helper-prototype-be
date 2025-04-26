@@ -15,13 +15,22 @@ import lombok.NoArgsConstructor;
 public class AddWordToWordSetDto {
     @Schema(description = "단어 입력", example = "word")
     private String word;
-    @Schema(description = "명사 뜻 입력", example = "[\"단어\"]")
-    private List<String> noun;
-    @Schema(description = "동사 뜻 입력", example = "[\"단어를 입력하다.\"]")
-    private List<String> verb;
-    @Schema(description = "형용사 뜻 입력", example = "[]")
-    private List<String> adjective;
-    @Schema(description = "부사 뜻 입력", example = "[]")
-    private List<String> adverb;
-    // private List<WordClassResponse> meaning;
+    @Schema(
+        description = "뜻 입력",
+        example = "[\n" +
+                  "{\n " +
+                  "  \"type\": \"noun\",\n" +
+                  "  \"value\": \n" + 
+                  "    \"단어\"\n" +
+                  "\n" +
+                  "}," +
+                  "{\n " +
+                  "  \"type\": \"verb\",\n" +
+                  "  \"value\": \n" +
+                  "    \"단어를 입력하다\"\n" +
+                  "\n" +
+                  "}" +
+                  "]"
+    )
+    private List<WordClassResponse> meaning;
 }
