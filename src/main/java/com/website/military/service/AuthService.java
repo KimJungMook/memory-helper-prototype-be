@@ -50,7 +50,7 @@ public class AuthService {
     private String unAuthorize;
     // 아이디 있는지 체크하는데 사용하는 메서드
     public ResponseEntity<?> idValidate(String email){
-        Optional<User> existingUser = userRepository.findByEmail(email);
+        Optional<User> existingUser = userRepository.findByEmail(email);   
         if(existingUser.isPresent()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(ResponseMessageDto.set(badRequestError, "존재하는 아이디가 있습니다."));
@@ -73,11 +73,11 @@ public class AuthService {
             user.setCreatedAt(Instant.now());
             userRepository.save(user);
             SignUpResponseDto response = new SignUpResponseDto(user.getEmail(), user.getUsername());
-        return ResponseEntity.ok(ResponseDataDto.set("OK", response));
+            return ResponseEntity.ok(ResponseDataDto.set("OK", response));
         }catch(Exception e){
             e.printStackTrace();
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ResponseMessageDto.set(internalError, "서버 에러"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ResponseMessageDto.set(internalError, "서버 에러"));
         }
     }
 
@@ -89,13 +89,19 @@ public class AuthService {
             if(passwordEncoder.matches(dto.getPassword(), user.getPassword())){
                 Long userId = user.getUserId();
                 String username = user.getUsername();
-                String accessToken = jwtProvider.generateAccessToken(userId);
-                RefreshToken.removeUserRefreshToken(userId);
-                String refreshToken = jwtProvider.generateRefreshToken(userId);
-                RefreshToken.putRefreshToken(refreshToken, userId);
-                LoginResponseDto response = new LoginResponseDto(username, accessToken, refreshToken);
-                return ResponseEntity.status(HttpStatus.OK)
-                .body(ResponseDataDto.set("OK", response));
+                try {
+                    String accessToken = jwtProvider.generateAccessToken(userId);
+                    RefreshToken.removeUserRefreshToken(userId);
+                    String refreshToken = jwtProvider.generateRefreshToken(userId);
+                    RefreshToken.putRefreshToken(refreshToken, userId);
+                    LoginResponseDto response = new LoginResponseDto(username, accessToken, refreshToken);
+                    return ResponseEntity.status(HttpStatus.OK)
+                    .body(ResponseDataDto.set("OK", response));    
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                }
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
@@ -125,7 +131,13 @@ public class AuthService {
         if(existingUser.isPresent()){
                 User user = existingUser.get();
                 DeleteUserResponse response = new DeleteUserResponse(user.getEmail(), user.getUsername());
-                userRepository.deleteById(loginUserId);
+                try {
+                    userRepository.deleteById(loginUserId);   
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseMessageDto.set(internalError, "서버 에러"));    
+                }
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
             }
          return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));

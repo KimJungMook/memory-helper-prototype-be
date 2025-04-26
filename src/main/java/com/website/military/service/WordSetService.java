@@ -113,22 +113,22 @@ public class WordSetService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }
         WordSets wordSets = new WordSets(dto.getSetName());
-        try{
-            Long userId = authService.getUserId(request);
-            Optional<User> existingUser = userRepository.findById(userId);
-            if(existingUser.isPresent()){
-                User user = existingUser.get();
-                wordSets.setUser(user);
+        Long userId = authService.getUserId(request);
+        Optional<User> existingUser = userRepository.findById(userId);
+        if(existingUser.isPresent()){
+            User user = existingUser.get();
+            wordSets.setUser(user);
+            try {
                 wordSetsRepository.save(wordSets);
-                RegisterResponseDto response = new RegisterResponseDto(wordSets.getSetId(), wordSets.getSetName());
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response)); // 여기서부터 다시.
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ResponseMessageDto.set(internalError, "서버 에러"));
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
-        }catch(Exception e){
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(ResponseMessageDto.set(internalError, "서버 에러"));
+            RegisterResponseDto response = new RegisterResponseDto(wordSets.getSetId(), wordSets.getSetName());
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response)); // 여기서부터 다시.
         }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
     }
 
     // 이미 존재한 단어를 단어장에 넣기
@@ -148,8 +148,14 @@ public class WordSetService {
                     GptWordSetMapping mapping = new GptWordSetMapping();
                     mapping.setGptword(gptWord);
                     mapping.setWordsets(sets);
-                    gptWordSetMappingRepository.save(mapping);
-                    wordSetsRepository.incrementWordCount(setId);
+                    try {
+                        gptWordSetMappingRepository.save(mapping);
+                        wordSetsRepository.incrementWordCount(setId);   
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                    }
                     ExistWordResponseDto response = new ExistWordResponseDto(gptWord.getGptWordId(), gptWord.getWord(), gptWord.getNoun(), gptWord.getVerb(), 
                     gptWord.getAdjective(), gptWord.getAdverb(), isGpt);
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
@@ -166,14 +172,20 @@ public class WordSetService {
                     WordSetMapping mapping = new WordSetMapping();
                     mapping.setWord(word);
                     mapping.setWordsets(sets);
-                    wordSetsMappingRepository.save(mapping);
-                    wordSetsRepository.incrementWordCount(setId);
+                    try {
+                        wordSetsMappingRepository.save(mapping);
+                        wordSetsRepository.incrementWordCount(setId);    
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                    }
                     ExistWordResponseDto response = new ExistWordResponseDto(word.getWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
                     word.getAdjective(), word.getAdverb(), isGpt);
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                 }   
             }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
@@ -205,21 +217,29 @@ public class WordSetService {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
                     }
                 }
+                Word Word = new Word(word, noun, verb, adjective, adverb, existingUser);
                 try {
-                    Word Word = new Word(word, noun, verb, adjective, adverb, existingUser);
                     wordRepository.save(Word);
-                    AddWordToWordSetResponseDto response = new AddWordToWordSetResponseDto(Word.getWordId(), Word.getWord(), Word.getNoun(), 
-                    Word.getVerb(), Word.getAdjective(), Word.getAdverb(), false);   
-                    WordSetMapping mapping = new WordSetMapping(Word, wordSets);                
-                    wordSetsMappingRepository.save(mapping);
-                    wordSetsRepository.incrementWordCount(setId);
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
                 } catch (Exception e) {
                     e.printStackTrace();
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ResponseMessageDto.set(internalError, "서버 에러"));
                 }
+                AddWordToWordSetResponseDto response = new AddWordToWordSetResponseDto(Word.getWordId(), Word.getWord(), Word.getNoun(), 
+                Word.getVerb(), Word.getAdjective(), Word.getAdverb(), false);   
+                WordSetMapping mapping = new WordSetMapping(Word, wordSets);           
+                try {
+                    wordSetsMappingRepository.save(mapping);
+                    wordSetsRepository.incrementWordCount(setId);                   
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                }     
+
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
             }
+
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }else{
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
@@ -233,7 +253,13 @@ public class WordSetService {
         if(existingWordSets.isPresent()){
             WordSets sets = existingWordSets.get();
             sets.setSetName(setName);
-            wordSetsRepository.save(sets);
+            try {
+                wordSetsRepository.save(sets);   
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ResponseMessageDto.set(internalError, "서버 에러"));
+            }
             RegisterResponseDto response = new RegisterResponseDto(id, setName);
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
@@ -246,8 +272,15 @@ public class WordSetService {
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, id);
         if(existingWordSets.isPresent()){
             WordSets sets = existingWordSets.get();
-            wordSetsRepository.deleteById(id);
+            try {
+                wordSetsRepository.deleteById(id);               
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ResponseMessageDto.set(internalError, "서버 에러"));
+            }
             DeleteResponseDto response = new DeleteResponseDto(id, sets.getSetName());
+
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
@@ -265,7 +298,14 @@ public class WordSetService {
                     GptWord Word = mappings.get().getGptword();
                     DetachResponse response = new DetachResponse(Word.getGptWordId(), Word.getWord(), Word.getNoun(), Word.getVerb(),
                     Word.getAdjective(), Word.getAdjective());
-                    wordSetsMappingRepository.deleteById(deleteId);
+                    try {
+                        wordSetsMappingRepository.deleteById(deleteId);   
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                    }
+
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
                 }
             }else{                
@@ -275,7 +315,13 @@ public class WordSetService {
                     Word Word = mappings.get().getWord();
                     DetachResponse response = new DetachResponse(Word.getWordId(), Word.getWord(), Word.getNoun(), Word.getVerb(),
                     Word.getAdjective(), Word.getAdjective());
-                    wordSetsMappingRepository.deleteById(deleteId);
+                    try {
+                        wordSetsMappingRepository.deleteById(deleteId);  
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                    }
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
                 }
             }

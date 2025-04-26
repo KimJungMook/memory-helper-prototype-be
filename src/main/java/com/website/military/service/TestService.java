@@ -152,7 +152,12 @@ public class TestService {
 
             if(length < 20){
                 tests.setTestCount(length);
-                // testsRepository.save(tests); // test 생성
+                try {
+                    // testsRepository.save(tests); // test 생성     
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
+                }
                 List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
                 Long problemNumber = 1L;
                 List<Word> wordList = new ArrayList<>();
@@ -350,8 +355,12 @@ public class TestService {
             for (SolvedProblems solvedProblem : solvedProblemsList) {
                 solvedProblem.setResults(results);
             }
-
-            resultsRepository.save(results);
+            try {
+                resultsRepository.save(results);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
+            }
             // result 만들어내기 03.11 (23:33) -> result 저장후, mistake solvedproblem 연결 완료 -> QA 부족 체크하기.
             responses.setCorrectList(correctList);
             responses.setIncorrectList(incorrectList);
@@ -369,7 +378,12 @@ public class TestService {
         if(existingWordSets.isPresent()){
             Tests tests = existingWordSets.get();
             DeleteExamResponse response = new DeleteExamResponse(testId, tests.getWordsets().getSetName(), Instant.now());
-            testsRepository.deleteById(testId);
+            try {
+                testsRepository.deleteById(testId);              
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
+            }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));

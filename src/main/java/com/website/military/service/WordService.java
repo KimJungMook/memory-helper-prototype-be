@@ -173,7 +173,13 @@ public class WordService {
             Optional.ofNullable(adverb)
             .ifPresent(words::setAdverb);
             words.setUpdatedAt(Instant.now());
-            wordRepository.save(words);
+            try {
+                wordRepository.save(words);   
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ResponseMessageDto.set(internalError, "서버 에러"));
+            }
             UpdateMeaningResponseDto response = new UpdateMeaningResponseDto(words.getWordId(), noun, verb,
             adjective, adverb);           
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
@@ -191,7 +197,13 @@ public class WordService {
             Optional<Word> existingWord = wordRepository.findByWordIdAndUser_UserId(id, userId);
             if(existingWord.isPresent()){
                 Word words = existingWord.get();
-                wordRepository.deleteById(id);
+                try {
+                    wordRepository.deleteById(id);                    
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                }
                 DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
                 words.getAdjective(), words.getAdverb());
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
@@ -202,7 +214,13 @@ public class WordService {
             Optional<GptWord> existingWord = gptWordRepository.findById(id);
             if(existingWord.isPresent()){
                 GptWord words = existingWord.get();
-                gptWordRepository.deleteById(id);
+                try {
+                    gptWordRepository.deleteById(id);    
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                }
                 DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
                 words.getAdjective(), words.getAdverb());
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
