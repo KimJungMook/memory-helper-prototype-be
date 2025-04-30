@@ -135,7 +135,7 @@ public class WordSetService {
     public ResponseEntity<?> assignWordToSet(Long setId, Long wordId, HttpServletRequest request, boolean isGpt){
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
-        if(existingWordSets.isPresent()){
+        if(existingWordSets.isPresent() && existingWordSets.get().getWordCount() <= 50){
             if(isGpt){
                 Optional<GptWordSetMapping> existingGptWordSetMappings = gptWordSetMappingRepository.findByGptword_GptWordIdAndWordsets_SetId(wordId, setId);
                 if(existingGptWordSetMappings.isPresent()){ // gpt단어가 단어장에 매핑이 되어져 있는지, 유저 단어가 단어장에 매핑이 되어져 있는지 체크
@@ -199,7 +199,7 @@ public class WordSetService {
         List<String> adverb = new ArrayList<>();
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
-        if(existingWordSets.isPresent()){
+        if(existingWordSets.isPresent() && existingWordSets.get().getWordCount() <= 50){ // 단어세트의 총 개수는 50개
             User existingUser = existingWordSets.get().getUser();
             WordSets wordSets = existingWordSets.get();
             Optional<Word> existingWord = wordRepository.findByWordAndUser_UserId(word, userId);
@@ -241,9 +241,10 @@ public class WordSetService {
             }
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
-        }else{
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
         }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
+        
     }
 
     // 세트의 이름을 바꾸고 싶을 때 사용하는 메서드
@@ -300,6 +301,7 @@ public class WordSetService {
                     Word.getAdjective(), Word.getAdjective());
                     try {
                         wordSetsMappingRepository.deleteById(deleteId);   
+                        wordSetsRepository.decrementWordCount(setId);
                     } catch (Exception e) {
                         e.printStackTrace();
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -317,6 +319,7 @@ public class WordSetService {
                     Word.getAdjective(), Word.getAdjective());
                     try {
                         wordSetsMappingRepository.deleteById(deleteId);  
+                        wordSetsRepository.decrementWordCount(setId);
                     } catch (Exception e) {
                         e.printStackTrace();
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -80,6 +80,9 @@ public class WordService {
                     words.getVerb(), words.getAdjective(), words.getAdverb(), true);
                     return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));                
             }else{ // 없으니까, gpt 돌려서 단어 만들어서 주기.
+                if (word == null || word.trim().isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청"));
+                }
                 try {
                     String s = getAIDescription(word);
                     String cleanJson = s.replaceAll("^```json\\s*", "").replaceAll("\\s*```$", ""); // 불필요한 json이런게 들어감.
@@ -124,6 +127,7 @@ public class WordService {
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(ResponseMessageDto.set(internalError, "서버 에러"));
                     }
+                    
                 } catch (Exception e) {
                     e.printStackTrace();
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -194,6 +198,21 @@ public class WordService {
     public ResponseEntity<?> deleteWord(Long id, HttpServletRequest request, boolean isGpt){
         Long userId = authService.getUserId(request);
         if(isGpt){
+            Optional<GptWord> existingWord = gptWordRepository.findById(id);
+            if(existingWord.isPresent()){
+                GptWord words = existingWord.get();
+                try {
+                    gptWordRepository.deleteById(id);    
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                }
+                DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
+                words.getAdjective(), words.getAdverb());
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
+            } 
+        }else{
             Optional<Word> existingWord = wordRepository.findByWordIdAndUser_UserId(id, userId);
             if(existingWord.isPresent()){
                 Word words = existingWord.get();
@@ -210,21 +229,6 @@ public class WordService {
             }else{
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
             }
-        }else{
-            Optional<GptWord> existingWord = gptWordRepository.findById(id);
-            if(existingWord.isPresent()){
-                GptWord words = existingWord.get();
-                try {
-                    gptWordRepository.deleteById(id);    
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ResponseMessageDto.set(internalError, "서버 에러"));
-                }
-                DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
-                words.getAdjective(), words.getAdverb());
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
-            } 
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }

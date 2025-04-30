@@ -22,4 +22,9 @@ public interface WordSetsRepository extends JpaRepository<WordSets, Long>{
         @Modifying
         @Query("UPDATE WordSets s SET s.wordCount = s.wordCount + 1 WHERE s.setId = :setId")
         void incrementWordCount(@Param("setId") Long setId);
+
+        @Transactional
+        @Modifying
+        @Query("UPDATE WordSets s SET s.wordCount = s.wordCount - 1 WHERE s.setId = :setId")
+        void decrementWordCount(@Param("setId") Long setId);
 }
