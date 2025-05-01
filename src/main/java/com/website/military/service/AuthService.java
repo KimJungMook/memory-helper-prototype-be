@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+    
     @Autowired
     private UserRepository userRepository;
 

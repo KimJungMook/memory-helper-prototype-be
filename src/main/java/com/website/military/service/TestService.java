@@ -124,7 +124,7 @@ public class TestService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
 
-    // 시험 문제 만드는 메서드  -> 중복으로 생성되는거 일단 막기.
+    // 시험 문제 만드는 메서드  -> 중복으로 생성되는거 일단 막기. -> 이상한 거 ai로 생기는거 막기. (2025.05.01)
     public ResponseEntity<?> generateExamList(HttpServletRequest request, Long setId){
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
@@ -322,7 +322,6 @@ public class TestService {
     public ResponseEntity<?> checkAnswers(HttpServletRequest request, Long testId, List<Character> checkedAnswers){
         Long userId = authService.getUserId(request);
         Optional<Tests> existingTests = testsRepository.findByUser_UserIdAndTestId(userId, testId);
-        CheckListResponse responses = new CheckListResponse();
         List<CheckResponse> correctList = new ArrayList<>();
         List<SolvedProblems> solvedProblemsList = new ArrayList<>();
         List<Mistakes> mistakesList = new ArrayList<>();
@@ -366,8 +365,7 @@ public class TestService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
             }
             // result 만들어내기 03.11 (23:33) -> result 저장후, mistake solvedproblem 연결 완료 -> QA 부족 체크하기.
-            responses.setCorrectList(correctList);
-            responses.setIncorrectList(incorrectList);
+            CheckListResponse responses = new CheckListResponse(results.getResultId(), correctList, incorrectList);
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responses));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
@@ -393,7 +391,7 @@ public class TestService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
     }
 
-    
+
     public String getAIDescription(List<String> wordList, List<String> meaningList){
         String requestUrl = apiUrl + "?key=" + apiKey;
         GeminiRequestDto request = new GeminiRequestDto();
@@ -417,7 +415,7 @@ public class TestService {
         .append("{\"id\":\"D\",\"text\":\"보기4\"}")
         .append("]}")
         .append("마지막에는 배열로 만들어줘.")
-        .append("추가 생성은 금지해줘.");
+        .append("제공된 항목만 사용하고, 새로운 항목이나 문항을 임의로 만들지 마세요");
         request.createGeminiReqDto(processedSentence.toString());
         String description = "";
         try {

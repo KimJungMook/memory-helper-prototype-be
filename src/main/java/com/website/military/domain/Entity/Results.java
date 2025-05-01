@@ -40,7 +40,7 @@ public class Results {
     @JoinColumn(name = "test_id")
     private Tests tests; // 외래키
 
-    private int score;
+    private double score;
     private Instant submittedAt;
 
     @JsonManagedReference // 중복 순환 해결.
