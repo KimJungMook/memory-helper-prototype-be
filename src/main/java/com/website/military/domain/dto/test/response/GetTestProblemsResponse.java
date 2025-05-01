@@ -14,9 +14,9 @@ public class GetTestProblemsResponse {
     
     private Long problemNumber;
 
-    private List<QuestionRequest> multipleChoice; // 문제에 해당하는 질문
-
     private String question;
+    
+    private List<QuestionRequest> multipleChoice; // 문제에 해당하는 질문
     
     private char answer; // 정답
 }

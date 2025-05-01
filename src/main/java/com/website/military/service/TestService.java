@@ -115,8 +115,8 @@ public class TestService {
             List<GetTestProblemsResponse> responses = new ArrayList<>();
             for(TestProblems problem : problems){
                 List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
-                GetTestProblemsResponse response = new GetTestProblemsResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList,
-                problem.getQuestion(), problem.getAnswer());
+                GetTestProblemsResponse response = new GetTestProblemsResponse(problem.getProblemId(), problem.getProblemNumber(), problem.getQuestion(), 
+                multipleChoiceList, problem.getAnswer());
                 responses.add(response);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
@@ -327,7 +327,7 @@ public class TestService {
         List<SolvedProblems> solvedProblemsList = new ArrayList<>();
         List<Mistakes> mistakesList = new ArrayList<>();
         List<CheckResponse> incorrectList = new ArrayList<>();
-        if(existingTests.isPresent()){
+        if(existingTests.isPresent() && checkedAnswers.size() == existingTests.get().getTestCount()){
             Tests tests = existingTests.get();
             List<TestProblems> problems = tests.getTestproblems();
             int index = 0;
@@ -338,18 +338,19 @@ public class TestService {
                     SolvedProblems solvedProblems = new SolvedProblems(problem);
                     solvedProblemRepository.save(solvedProblems);
                     solvedProblemsList.add(solvedProblems);
-                    CheckResponse response = new CheckResponse(problem.getProblemNumber(), multipleChoiceList, problem.getAnswer()); 
+                    CheckResponse response = new CheckResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList, checkedAnswers.get(index), problem.getAnswer()); 
                     correctList.add(response);
                 }else{
                     Mistakes mistakesProblems = new Mistakes(problem);
                     mistakesRepository.save(mistakesProblems);
                     mistakesList.add(mistakesProblems);
-                    CheckResponse response = new CheckResponse(problem.getProblemNumber(), multipleChoiceList, problem.getAnswer()); 
+                    CheckResponse response = new CheckResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList, checkedAnswers.get(index),problem.getAnswer()); 
                     incorrectList.add(response);
                     mistakeIndex++;
                 }
                 index++; // Result에 저장하기. 채점을 했으니까. 여기서부터 다시하기. 25.03.08 (23:23)
             }
+
             Results results = new Results(tests.getUser(), tests, (index-mistakeIndex)*100/index, mistakesList, solvedProblemsList);
 
             for (Mistakes mistake : mistakesList) {
@@ -392,6 +393,7 @@ public class TestService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
     }
 
+    
     public String getAIDescription(List<String> wordList, List<String> meaningList){
         String requestUrl = apiUrl + "?key=" + apiKey;
         GeminiRequestDto request = new GeminiRequestDto();
@@ -493,7 +495,7 @@ public class TestService {
         String cleanJson = s.replaceAll("^```json\\s*", "").replaceAll("\\s*```$", ""); // 불필요한 json이런게 들어감.
         JSONArray objectArray = new JSONArray(cleanJson);
         List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
-        for(int i=0;i<objectArray.length();i++){
+        for(int i=0;i<objectArray.length() && problemNumber <= 20;i++){
             List<GenerateExamListResponse> responses = new ArrayList<>();
             JSONArray newObject = objectArray.getJSONObject(i).getJSONArray("options"); // options에 나오는거까지 찍힘.
             String question = objectArray.getJSONObject(i).getString("question");
