@@ -12,14 +12,11 @@ public class ExistWordResponseDto {
     private Long wordId;
     private String word;
     private List<WordClassResponse> meaning;
-
-    private boolean isGpt;
     public ExistWordResponseDto(Long wordId, String word, List<String> noun, List<String> verb, 
-    List<String> adjective, List<String> adverb, boolean isGpt){
+    List<String> adjective, List<String> adverb){
         this.wordId = wordId;
         this.word = word;
         List<WordClassResponse> responseList = CommonUtils.meaningResponse(noun, verb, adjective, adverb);
         this.meaning = responseList;
-        this.isGpt = isGpt;
     }
 }
