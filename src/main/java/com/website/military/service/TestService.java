@@ -411,7 +411,7 @@ public class TestService {
         return responseDtos;
     }
 
-    public List<QuestionRequest> parseMultipleChoice(String multipleChoiceJson) {
+    public List<QuestionRequest> parseMultipleChoice(String multipleChoiceJson){
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(multipleChoiceJson, objectMapper.getTypeFactory().constructCollectionType(List.class, QuestionRequest.class));
