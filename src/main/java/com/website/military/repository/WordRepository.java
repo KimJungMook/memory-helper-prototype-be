@@ -8,6 +8,5 @@ import com.website.military.domain.Entity.Word;
 
 public interface WordRepository extends JpaRepository<Word, Long>{
     Optional<Word> findByWord(String word);
-    Optional<Word> findByWordAndUser_UserId(String word, Long userId);
-    Optional<Word> findByWordIdAndUser_UserId(Long id, Long userId);
+    Optional<Word> findFirstByWordAndUser_UserIdOrderByCreateAtDesc(String word, Long userId);
 }
