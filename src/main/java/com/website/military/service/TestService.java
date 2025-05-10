@@ -18,8 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.website.military.domain.Entity.GptWord;
-import com.website.military.domain.Entity.GptWordSetMapping;
 import com.website.military.domain.Entity.Mistakes;
 import com.website.military.domain.Entity.Results;
 import com.website.military.domain.Entity.SolvedProblems;
@@ -131,14 +129,9 @@ public class TestService {
         if(existingWordSets.isPresent()){
             WordSets wordSets = existingWordSets.get();
             List<WordSetMapping> mapping = wordSets.getWordsetmapping();
-            List<GptWordSetMapping> gptmapping = wordSets.getGptwordsetMappings();
-            int mappingSize = mapping.size(); // mapping size 밑에서 쓸일이 있음.
-            int gptmappingSize = gptmapping.size();
             int length = wordSets.getWordCount();
             Tests tests = new Tests(wordSets.getUser(), wordSets, 0);
-
             Collections.shuffle(mapping); // 매핑 된거 먼저 셔플을 해야 넣은 순서대로 문제가 나오지 않음.
-            Collections.shuffle(gptmapping);
 
             if(length < 20){
                 tests.setTestCount(length);
@@ -146,11 +139,7 @@ public class TestService {
                 List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
                 List<GenerateExamListResponseDto> firstTenResponses = new ArrayList<>();
                 List<GenerateExamListResponseDto> lastResponses = new ArrayList<>();
-                List<GenerateExamListResponseDto> gptFirstTenResponses = new ArrayList<>();
-                List<GenerateExamListResponseDto> gptLastResponses = new ArrayList<>();
-                Long problemNumber = 1L;
                 List<Word> wordList = new ArrayList<>();
-                List<GptWord> gptWordList = new ArrayList<>();
                 for(WordSetMapping tmp : mapping){
                     Word tmpWord = tmp.getWord();
                     wordList.add(tmpWord);
@@ -177,7 +166,6 @@ public class TestService {
                         String jsonString = objectMapper.writeValueAsString(words);
                         char answer = response.getAnswer().charAt(0);
                         TestProblems testProblems = new TestProblems(tests, jsonString, question, response.getProblemNumber(), answer);
-                        problemNumber = response.getProblemNumber();
                         testProblemsRepository.save(testProblems); 
                         responseDtos.add(response); 
                     } catch (Exception e) {
@@ -185,110 +173,27 @@ public class TestService {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
                     }
                 }
-
-                for(GptWordSetMapping tmp : gptmapping){
-                    GptWord tmpWord = tmp.getGptword();
-                    gptWordList.add(tmpWord);
-                }
-                if(gptWordList.size() > 10){
-                    gptFirstTenResponses = parsingGptData(gptWordList.subList(0, 10), problemNumber);
-                    gptLastResponses = parsingGptData(gptWordList.subList(10, gptWordList.size()), problemNumber + 10);
-                    gptFirstTenResponses.addAll(gptLastResponses);
-                }else{
-                    gptFirstTenResponses = parsingGptData(gptWordList, problemNumber);
-                }
-                for(GenerateExamListResponseDto response : gptFirstTenResponses){
-                    List<QuestionRequest> words = new ArrayList<>();
-                    for(GenerateExamListResponse list : response.getMultipleChoice()){
-                        String id = list.getId();
-                        String meaning = list.getMeaning();
-                        words.add(new QuestionRequest(id, meaning));
-                    }
-                    try {
-                        ObjectMapper objectMapper = new ObjectMapper();   
-                        String question = response.getQuestion();
-                        String jsonString = objectMapper.writeValueAsString(words);
-                        char answer = response.getAnswer().charAt(0);
-                        TestProblems testProblems = new TestProblems(tests, jsonString, question, response.getProblemNumber(), answer);
-                        testProblemsRepository.save(testProblems); 
-                        responseDtos.add(response); 
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
-                    }  
-                    
-                }
-
                 // 2025.04.03 list형태로 만들어내는것 성공 -> 10개단위로 끊어내는 것도 만들어야함. -> 아직 테스트에 넣는 것까지는 불가능.
                 // 2025.04.26 test 만드는 것까지 성공. -> QA 부족. -> 아직까지는 에러는 안뜸
                 GenerateExamListTestIdResponse response = new GenerateExamListTestIdResponse(tests.getTestId(), responseDtos);
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
             }else{
-                int minValue = Math.min(gptmappingSize, mappingSize);
-                Random random = new Random();
-                int randomPickSize, userPickSize;
-                Long lastGptsize, lastUserSize;
                 List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
                 List<GenerateExamListResponseDto> firstTenResponses = new ArrayList<>();
                 List<GenerateExamListResponseDto> lastResponses = new ArrayList<>();
-                List<GenerateExamListResponseDto> gptFirstTenResponses = new ArrayList<>();
-                List<GenerateExamListResponseDto> gptLastResponses = new ArrayList<>();
                 List<Word> wordList = new ArrayList<>();
-                List<GptWord> gptWordList = new ArrayList<>(); 
-                while (true) {
-                    randomPickSize = random.nextInt(Math.min(minValue, 20) + 1); // gpt단어는 최대 20개까지 뽑을 수 있음
-                    userPickSize = 20 - randomPickSize; // 남은 개수는 유저 단어에서 뽑음
-                    if(gptmappingSize >= mappingSize){
-                        if(gptmappingSize >= userPickSize){
-                            for(GptWordSetMapping tmp : gptmapping.subList(0, userPickSize)){
-                                GptWord tmpWord = tmp.getGptword();
-                                gptWordList.add(tmpWord);
-                            }
-                            for(WordSetMapping tmp : mapping.subList(0, randomPickSize)){
-                                Word tmpWord = tmp.getWord();
-                                wordList.add(tmpWord);
-                            }
-                            lastGptsize = (long)userPickSize;
-                            lastUserSize = (long)randomPickSize;
-                            break;
-                        }
-                    }else{
-                        if(mappingSize >= userPickSize){
-                            for(GptWordSetMapping tmp : gptmapping.subList(0, randomPickSize)){
-                                GptWord tmpWord = tmp.getGptword();
-                                gptWordList.add(tmpWord);
-                            }
-                            for(WordSetMapping tmp : mapping.subList(0, userPickSize)){
-                                Word tmpWord = tmp.getWord();
-                                wordList.add(tmpWord);
-                            }
-                            lastUserSize = (long)userPickSize;
-                            lastGptsize = (long)randomPickSize;
-                            break;
-                        }
-                    }
-                }
-                
+            
                 tests.setTestCount(20);
                 testsRepository.save(tests); // test 생성
-                if(wordList.size() > 10){
-                    firstTenResponses = parsingData(wordList.subList(0, 10), 1L);
-                    lastResponses = parsingData(wordList.subList(10, lastUserSize.intValue()), 11L);
-                    firstTenResponses.addAll(lastResponses);
-                    Long size = (long) wordList.size();
-                    gptFirstTenResponses = parsingGptData(gptWordList, size);
-                    firstTenResponses.addAll(gptFirstTenResponses);
-                }else{
-                    firstTenResponses = parsingData(wordList, 1L);
-                    Long size = (long) wordList.size();
-                    gptFirstTenResponses = parsingGptData(gptWordList.subList(0, 10), size);
-                    gptLastResponses = parsingGptData(gptWordList.subList(10, lastGptsize.intValue()), size + 10);
-                    gptFirstTenResponses.addAll(gptLastResponses);
-                    firstTenResponses.addAll(gptFirstTenResponses);
+
+                for(WordSetMapping tmp : mapping.subList(0, 20)){
+                    Word tmpWord = tmp.getWord();
+                    wordList.add(tmpWord);
                 }
-                // 2025.04.26 개수 20개가 안될 때가 있음. 이유 찾기.
-                System.out.println("GPT: " + gptLastResponses);
-                System.out.println("User " + lastResponses);
+                firstTenResponses = parsingData(wordList.subList(0, 10), 1L);
+                lastResponses = parsingData(wordList.subList(10, 20), 11L);
+                firstTenResponses.addAll(lastResponses);
+
                 for(GenerateExamListResponseDto response : firstTenResponses){
                     List<QuestionRequest> words = new ArrayList<>();
                     for(GenerateExamListResponse list : response.getMultipleChoice()){
@@ -436,11 +341,6 @@ public class TestService {
         return getRandomPOS(word.getNoun(), word.getVerb(), word.getAdjective(), word.getAdverb());
     }
     
-    // gpt가 만든 단어 품사 골라주는 메서드 
-    private Long wordPOS(GptWord word) {
-        return getRandomPOS(word.getNoun(), word.getVerb(), word.getAdjective(), word.getAdverb());
-    }
-    
     // 품사 랜덤으로 고르는 메서드
     private Long getRandomPOS(List<String> noun, List<String> verb, List<String> adjective, List<String> adverb) {
         List<Long> indexList = new ArrayList<>();
@@ -505,52 +405,6 @@ public class TestService {
             }
             GenerateExamListResponseDto responseDto = new GenerateExamListResponseDto(problemNumber, responses, question, answer);    
             problemNumber = problemNumber + 1;
-            Collections.shuffle(responseDto.getMultipleChoice());     
-            responseDtos.add(responseDto);   
-        }
-        return responseDtos;
-    }
-
-    private List<GenerateExamListResponseDto> parsingGptData(List<GptWord> words, Long problemNumber){
-        Long number = problemNumber + 1;             // 문제를 response로 낼 때는 몇번이지 알려줘야하기에.
-        List<String> meaningList = new ArrayList<>();
-        List<String> wordList = new ArrayList<>(); 
-        for(GptWord word : words){
-            Long id = wordPOS(word);
-            String meaning = "";
-            switch (id.intValue()) {
-            case 0:
-                meaning = word.getNoun().get(0);
-                break;
-            case 1:
-                meaning = word.getVerb().get(0);
-                break;
-            case 2:
-                meaning = word.getAdjective().get(0);
-                break;
-            case 3:
-                meaning = word.getAdverb().get(0);
-                break;
-            }
-            meaningList.add(meaning);
-            wordList.add(word.getWord());
-        }
-        String s = getAIDescription(wordList, meaningList);
-        String cleanJson = s.replaceAll("^```json\\s*", "").replaceAll("\\s*```$", ""); // 불필요한 json이런게 들어감.
-        JSONArray objectArray = new JSONArray(cleanJson);
-        List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
-        for(int i=0;i<objectArray.length();i++){
-            List<GenerateExamListResponse> responses = new ArrayList<>();
-            JSONArray newObject = objectArray.getJSONObject(i).getJSONArray("options"); // options에 나오는거까지 찍힘.
-            String question = objectArray.getJSONObject(i).getString("question");
-            String answer = objectArray.getJSONObject(i).getString("answer");
-            for(Object obj : newObject){
-                JSONObject jsonObj = (JSONObject) obj;
-                GenerateExamListResponse response = new GenerateExamListResponse(jsonObj.getString("id"), jsonObj.getString("text"));
-                responses.add(response);
-            }
-            GenerateExamListResponseDto responseDto = new GenerateExamListResponseDto(number, responses, question, answer);    
-            number = number + 1;
             Collections.shuffle(responseDto.getMultipleChoice());     
             responseDtos.add(responseDto);   
         }

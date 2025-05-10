@@ -24,7 +24,6 @@ import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.response.WordClassResponse;
 import com.website.military.domain.dto.word.request.ExistWordDto;
 import com.website.military.domain.dto.word.request.UpdateMeaningDto;
-import com.website.military.domain.dto.word.response.DeleteWordResponseDto;
 import com.website.military.domain.dto.word.response.ExistWordResponseDto;
 import com.website.military.domain.dto.word.response.GptWordResponseDto;
 import com.website.military.domain.dto.word.response.UpdateMeaningResponseDto;
@@ -120,7 +119,7 @@ public class WordService {
                     try {
                         GptWord gptWord = new GptWord(word, nounList, verbList, adjectiveList, adverbList);
                         gptWordRepository.save(gptWord);
-                        GptWordResponseDto response = new GptWordResponseDto(gptWord.getGptWordId(), gptWord.getWord(),nounList, verbList, adjectiveList, adverbList,true);
+                        GptWordResponseDto response = new GptWordResponseDto(gptWord.getGptWordId(), gptWord.getWord(),nounList, verbList, adjectiveList, adverbList);
                         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseDataDto.set("CREATE", response)); 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -195,43 +194,43 @@ public class WordService {
     }
 
     //  유저가 만든 단어 삭제하기. -> 로직 변경
-    public ResponseEntity<?> deleteWord(Long id, HttpServletRequest request, boolean isGpt){
-        Long userId = authService.getUserId(request);
-        if(isGpt){
-            Optional<GptWord> existingWord = gptWordRepository.findById(id);
-            if(existingWord.isPresent()){
-                GptWord words = existingWord.get();
-                try {
-                    gptWordRepository.deleteById(id);    
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ResponseMessageDto.set(internalError, "서버 에러"));
-                }
-                DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
-                words.getAdjective(), words.getAdverb());
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
-            } 
-        }else{
-            Optional<Word> existingWord = wordRepository.findByWordIdAndUser_UserId(id, userId);
-            if(existingWord.isPresent()){
-                Word words = existingWord.get();
-                try {
-                    wordRepository.deleteById(id);                    
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ResponseMessageDto.set(internalError, "서버 에러"));
-                }
-                DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
-                words.getAdjective(), words.getAdverb());
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
-            }else{
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
-            }
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
-    }
+    // public ResponseEntity<?> deleteWord(Long id, HttpServletRequest request, boolean isGpt){
+    //     Long userId = authService.getUserId(request);
+    //     if(isGpt){
+    //         Optional<GptWord> existingWord = gptWordRepository.findById(id);
+    //         if(existingWord.isPresent()){
+    //             GptWord words = existingWord.get();
+    //             try {
+    //                 gptWordRepository.deleteById(id);    
+    //             } catch (Exception e) {
+    //                 e.printStackTrace();
+    //                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                 .body(ResponseMessageDto.set(internalError, "서버 에러"));
+    //             }
+    //             DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
+    //             words.getAdjective(), words.getAdverb());
+    //             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
+    //         } 
+    //     }else{
+    //         Optional<Word> existingWord = wordRepository.findByWordIdAndUser_UserId(id, userId);
+    //         if(existingWord.isPresent()){
+    //             Word words = existingWord.get();
+    //             try {
+    //                 wordRepository.deleteById(id);                    
+    //             } catch (Exception e) {
+    //                 e.printStackTrace();
+    //                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                 .body(ResponseMessageDto.set(internalError, "서버 에러"));
+    //             }
+    //             DeleteWordResponseDto response = new DeleteWordResponseDto(id, words.getWord(), words.getNoun(), words.getVerb(),
+    //             words.getAdjective(), words.getAdverb());
+    //             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
+    //         }else{
+    //             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
+    //         }
+    //     }
+    //     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+    // }
     
 
     public String getAIDescription(String word){

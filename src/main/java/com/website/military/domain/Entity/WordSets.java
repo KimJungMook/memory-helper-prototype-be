@@ -44,9 +44,7 @@ public class WordSets {
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy="wordsets", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WordSetMapping> wordsetmapping;
-    @JsonManagedReference // 중복 순환 해결.
-    @OneToMany(fetch = FetchType.LAZY, mappedBy="wordsets", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GptWordSetMapping> gptwordsetMappings;
+
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "wordsets")
     private List<Tests> tests;

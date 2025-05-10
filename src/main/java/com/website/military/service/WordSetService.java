@@ -9,9 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import com.website.military.domain.Entity.GptWord;
-import com.website.military.domain.Entity.GptWordSetMapping;
 import com.website.military.domain.Entity.User;
 import com.website.military.domain.Entity.Word;
 import com.website.military.domain.Entity.WordSetMapping;
@@ -21,15 +18,12 @@ import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.response.WordClassResponse;
 import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
 import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
-import com.website.military.domain.dto.word.response.ExistWordResponseDto;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
 import com.website.military.domain.dto.wordsets.response.DeleteResponseDto;
 import com.website.military.domain.dto.wordsets.response.DetachResponse;
 import com.website.military.domain.dto.wordsets.response.GetWordsBySetIdResponse;
 import com.website.military.domain.dto.wordsets.response.RegisterResponseDto;
 import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
-import com.website.military.repository.GptWordRepository;
-import com.website.military.repository.GptWordSetMappingRepository;
 import com.website.military.repository.UserRepository;
 import com.website.military.repository.WordRepository;
 import com.website.military.repository.WordSetsMappingRepository;
@@ -48,11 +42,7 @@ public class WordSetService {
     @Autowired
     private WordSetsMappingRepository wordSetsMappingRepository;
     @Autowired
-    private GptWordSetMappingRepository gptWordSetMappingRepository;
-    @Autowired
     private WordRepository wordRepository;
-    @Autowired
-    private GptWordRepository gptWordRepository;
     @Autowired
     private AuthService authService;
 
@@ -87,20 +77,20 @@ public class WordSetService {
         Optional<WordSets> wordsets = wordSetsRepository.findByUser_UserIdAndSetId(userId, id);
         if(wordsets.isPresent()){
             List<WordSetMapping> wordSetsMappings = wordSetsMappingRepository.findAllByWordsets_SetId(id);
-            List<GptWordSetMapping> gptWordSetMappings = gptWordSetMappingRepository.findAllByWordsets_SetId(id);
+            // List<GptWordSetMapping> gptWordSetMappings = gptWordSetMappingRepository.findAllByWordsets_SetId(id);
             List<GetWordsBySetIdResponse> words = new ArrayList<>();
             for(WordSetMapping mapping : wordSetsMappings){ // 둘다 비어져 있을 때는 어떻게 하는게좋을지.
                 Word response = mapping.getWord();
                 GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getWordId(), response.getWord(), response.getNoun(), 
-                response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt(), false);
+                response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt());
                 words.add(responses);
             }
-            for(GptWordSetMapping mapping : gptWordSetMappings){
-                GptWord response = mapping.getGptword();
-                GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getGptWordId(), response.getWord(), response.getNoun(), 
-                response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt(), true);
-                words.add(responses);
-            }
+            // for(GptWordSetMapping mapping : gptWordSetMappings){
+            //     GptWord response = mapping.getGptword();
+            //     GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getGptWordId(), response.getWord(), response.getNoun(), 
+            //     response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt(), true);
+            //     words.add(responses);
+            // }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", words));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
@@ -131,64 +121,64 @@ public class WordSetService {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
     }
 
-    // 이미 존재한 단어를 단어장에 넣기
-    public ResponseEntity<?> assignWordToSet(Long setId, Long wordId, HttpServletRequest request, boolean isGpt){
-        Long userId = authService.getUserId(request);
-        Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
-        if(existingWordSets.isPresent() && existingWordSets.get().getWordCount() <= 50){
-            if(isGpt){
-                Optional<GptWordSetMapping> existingGptWordSetMappings = gptWordSetMappingRepository.findByGptword_GptWordIdAndWordsets_SetId(wordId, setId);
-                if(existingGptWordSetMappings.isPresent()){ // gpt단어가 단어장에 매핑이 되어져 있는지, 유저 단어가 단어장에 매핑이 되어져 있는지 체크
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
-                }
-                Optional<GptWord> existingGptWord = gptWordRepository.findById(wordId);
-                if(existingGptWord.isPresent()){
-                    GptWord gptWord = existingGptWord.get();
-                    WordSets sets = existingWordSets.get();
-                    GptWordSetMapping mapping = new GptWordSetMapping();
-                    mapping.setGptword(gptWord);
-                    mapping.setWordsets(sets);
-                    try {
-                        gptWordSetMappingRepository.save(mapping);
-                        wordSetsRepository.incrementWordCount(setId);   
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(ResponseMessageDto.set(internalError, "서버 에러"));
-                    }
-                    ExistWordResponseDto response = new ExistWordResponseDto(gptWord.getGptWordId(), gptWord.getWord(), gptWord.getNoun(), gptWord.getVerb(), 
-                    gptWord.getAdjective(), gptWord.getAdverb(), isGpt);
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
-                }
-            }else{
-                Optional<WordSetMapping> existingWordSetMappings = wordSetsMappingRepository.findByWord_WordIdAndWordsets_SetId(wordId, setId);
-                if(existingWordSetMappings.isPresent()){ // gpt단어가 단어장에 매핑이 되어져 있는지, 유저 단어가 단어장에 매핑이 되어져 있는지 체크
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
-                }
-                Optional<Word> existingWord = wordRepository.findByWordIdAndUser_UserId(wordId, userId);
-                if(existingWord.isPresent()){
-                    Word word = existingWord.get();
-                    WordSets sets = existingWordSets.get();
-                    WordSetMapping mapping = new WordSetMapping();
-                    mapping.setWord(word);
-                    mapping.setWordsets(sets);
-                    try {
-                        wordSetsMappingRepository.save(mapping);
-                        wordSetsRepository.incrementWordCount(setId);    
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(ResponseMessageDto.set(internalError, "서버 에러"));
-                    }
-                    ExistWordResponseDto response = new ExistWordResponseDto(word.getWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
-                    word.getAdjective(), word.getAdverb(), isGpt);
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
-                }   
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
-    }
+    // // 이미 존재한 단어를 단어장에 넣기
+    // public ResponseEntity<?> assignWordToSet(Long setId, Long wordId, HttpServletRequest request, boolean isGpt){
+    //     Long userId = authService.getUserId(request);
+    //     Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
+    //     if(existingWordSets.isPresent() && existingWordSets.get().getWordCount() <= 50){
+    //         if(isGpt){
+    //             Optional<GptWordSetMapping> existingGptWordSetMappings = gptWordSetMappingRepository.findByGptword_GptWordIdAndWordsets_SetId(wordId, setId);
+    //             if(existingGptWordSetMappings.isPresent()){ // gpt단어가 단어장에 매핑이 되어져 있는지, 유저 단어가 단어장에 매핑이 되어져 있는지 체크
+    //                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+    //             }
+    //             Optional<GptWord> existingGptWord = gptWordRepository.findById(wordId);
+    //             if(existingGptWord.isPresent()){
+    //                 GptWord gptWord = existingGptWord.get();
+    //                 WordSets sets = existingWordSets.get();
+    //                 GptWordSetMapping mapping = new GptWordSetMapping();
+    //                 mapping.setGptword(gptWord);
+    //                 mapping.setWordsets(sets);
+    //                 try {
+    //                     gptWordSetMappingRepository.save(mapping);
+    //                     wordSetsRepository.incrementWordCount(setId);   
+    //                 } catch (Exception e) {
+    //                     e.printStackTrace();
+    //                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                     .body(ResponseMessageDto.set(internalError, "서버 에러"));
+    //                 }
+    //                 ExistWordResponseDto response = new ExistWordResponseDto(gptWord.getGptWordId(), gptWord.getWord(), gptWord.getNoun(), gptWord.getVerb(), 
+    //                 gptWord.getAdjective(), gptWord.getAdverb(), isGpt);
+    //                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+    //             }
+    //         }else{
+    //             Optional<WordSetMapping> existingWordSetMappings = wordSetsMappingRepository.findByWord_WordIdAndWordsets_SetId(wordId, setId);
+    //             if(existingWordSetMappings.isPresent()){ // gpt단어가 단어장에 매핑이 되어져 있는지, 유저 단어가 단어장에 매핑이 되어져 있는지 체크
+    //                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+    //             }
+    //             Optional<Word> existingWord = wordRepository.findByWordIdAndUser_UserId(wordId, userId);
+    //             if(existingWord.isPresent()){
+    //                 Word word = existingWord.get();
+    //                 WordSets sets = existingWordSets.get();
+    //                 WordSetMapping mapping = new WordSetMapping();
+    //                 mapping.setWord(word);
+    //                 mapping.setWordsets(sets);
+    //                 try {
+    //                     wordSetsMappingRepository.save(mapping);
+    //                     wordSetsRepository.incrementWordCount(setId);    
+    //                 } catch (Exception e) {
+    //                     e.printStackTrace();
+    //                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                     .body(ResponseMessageDto.set(internalError, "서버 에러"));
+    //                 }
+    //                 ExistWordResponseDto response = new ExistWordResponseDto(word.getWordId(), word.getWord(), word.getNoun(), word.getVerb(), 
+    //                 word.getAdjective(), word.getAdverb(), isGpt);
+    //                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+    //             }   
+    //         }
+    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+    //     }
+    //     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+    // }
 
     // 단어를 단어장에 넣기 (아직 존재하지 않는 단어)
     public ResponseEntity<?> addWordToWordSet(Long setId, AddWordToWordSetDto dto, HttpServletRequest request){
@@ -226,7 +216,7 @@ public class WordSetService {
                     .body(ResponseMessageDto.set(internalError, "서버 에러"));
                 }
                 AddWordToWordSetResponseDto response = new AddWordToWordSetResponseDto(Word.getWordId(), Word.getWord(), Word.getNoun(), 
-                Word.getVerb(), Word.getAdjective(), Word.getAdverb(), false);   
+                Word.getVerb(), Word.getAdjective(), Word.getAdverb());   
                 WordSetMapping mapping = new WordSetMapping(Word, wordSets);           
                 try {
                     wordSetsMappingRepository.save(mapping);
@@ -288,45 +278,46 @@ public class WordSetService {
     }
 
     // 단어장에 있는 단어를 없애고 싶을 때 사용하는 메서드
-    public ResponseEntity<?> detachWordFromSet(Long setId, Long wordId, HttpServletRequest request, boolean isGpt){
+    public ResponseEntity<?> detachWordFromSet(Long setId, Long wordId, HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
         if (existingWordSets.isPresent()) {
-            if(isGpt){
-                Optional<GptWordSetMapping> mappings = gptWordSetMappingRepository.findByGptword_GptWordIdAndWordsets_SetId(wordId, setId);
-                if(mappings.isPresent()){
-                    Long deleteId = mappings.get().getId();
-                    GptWord Word = mappings.get().getGptword();
-                    DetachResponse response = new DetachResponse(Word.getGptWordId(), Word.getWord(), Word.getNoun(), Word.getVerb(),
-                    Word.getAdjective(), Word.getAdjective());
-                    try {
-                        wordSetsMappingRepository.deleteById(deleteId);   
-                        wordSetsRepository.decrementWordCount(setId);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(ResponseMessageDto.set(internalError, "서버 에러"));
-                    }
+            // if(isGpt){
+            //     Optional<GptWordSetMapping> mappings = gptWordSetMappingRepository.findByGptword_GptWordIdAndWordsets_SetId(wordId, setId);
+            //     if(mappings.isPresent()){
+            //         Long deleteId = mappings.get().getId();
+            //         GptWord Word = mappings.get().getGptword();
+            //         DetachResponse response = new DetachResponse(Word.getGptWordId(), Word.getWord(), Word.getNoun(), Word.getVerb(),
+            //         Word.getAdjective(), Word.getAdjective());
+            //         try {
+            //             wordSetsMappingRepository.deleteById(deleteId);   
+            //             wordSetsRepository.decrementWordCount(setId);
+            //         } catch (Exception e) {
+            //             e.printStackTrace();
+            //             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            //             .body(ResponseMessageDto.set(internalError, "서버 에러"));
+            //         }
 
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
-                }
-            }else{                
-                Optional<WordSetMapping> mappings = wordSetsMappingRepository.findByWord_WordIdAndWordsets_SetId(wordId, setId);
-                if(mappings.isPresent()){
-                    Long deleteId = mappings.get().getId();
-                    Word Word = mappings.get().getWord();
-                    DetachResponse response = new DetachResponse(Word.getWordId(), Word.getWord(), Word.getNoun(), Word.getVerb(),
-                    Word.getAdjective(), Word.getAdjective());
-                    try {
-                        wordSetsMappingRepository.deleteById(deleteId);  
-                        wordSetsRepository.decrementWordCount(setId);
+            //         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
+            //     }
+            // }else{                
+            Optional<WordSetMapping> mappings = wordSetsMappingRepository.findByWord_WordIdAndWordsets_SetId(wordId, setId);
+            if(mappings.isPresent()){
+                Long deleteId = mappings.get().getId();
+                Word Word = mappings.get().getWord();
+                DetachResponse response = new DetachResponse(Word.getWordId(), Word.getWord(), Word.getNoun(), Word.getVerb(),
+                Word.getAdjective(), Word.getAdjective());
+                try {
+                    wordSetsMappingRepository.deleteById(deleteId);  
+                    wordSetsRepository.decrementWordCount(setId);
+                    // wordRepository.deleteById(deleteId); // 일단 고민을 해봐야할 부분으로 보임.
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(ResponseMessageDto.set(internalError, "서버 에러"));
-                    }
-                    return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
+                    e.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseMessageDto.set(internalError, "서버 에러"));
                 }
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
+                // }
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
         }
