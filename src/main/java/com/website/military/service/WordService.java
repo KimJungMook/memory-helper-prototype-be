@@ -142,56 +142,56 @@ public class WordService {
         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", returnWord));
     }
 
-    // QA 테스트 미흡 ( 2.3.) -> 수정하면 시간 변경하도록. -> (2. 5) 시간 변경 완료 -> (3.3) 유저가 쓴거만 고칠 수 있게 변경
-    public ResponseEntity<?> updateMeaning(Long id, UpdateMeaningDto dto,HttpServletRequest request){ // word(유저가 쓴)가 만든거 변경
-        Long userId = authService.getUserId(request);
-        String word = dto.getWord();
-        Optional<Word> existingWord = wordRepository.findByWordIdAndUser_UserId(id, userId);
-        List<String> noun = new ArrayList<>();
-        List<String> verb = new ArrayList<>();
-        List<String> adjective = new ArrayList<>();
-        List<String> adverb = new ArrayList<>();
-        if(existingWord.isPresent()){
-            for(WordClassResponse r : dto.getMeaning()){
-                if(r.getType().equals("noun")){
-                    noun.add(r.getValue());
-                }else if(r.getType().equals("verb")){
-                    verb.add(r.getValue());
-                }else if(r.getType().equals("adjective")){
-                    adjective.add(r.getValue());
-                }else if(r.getType().equals("adverb")){
-                    adverb.add(r.getValue());
-                }else{
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
-                }
-            }
-            Word words = existingWord.get();
-            if(word.equals(words.getWord())){
-            Optional.ofNullable(noun)
-            .ifPresent(words::setNoun);
-            Optional.ofNullable(verb)
-            .ifPresent(words::setVerb);
-            Optional.ofNullable(adjective)
-            .ifPresent(words::setAdjective);
-            Optional.ofNullable(adverb)
-            .ifPresent(words::setAdverb);
-            words.setUpdatedAt(Instant.now());
-            try {
-                wordRepository.save(words);   
-            } catch (Exception e) {
-                e.printStackTrace();
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ResponseMessageDto.set(internalError, "서버 에러"));
-            }
-            UpdateMeaningResponseDto response = new UpdateMeaningResponseDto(words.getWordId(), noun, verb,
-            adjective, adverb);           
-            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
-            }else{
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
-            }
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
-    }
+    // // QA 테스트 미흡 ( 2.3.) -> 수정하면 시간 변경하도록. -> (2. 5) 시간 변경 완료 -> (3.3) 유저가 쓴거만 고칠 수 있게 변경
+    // public ResponseEntity<?> updateMeaning(Long id, UpdateMeaningDto dto,HttpServletRequest request){ // word(유저가 쓴)가 만든거 변경
+    //     Long userId = authService.getUserId(request);
+    //     String word = dto.getWord();
+    //     Optional<Word> existingWord = wordRepository.findByWordIdAndUser_UserId(id, userId);
+    //     List<String> noun = new ArrayList<>();
+    //     List<String> verb = new ArrayList<>();
+    //     List<String> adjective = new ArrayList<>();
+    //     List<String> adverb = new ArrayList<>();
+    //     if(existingWord.isPresent()){
+    //         for(WordClassResponse r : dto.getMeaning()){
+    //             if(r.getType().equals("noun")){
+    //                 noun.add(r.getValue());
+    //             }else if(r.getType().equals("verb")){
+    //                 verb.add(r.getValue());
+    //             }else if(r.getType().equals("adjective")){
+    //                 adjective.add(r.getValue());
+    //             }else if(r.getType().equals("adverb")){
+    //                 adverb.add(r.getValue());
+    //             }else{
+    //                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+    //             }
+    //         }
+    //         Word words = existingWord.get();
+    //         if(word.equals(words.getWord())){
+    //         Optional.ofNullable(noun)
+    //         .ifPresent(words::setNoun);
+    //         Optional.ofNullable(verb)
+    //         .ifPresent(words::setVerb);
+    //         Optional.ofNullable(adjective)
+    //         .ifPresent(words::setAdjective);
+    //         Optional.ofNullable(adverb)
+    //         .ifPresent(words::setAdverb);
+    //         words.setUpdatedAt(Instant.now());
+    //         try {
+    //             wordRepository.save(words);   
+    //         } catch (Exception e) {
+    //             e.printStackTrace();
+    //             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body(ResponseMessageDto.set(internalError, "서버 에러"));
+    //         }
+    //         UpdateMeaningResponseDto response = new UpdateMeaningResponseDto(words.getWordId(), noun, verb,
+    //         adjective, adverb);           
+    //         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+    //         }else{
+    //             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+    //         }
+    //     }
+    //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseMessageDto.set(unAuthorize, "잘못된 접근입니다."));
+    // }
 
     //  유저가 만든 단어 삭제하기. -> 로직 변경
     // public ResponseEntity<?> deleteWord(Long id, HttpServletRequest request, boolean isGpt){
