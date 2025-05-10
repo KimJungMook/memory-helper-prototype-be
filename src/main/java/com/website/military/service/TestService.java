@@ -98,7 +98,7 @@ public class TestService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }else{
             for(Tests test : testsList){
-                GetAllExamListResponse response = new GetAllExamListResponse(test.getTestId(), test.getCreatedAt(), test.getTestType());
+                GetAllExamListResponse response = new GetAllExamListResponse(test.getTestId(), test.getCreatedAt(), test.getTestType(), test.getTestCount());
                 responses.add(response);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));

@@ -10,5 +10,6 @@ import lombok.Data;
 public class GetAllExamListResponse {
     private Long testId;
     private Instant createdAt;
-    private int testType;
+    private int testType;  
+    private int testCount;
 }
