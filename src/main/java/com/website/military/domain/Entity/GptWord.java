@@ -2,17 +2,14 @@ package com.website.military.domain.Entity;
 import java.time.Instant;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.website.military.config.converter.StringListConverter;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -49,10 +46,6 @@ public class GptWord {
     private Instant createAt;
     private Instant updatedAt;
     
-    @JsonManagedReference // 중복 순환 해결.
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "gptword")
-    private List<GptWordSetMapping> gptWordSetMappings;
-
 //    @JsonManagedReference // 중복 순환 해결.
 //    @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")
 //    private List<TestProblems> testproblems;

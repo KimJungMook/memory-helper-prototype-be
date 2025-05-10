@@ -13,6 +13,8 @@ import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.test.request.CheckRequest;
 import com.website.military.domain.dto.test.response.DeleteExamResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponseDto;
+import com.website.military.domain.dto.test.response.GetAllExamListResponse;
+import com.website.military.domain.dto.test.response.GetTestProblemsResponse;
 import com.website.military.service.TestService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,11 +38,103 @@ public class TestController {
     private TestService testService;
 
     // GET
+    @Operation(summary = "시험세트 찾기", description = "내가 만든 시험세트 찾아주는 메서드")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "OK",
+            content = {@Content(
+                mediaType = "application/json",
+                array = @ArraySchema(
+                    schema = @Schema(implementation=GetAllExamListResponse.class)
+                ),
+                examples = @ExampleObject(value = "{"
+                + "\"code\": \"OK\","
+                + "\"data\": ["
+                + "  {"
+                + "    \"testId\": 1,"
+                + "    \"createdAt\": \"2025-03-05T14:43:12.031Z\","
+                + "    \"testType\": 0"
+                + "  },"
+                + "  {"
+                + "    \"testId\": 2,"
+                + "    \"createdAt\": \"2025-03-05T14:43:12.031Z\","
+                + "    \"testType\": 0"
+                + "  }"
+                + "]"
+                + "}")            
+            )}),
+       @ApiResponse(responseCode = "400", description = "잘못된 접근입니다.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
+                ))}),
+        @ApiResponse(responseCode = "500", description = "서버 에러",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+                ))})
+    })
     @GetMapping("/all")
     public ResponseEntity<?> getAllExamList(HttpServletRequest request) {
         return testService.getAllExamList(request);
     }
 
+    @Operation(summary = "시험 하나를 불러오는 API", description = "생성된 시험 하나를 불러오는 API")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "성공",
+            content = {@Content(
+                mediaType = "application/json",
+                array = @ArraySchema(
+                    schema = @Schema(implementation=GetTestProblemsResponse.class)
+                ),
+                examples = @ExampleObject(value = "{"
+                + "\"code\": \"OK\","
+                + "\"data\": ["
+                + "  {"
+                + "    \"problemId\": 331,"
+                + "    \"problemNumber\": 1,"
+                + "    \"question\": \"banana의 의미는 무엇입니까?\","
+                + "    \"multipleChoice\": ["
+                + "      {\"id\": \"D\", \"meaning\": \"바나나\"},"
+                + "      {\"id\": \"C\", \"meaning\": \"포도\"},"
+                + "      {\"id\": \"A\", \"meaning\": \"사과\"},"
+                + "      {\"id\": \"B\", \"meaning\": \"오렌지\"}"
+                + "    ],"
+                + "    \"answer\": \"D\""
+                + "  },"
+                + "  {"
+                + "    \"problemId\": 332,"
+                + "    \"problemNumber\": 2,"
+                + "    \"question\": \"word의 의미는 무엇입니까?\","
+                + "    \"multipleChoice\": ["
+                + "      {\"id\": \"C\", \"meaning\": \"그림을 그리다\"},"
+                + "      {\"id\": \"D\", \"meaning\": \"노래를 부르다\"},"
+                + "      {\"id\": \"A\", \"meaning\": \"책을 읽다\"},"
+                + "      {\"id\": \"B\", \"meaning\": \"단어를 입력하다\"}"
+                + "    ],"
+                + "    \"answer\": \"B\""
+                + "  },"
+                + "  {"
+                + "    \"problemId\": 333,"
+                + "    \"problemNumber\": 3,"
+                + "    \"question\": \"rabbit의 의미는 무엇입니까?\","
+                + "    \"multipleChoice\": ["
+                + "      {\"id\": \"D\", \"meaning\": \"새\"},"
+                + "      {\"id\": \"C\", \"meaning\": \"개\"},"
+                + "      {\"id\": \"A\", \"meaning\": \"토끼\"},"
+                + "      {\"id\": \"B\", \"meaning\": \"고양이\"}"
+                + "    ],"
+                + "    \"answer\": \"A\""
+                + "  }"
+                + "]"
+                + "}")
+            )}),
+        @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                    examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
+                    ))}),
+        @ApiResponse(responseCode = "500", description = "서버 에러",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+                ))})
+    })
     @GetMapping("/{id}")
     public ResponseEntity<?> getTestProblems(HttpServletRequest request, @PathVariable("id") Long id){
         return testService.getTestProblems(request, id);

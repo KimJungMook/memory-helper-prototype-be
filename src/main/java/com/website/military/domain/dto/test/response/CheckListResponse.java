@@ -1,14 +1,15 @@
 package com.website.military.domain.dto.test.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 
 @Data
-@NoArgsConstructor
+@AllArgsConstructor
 public class CheckListResponse {
+    private Long resultId;
     private List<CheckResponse> correctList;
     private List<CheckResponse> incorrectList;
 }

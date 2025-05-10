@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
 import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
-import com.website.military.domain.dto.word.response.ExistWordResponseDto;
 import com.website.military.domain.dto.wordsets.request.ChangeSetNameDto;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
 import com.website.military.domain.dto.wordsets.response.DeleteResponseDto;
@@ -174,73 +173,73 @@ public class WordSetController {
         return wordSetService.registerWordSets(dto, request);
     }
     
-    @Operation(summary = "이미 존재한 단어 단어세트에 넣기", description = "이미 존재한 단어 단어장에 넣어주는 api")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "OK",
-            content = {@Content(schema = @Schema(implementation = ExistWordResponseDto.class),
-                examples = @ExampleObject(value = "{\n"
-                + "\"code\": \"OK\",\n"
-                + "\"data\": {\n"
-                + "  \"wordId\": 1,\n"
-                + "  \"word\": \"word\",\n"
-                + "  \"meaning\": [\n"
-                + "    {\"type\": \"noun\", \"value\": \"단어\"},\n"
-                + "  ],\n"
-                + "  \"gpt\": false\n"
-                + "}\n"
-                + "}")
-            )}),
-        @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
-            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
-                ))}),
-        @ApiResponse(responseCode = "500", description = "서버 에러",
-            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
-                ))})
-    })
-    @PostMapping("/{setId}/word/{wordId}")
-    public ResponseEntity<?> assignWordToSet(
-    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
-    @PathVariable("setId") Long setId, 
-    @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
-    @PathVariable("wordId") Long wordId, HttpServletRequest request ){
-        return wordSetService.assignWordToSet(setId, wordId, request, false);
-    }
+    // @Operation(summary = "이미 존재한 단어 단어세트에 넣기", description = "이미 존재한 단어 단어장에 넣어주는 api")
+    // @ApiResponses(value = {
+    //     @ApiResponse(responseCode = "200", description = "OK",
+    //         content = {@Content(schema = @Schema(implementation = ExistWordResponseDto.class),
+    //             examples = @ExampleObject(value = "{\n"
+    //             + "\"code\": \"OK\",\n"
+    //             + "\"data\": {\n"
+    //             + "  \"wordId\": 1,\n"
+    //             + "  \"word\": \"word\",\n"
+    //             + "  \"meaning\": [\n"
+    //             + "    {\"type\": \"noun\", \"value\": \"단어\"},\n"
+    //             + "  ],\n"
+    //             + "  \"gpt\": false\n"
+    //             + "}\n"
+    //             + "}")
+    //         )}),
+    //     @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
+    //         content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+    //             examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
+    //             ))}),
+    //     @ApiResponse(responseCode = "500", description = "서버 에러",
+    //         content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+    //             examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+    //             ))})
+    // })
+    // @PostMapping("/{setId}/word/{wordId}")
+    // public ResponseEntity<?> assignWordToSet(
+    // @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
+    // @PathVariable("setId") Long setId, 
+    // @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
+    // @PathVariable("wordId") Long wordId, HttpServletRequest request ){
+    //     return wordSetService.assignWordToSet(setId, wordId, request, false);
+    // }
 
-    @Operation(summary = "이미 존재한 Gpt단어 단어세트에 넣기", description = "이미 존재한 Gpt단어 단어장에 넣어주는 api")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "OK",
-            content = {@Content(schema = @Schema(implementation = ExistWordResponseDto.class),
-                examples = @ExampleObject(value = "{\n"
-                + "\"code\": \"OK\",\n"
-                + "\"data\": {\n"
-                + "  \"wordId\": 1,\n"
-                + "  \"word\": \"word\",\n"
-                + "  \"meaning\": [\n"
-                + "    {\"type\": \"noun\", \"value\": \"단어\"},\n"
-                + "  ],\n"
-                + "  \"gpt\": true\n"
-                + "}\n"
-                + "}")
-            )}),
-        @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
-            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
-                ))}),
-        @ApiResponse(responseCode = "500", description = "서버 에러",
-            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-                examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
-                ))})
-    })
-    @PostMapping("/{setId}/word/gpt/{wordId}")
-    public ResponseEntity<?> assignGptWordToSet(
-    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
-    @PathVariable("setId") Long setId, 
-    @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
-    @PathVariable("wordId") Long wordId, HttpServletRequest request ){
-        return wordSetService.assignWordToSet(setId, wordId, request, true);
-    }
+    // @Operation(summary = "이미 존재한 Gpt단어 단어세트에 넣기", description = "이미 존재한 Gpt단어 단어장에 넣어주는 api")
+    // @ApiResponses(value = {
+    //     @ApiResponse(responseCode = "200", description = "OK",
+    //         content = {@Content(schema = @Schema(implementation = ExistWordResponseDto.class),
+    //             examples = @ExampleObject(value = "{\n"
+    //             + "\"code\": \"OK\",\n"
+    //             + "\"data\": {\n"
+    //             + "  \"wordId\": 1,\n"
+    //             + "  \"word\": \"word\",\n"
+    //             + "  \"meaning\": [\n"
+    //             + "    {\"type\": \"noun\", \"value\": \"단어\"},\n"
+    //             + "  ],\n"
+    //             + "  \"gpt\": true\n"
+    //             + "}\n"
+    //             + "}")
+    //         )}),
+    //     @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
+    //         content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+    //             examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
+    //             ))}),
+    //     @ApiResponse(responseCode = "500", description = "서버 에러",
+    //         content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+    //             examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+    //             ))})
+    // })
+    // @PostMapping("/{setId}/word/gpt/{wordId}")
+    // public ResponseEntity<?> assignGptWordToSet(
+    // @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
+    // @PathVariable("setId") Long setId, 
+    // @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
+    // @PathVariable("wordId") Long wordId, HttpServletRequest request ){
+    //     return wordSetService.assignWordToSet(setId, wordId, request, true);
+    // }
 
     @Operation(summary = "유저가 만든 단어 단어세트에 넣기", description = "존재하지 않는 단어를 단어장에 넣는 api")
     @ApiResponses(value = {
@@ -370,42 +369,42 @@ public class WordSetController {
     @PathVariable("setId") Long setId, 
     @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("wordId")Long wordId, HttpServletRequest request){
-        return wordSetService.detachWordFromSet(setId, wordId, request, false);
+        return wordSetService.detachWordFromSet(setId, wordId, request);
     }
 
-    @Operation(summary = "Gpt단어 단어장에서 삭제", description = "Gpt단어를 단어장에서 없애주는 api")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "DELETE",
-            content = {@Content(schema = @Schema(implementation = DetachResponse.class),
-                examples = @ExampleObject(value = "{\n"
-                + "\"code\": \"OK\",\n"
-                + "\"data\": {\n"
-                + "  \"wordId\": 1,\n"
-                + "  \"word\": \"word\",\n"
-                + "  \"meaning\": [\n"
-                + "    {\"type\": \"noun\", \"value\": \"단어\"},\n"
-                + "  ],\n"
-                + "  \"gpt\": true\n"
-                + "}\n"
-                + "}")
-            )}),
-        @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
-        content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-            examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
-            ))}),
-        @ApiResponse(responseCode = "500", description = "서버 에러",
-        content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
-            examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
-            ))})
-    })
-    @DeleteMapping("/{setId}/gpt/word/{wordId}")
-    public ResponseEntity<?> detachGptWordFromSet(
-    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64"))     
-    @PathVariable("setId") Long setId, 
-    @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
-    @PathVariable("wordId")Long wordId, HttpServletRequest request){
-        return wordSetService.detachWordFromSet(setId, wordId, request, true);
-    }
+    // @Operation(summary = "Gpt단어 단어장에서 삭제", description = "Gpt단어를 단어장에서 없애주는 api")
+    // @ApiResponses(value = {
+    //     @ApiResponse(responseCode = "200", description = "DELETE",
+    //         content = {@Content(schema = @Schema(implementation = DetachResponse.class),
+    //             examples = @ExampleObject(value = "{\n"
+    //             + "\"code\": \"OK\",\n"
+    //             + "\"data\": {\n"
+    //             + "  \"wordId\": 1,\n"
+    //             + "  \"word\": \"word\",\n"
+    //             + "  \"meaning\": [\n"
+    //             + "    {\"type\": \"noun\", \"value\": \"단어\"},\n"
+    //             + "  ],\n"
+    //             + "  \"gpt\": true\n"
+    //             + "}\n"
+    //             + "}")
+    //         )}),
+    //     @ApiResponse(responseCode = "400", description = "잘못된 요청입니다.",
+    //     content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+    //         examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 요청입니다.\" } }"
+    //         ))}),
+    //     @ApiResponse(responseCode = "500", description = "서버 에러",
+    //     content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+    //         examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+    //         ))})
+    // })
+    // @DeleteMapping("/{setId}/gpt/word/{wordId}")
+    // public ResponseEntity<?> detachGptWordFromSet(
+    // @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64"))     
+    // @PathVariable("setId") Long setId, 
+    // @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
+    // @PathVariable("wordId")Long wordId, HttpServletRequest request){
+    //     return wordSetService.detachWordFromSet(setId, wordId, request, true);
+    // }
     
 
 }
