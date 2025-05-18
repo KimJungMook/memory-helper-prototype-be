@@ -21,6 +21,7 @@ import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
 import com.website.military.domain.dto.wordsets.response.DeleteResponseDto;
 import com.website.military.domain.dto.wordsets.response.DetachResponse;
+import com.website.military.domain.dto.wordsets.response.GetWordsBySetIdFinalResponse;
 import com.website.military.domain.dto.wordsets.response.GetWordsBySetIdResponse;
 import com.website.military.domain.dto.wordsets.response.RegisterResponseDto;
 import com.website.military.domain.dto.wordsets.response.WordSetsResponseDto;
@@ -85,13 +86,17 @@ public class WordSetService {
                 response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt());
                 words.add(responses);
             }
+            GetWordsBySetIdFinalResponse response = GetWordsBySetIdFinalResponse.builder()
+            .list(words)
+            .name(wordsets.get().getSetName())
+            .build();
             // for(GptWordSetMapping mapping : gptWordSetMappings){
             //     GptWord response = mapping.getGptword();
             //     GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getGptWordId(), response.getWord(), response.getNoun(), 
             //     response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt(), true);
             //     words.add(responses);
             // }
-            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", words));
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
