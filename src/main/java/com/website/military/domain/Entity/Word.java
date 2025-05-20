@@ -19,6 +19,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -33,6 +34,7 @@ public class Word {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "word_id", updatable = false)
     private Long wordId;
+    @Size(min = 1, max = 30, message = "단어는 1자이상 30자이하여야합니다.")
     private String word;
     
     @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환

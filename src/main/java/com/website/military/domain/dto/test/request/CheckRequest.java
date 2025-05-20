@@ -2,6 +2,9 @@ package com.website.military.domain.dto.test.request;
 
 import java.util.List;
 
+import com.website.military.config.annotation.ValidAnswerChar;
+
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,5 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CheckRequest {
-    private List<Character> checkedAnswers;
+
+    @NotNull
+    private List<@ValidAnswerChar Character> checkedAnswers;
 }

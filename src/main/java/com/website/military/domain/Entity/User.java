@@ -29,21 +29,24 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id", updatable = false)
     private Long userId;
+
     private String username;
     private String email;
     private String password;
     private Instant createdAt;
-    private Instant updatedAt;
 
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
     private List<WordSets> wordsets;
+
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
     private List<Word> words;
+    
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     private List<Tests> tests;
+    
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     private List<Results> results;

@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -73,7 +74,7 @@ public class WordController {
                 ))})
     })
     @PostMapping("/exists")
-    public ResponseEntity<?> existWord(@RequestBody ExistWordDto dto, HttpServletRequest request) {
+    public ResponseEntity<?> existWord(@Valid @RequestBody ExistWordDto dto, HttpServletRequest request) {
         return wordService.existWord(dto, request);
     }
 

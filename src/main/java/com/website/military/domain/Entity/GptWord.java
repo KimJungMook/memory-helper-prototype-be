@@ -11,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,26 +26,26 @@ public class GptWord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "gpt_word_id", updatable = false)
     private Long gptWordId;
+    @Size(min = 1, max = 30, message = "단어는 1자이상 30자이하여야합니다.")
     private String word;
     
     @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
     @Column(columnDefinition = "JSON")
-
     private List<String> noun;
+
     @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
     @Column(columnDefinition = "JSON")
-
     private List<String> verb;
+
     @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
     @Column(columnDefinition = "JSON")
-
     private List<String> adjective;
+
     @Convert(converter = StringListConverter.class) // List<String>을 JSON으로 변환
     @Column(columnDefinition = "JSON")
     private List<String> adverb;
 
     private Instant createAt;
-    private Instant updatedAt;
     
 //    @JsonManagedReference // 중복 순환 해결.
 //    @OneToMany(fetch = FetchType.LAZY, mappedBy = "gptword")

@@ -2,10 +2,13 @@ package com.website.military.config.error;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -22,6 +25,18 @@ public class GlobalExceptionHandler {
     @Value("${error.BAD_REQUEST_ERROR}")
     private String badRequestError;
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        AtomicReference<String> errorMessage = new AtomicReference<>("");
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            errorMessage.set(error.getDefaultMessage());
+            errors.put(error.getField(), error.getDefaultMessage());
+        });
+        // return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, errorMessage.get())); 이게 메세지를 나오게 하는 방법
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError,  "잘못된 요청입니다."));
+    }
+    
     @ExceptionHandler(MalformedJwtException.class)
     public ResponseEntity<?> handleMalformedJwtException(MalformedJwtException e){
         e.printStackTrace();
