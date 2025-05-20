@@ -26,6 +26,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.RequestBody;
 
 
@@ -206,7 +208,7 @@ public class TestController {
     }
 
     @PostMapping("/check/{testId}") // -> 채점을 할 때 result는 생성됌.
-    public ResponseEntity<?> checkAnswers(HttpServletRequest request, @PathVariable("testId")Long testId, @RequestBody CheckRequest dto) {
+    public ResponseEntity<?> checkAnswers(HttpServletRequest request, @PathVariable("testId")Long testId, @Valid @RequestBody CheckRequest dto) {
         return testService.checkAnswers(request, testId, dto.getCheckedAnswers());
     }
     

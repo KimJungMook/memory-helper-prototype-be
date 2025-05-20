@@ -16,6 +16,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,7 @@ public class Results {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "result_id", updatable = false)
     private Long resultId;
+
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -40,7 +42,9 @@ public class Results {
     @JoinColumn(name = "test_id")
     private Tests tests; // 외래키
 
+    @Size(min = 0, max = 100, message = "점수는 0점에서 100점 사이여야합니다.")
     private double score;
+    
     private Instant submittedAt;
 
     @JsonManagedReference // 중복 순환 해결.

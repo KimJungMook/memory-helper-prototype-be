@@ -33,8 +33,10 @@ public class WordSets {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "set_id", updatable = false)
     private Long setId;
+
     private String setName;
     private Instant createdAt;
+    private Instant updatedAt;
     private int wordCount;
     
     @JsonBackReference // 중복 순환 해결.
