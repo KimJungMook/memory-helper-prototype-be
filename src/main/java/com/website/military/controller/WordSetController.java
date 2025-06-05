@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
+import com.website.military.domain.dto.word.request.UpdateMeaningDto;
 import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
 import com.website.military.domain.dto.wordsets.request.ChangeSetNameDto;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
@@ -308,6 +309,16 @@ public class WordSetController {
         return wordSetService.changeSetName(id, dto.getSetName() ,request);
     }
     
+    @PatchMapping("/{setId}/word/{wordId}")
+    public ResponseEntity<?> patchWordFromSet(
+    @RequestBody UpdateMeaningDto dto,
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64"))     
+    @PathVariable("setId") Long setId, 
+    @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("wordId")Long wordId, HttpServletRequest request){
+        return wordSetService.patchWordFromSet(setId, wordId, dto, request);
+    }
+
     // DELETE
     @Operation(summary = "단어세트 삭제", description = "ID에 해당하는 단어셋을 삭제합니다.")
     @ApiResponses(value = {

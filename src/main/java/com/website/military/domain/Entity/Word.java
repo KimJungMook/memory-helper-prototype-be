@@ -54,7 +54,8 @@ public class Word {
     private List<String> adverb;
 
     private Instant createAt;
-    
+    private Instant updatedAt;
+
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "user_id")

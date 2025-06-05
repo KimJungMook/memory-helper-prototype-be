@@ -1,5 +1,6 @@
 package com.website.military.service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +18,9 @@ import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.response.WordClassResponse;
 import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
+import com.website.military.domain.dto.word.request.UpdateMeaningDto;
 import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
+import com.website.military.domain.dto.word.response.ExistWordResponseDto;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
 import com.website.military.domain.dto.wordsets.response.DeleteResponseDto;
 import com.website.military.domain.dto.wordsets.response.DetachResponse;
@@ -63,7 +66,7 @@ public class WordSetService {
         List<WordSetsResponseDto> responses = new ArrayList<>();
         if(!existingWordSets.isEmpty()){
             for(WordSets sets : existingWordSets){
-                WordSetsResponseDto response = new WordSetsResponseDto(sets.getSetId(), sets.getSetName(), sets.getCreatedAt(), sets.getWordCount() ,sets.getTests().size());
+                WordSetsResponseDto response = new WordSetsResponseDto(sets.getSetId(), sets.getSetName(), sets.getCreatedAt(), sets.getWordCount() ,sets.getTests());
                 responses.add(response);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
@@ -78,7 +81,6 @@ public class WordSetService {
         Optional<WordSets> wordsets = wordSetsRepository.findByUser_UserIdAndSetId(userId, id);
         if(wordsets.isPresent()){
             List<WordSetMapping> wordSetsMappings = wordSetsMappingRepository.findAllByWordsets_SetId(id);
-            // List<GptWordSetMapping> gptWordSetMappings = gptWordSetMappingRepository.findAllByWordsets_SetId(id);
             List<GetWordsBySetIdResponse> words = new ArrayList<>();
             for(WordSetMapping mapping : wordSetsMappings){ // 둘다 비어져 있을 때는 어떻게 하는게좋을지.
                 Word response = mapping.getWord();
@@ -89,13 +91,8 @@ public class WordSetService {
             GetWordsBySetIdFinalResponse response = GetWordsBySetIdFinalResponse.builder()
             .list(words)
             .name(wordsets.get().getSetName())
+            .createdAt(wordsets.get().getCreatedAt())
             .build();
-            // for(GptWordSetMapping mapping : gptWordSetMappings){
-            //     GptWord response = mapping.getGptword();
-            //     GetWordsBySetIdResponse responses = new GetWordsBySetIdResponse(response.getGptWordId(), response.getWord(), response.getNoun(), 
-            //     response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt(), true);
-            //     words.add(responses);
-            // }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
@@ -280,7 +277,7 @@ public class WordSetService {
     public ResponseEntity<?> detachWordFromSet(Long setId, Long wordId, HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
-        if (existingWordSets.isPresent()) {
+        if (existingWordSets.isPresent() && existingWordSets.get().getTests().isEmpty()) {
             // if(isGpt){
             //     Optional<GptWordSetMapping> mappings = gptWordSetMappingRepository.findByGptword_GptWordIdAndWordsets_SetId(wordId, setId);
             //     if(mappings.isPresent()){
@@ -305,11 +302,11 @@ public class WordSetService {
                 Long deleteId = mappings.get().getId();
                 Word Word = mappings.get().getWord();
                 DetachResponse response = new DetachResponse(Word.getWordId(), Word.getWord(), Word.getNoun(), Word.getVerb(),
-                Word.getAdjective(), Word.getAdjective());
+                Word.getAdjective(), Word.getAdverb());
                 try {
                     wordSetsMappingRepository.deleteById(deleteId);  
                     wordSetsRepository.decrementWordCount(setId);
-                    // wordRepository.deleteById(deleteId); // 일단 고민을 해봐야할 부분으로 보임.
+                    // wordRepository.deleteById(deleteId); // 일단 고민을 해봐야할 부분으로 보임. 단어를 없애는 게 맞는지?
                     } catch (Exception e) {
                     e.printStackTrace();
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -322,5 +319,54 @@ public class WordSetService {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
 
+    }
+
+    public ResponseEntity<?> patchWordFromSet(Long setId, Long wordId, UpdateMeaningDto dto, HttpServletRequest request){
+        Long userId = authService.getUserId(request);
+        Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
+        if (existingWordSets.isPresent() && existingWordSets.get().getTests().isEmpty()) {
+            Optional<WordSetMapping> mappings = wordSetsMappingRepository.findByWord_WordIdAndWordsets_SetId(wordId, setId);
+            if(mappings.isPresent()){
+                Word word = mappings.get().getWord();
+                System.out.println(word.getWord());
+                List<String> verb = new ArrayList<>();
+                List<String> noun = new ArrayList<>();
+                List<String> adjective = new ArrayList<>();
+                List<String> adverb = new ArrayList<>();
+
+                for(WordClassResponse response : dto.getMeaning()){
+                    String type = response.getType();
+                    String value = response.getValue();
+                    if(type.equals("verb")){
+                        verb.add(value);
+                    }else if(type.equals("noun")){
+                        noun.add(value);
+                    }else if(type.equals("adjective")){
+                        adjective.add(value);
+                    }else if(type.equals("adverb")){
+                        adverb.add(value);
+                    }else{
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
+                    }
+                }
+
+                word.setVerb(verb);
+                word.setNoun(noun);
+                word.setAdjective(adjective);
+                word.setAdverb(adverb);
+                ExistWordResponseDto response = new ExistWordResponseDto(wordId, word.getWord(), noun, verb, adjective, adverb);
+                try { 
+                    word.setUpdatedAt(Instant.now());
+                    wordRepository.save(word);
+                    } catch (Exception e) {
+                    e.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseMessageDto.set(internalError, "서버 에러"));
+                }
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
     }
 }

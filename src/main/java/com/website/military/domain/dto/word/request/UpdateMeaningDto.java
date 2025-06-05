@@ -5,7 +5,6 @@ import java.util.List;
 import com.website.military.domain.dto.response.WordClassResponse;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,9 +13,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdateMeaningDto {
-    @Schema(description = "단어 입력", example = "word")
-    @Size(min = 1, max = 30, message = "단어는 1자이상 30자이하여야합니다.")
-    private String word;
     @Schema(
         description = "뜻 입력",
         example = "[\n" +
