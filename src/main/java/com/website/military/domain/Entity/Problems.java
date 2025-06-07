@@ -15,10 +15,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "testproblems")
+@Table(name = "problems")
 @Data
 @NoArgsConstructor
-public class TestProblems {
+public class Problems {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "problem_id", updatable = false)
@@ -26,8 +26,8 @@ public class TestProblems {
 
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
-    @JoinColumn(name = "test_id")
-    private Tests tests; // 외래키
+    @JoinColumn(name = "examId")
+    private Exam exam; // 외래키
 
     
     private String question;
@@ -38,17 +38,16 @@ public class TestProblems {
 
     private Long problemNumber;
 
-    @Column(columnDefinition = "CHAR(1)")
-    private char answer;
+    private int answer;
     
-    @OneToOne(mappedBy = "testProblem") // 1대1 관계의 반대편
+    @OneToOne(mappedBy = "problems") // 1대1 관계의 반대편
     private SolvedProblems solvedProblem;
 
-    @OneToOne(mappedBy = "testProblem") // 1대1 관계의 반대편
+    @OneToOne(mappedBy = "problems") // 1대1 관계의 반대편
     private Mistakes mistakes;
 
-    public TestProblems(Tests tests, String multipleChoice, String question, Long problemNumber, char answer){
-        this.tests = tests;
+    public Problems(Exam exam, String multipleChoice, String question, Long problemNumber, int answer){
+        this.exam = exam;
         this.multipleChoice = multipleChoice;
         this.question = question;
         this.problemNumber = problemNumber;

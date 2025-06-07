@@ -33,11 +33,11 @@ public class Mistakes {
     
     @OneToOne
     @JoinColumn(name = "problem_id", unique = true) // 1대1 관계
-    private TestProblems testProblem;
+    private Problems problems;
 
-    public Mistakes(TestProblems testProblems){
-        this.testProblem = testProblems;
-        testProblem.setSolvedProblem(this); // 양방향 자동 설정
+    public Mistakes(Problems problems){
+        this.problems = problems;
+        problems.setSolvedProblem(this); // 양방향 자동 설정
     }
 
 }

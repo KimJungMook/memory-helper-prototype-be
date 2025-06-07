@@ -18,5 +18,5 @@ public class GetTestProblemsResponse {
     
     private List<QuestionRequest> multipleChoice; // 문제에 해당하는 질문
     
-    private char answer; // 정답
+    // private int answer; // 정답
 }

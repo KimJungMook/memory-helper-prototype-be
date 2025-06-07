@@ -45,7 +45,7 @@ public class User {
     
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-    private List<Tests> tests;
+    private List<Exam> exams;
     
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")

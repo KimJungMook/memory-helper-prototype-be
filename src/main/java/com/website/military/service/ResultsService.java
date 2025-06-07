@@ -36,9 +36,9 @@ public class ResultsService {
     @Autowired
     private AuthService authService;
 
-    public ResponseEntity<?> getGradingResult(HttpServletRequest request, Long id){
+    public ResponseEntity<?> getGradingResult(HttpServletRequest request, Long resultId){
         Long userId = authService.getUserId(request);
-        Optional<Results> existingResults = resultsRepository.findByUser_UserIdAndResultId(userId, id);
+        Optional<Results> existingResults = resultsRepository.findByUser_UserIdAndResultId(userId, resultId);
         if(existingResults.isPresent()){
             Results result = existingResults.get();
             GetGradingResponse response = new GetGradingResponse(result.getResultId(), result.getScore(), result.getSubmittedAt());

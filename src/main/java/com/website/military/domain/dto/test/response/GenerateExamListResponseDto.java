@@ -11,5 +11,5 @@ public class GenerateExamListResponseDto {
     private Long problemNumber;
     private List<GenerateExamListResponse> multipleChoice;
     private String question;
-    private String answer;
+    private int answer;
 }

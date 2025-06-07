@@ -15,5 +15,7 @@ import lombok.NoArgsConstructor;
 public class CheckRequest {
 
     @NotNull
-    private List<@ValidAnswerChar Character> checkedAnswers;
+    // private List<@ValidAnswerChar Character> checkedAnswers;
+    private List<Integer> checkedAnswers;
+
 }

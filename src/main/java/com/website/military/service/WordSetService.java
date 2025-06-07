@@ -66,7 +66,7 @@ public class WordSetService {
         List<WordSetsResponseDto> responses = new ArrayList<>();
         if(!existingWordSets.isEmpty()){
             for(WordSets sets : existingWordSets){
-                WordSetsResponseDto response = new WordSetsResponseDto(sets.getSetId(), sets.getSetName(), sets.getCreatedAt(), sets.getWordCount() ,sets.getTests());
+                WordSetsResponseDto response = new WordSetsResponseDto(sets.getSetId(), sets.getSetName(), sets.getCreatedAt(), sets.getWordCount() ,sets.getExams()); // 여기를 tests로 넣었는데, 리스트가 아니고 테스트 하나만 나오게 할거면 변경 필요할 듯.
                 responses.add(response);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
@@ -76,11 +76,11 @@ public class WordSetService {
     }
 
     // 단어세트에 있는 단어 불러오는 메서드
-    public ResponseEntity<?> getWordsBySetId(Long id, HttpServletRequest request){
+    public ResponseEntity<?> getWordsBySetId(Long setId, HttpServletRequest request){
         Long userId = authService.getUserId(request);
-        Optional<WordSets> wordsets = wordSetsRepository.findByUser_UserIdAndSetId(userId, id);
+        Optional<WordSets> wordsets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
         if(wordsets.isPresent()){
-            List<WordSetMapping> wordSetsMappings = wordSetsMappingRepository.findAllByWordsets_SetId(id);
+            List<WordSetMapping> wordSetsMappings = wordSetsMappingRepository.findAllByWordsets_SetId(setId);
             List<GetWordsBySetIdResponse> words = new ArrayList<>();
             for(WordSetMapping mapping : wordSetsMappings){ // 둘다 비어져 있을 때는 어떻게 하는게좋을지.
                 Word response = mapping.getWord();
@@ -234,9 +234,9 @@ public class WordSetService {
     }
 
     // 세트의 이름을 바꾸고 싶을 때 사용하는 메서드
-    public ResponseEntity<?> changeSetName(Long id, String setName,HttpServletRequest request){
+    public ResponseEntity<?> changeSetName(Long setId, String setName,HttpServletRequest request){
         Long userId = authService.getUserId(request);
-        Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, id);
+        Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
         if(existingWordSets.isPresent()){
             WordSets sets = existingWordSets.get();
             sets.setSetName(setName);
@@ -247,26 +247,26 @@ public class WordSetService {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ResponseMessageDto.set(internalError, "서버 에러"));
             }
-            RegisterResponseDto response = new RegisterResponseDto(id, setName);
+            RegisterResponseDto response = new RegisterResponseDto(setId, setName);
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
 
     // 단어 Set를 없애는 메서드
-    public ResponseEntity<?> deleteWordSets(Long id, HttpServletRequest request){
+    public ResponseEntity<?> deleteWordSets(Long setId, HttpServletRequest request){
         Long userId = authService.getUserId(request);
-        Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, id);
+        Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
         if(existingWordSets.isPresent()){
             WordSets sets = existingWordSets.get();
             try {
-                wordSetsRepository.deleteById(id);               
+                wordSetsRepository.deleteById(setId);               
             } catch (Exception e) {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ResponseMessageDto.set(internalError, "서버 에러"));
             }
-            DeleteResponseDto response = new DeleteResponseDto(id, sets.getSetName());
+            DeleteResponseDto response = new DeleteResponseDto(setId, sets.getSetName());
 
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
@@ -277,7 +277,7 @@ public class WordSetService {
     public ResponseEntity<?> detachWordFromSet(Long setId, Long wordId, HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
-        if (existingWordSets.isPresent() && existingWordSets.get().getTests().isEmpty()) {
+        if (existingWordSets.isPresent() && existingWordSets.get().getExams().isEmpty()) {
             // if(isGpt){
             //     Optional<GptWordSetMapping> mappings = gptWordSetMappingRepository.findByGptword_GptWordIdAndWordsets_SetId(wordId, setId);
             //     if(mappings.isPresent()){
@@ -324,7 +324,7 @@ public class WordSetService {
     public ResponseEntity<?> patchWordFromSet(Long setId, Long wordId, UpdateMeaningDto dto, HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
-        if (existingWordSets.isPresent() && existingWordSets.get().getTests().isEmpty()) {
+        if (existingWordSets.isPresent() && existingWordSets.get().getExams().isEmpty()) {
             Optional<WordSetMapping> mappings = wordSetsMappingRepository.findByWord_WordIdAndWordsets_SetId(wordId, setId);
             if(mappings.isPresent()){
                 Word word = mappings.get().getWord();

@@ -15,6 +15,6 @@ public class CheckResponse {
 
     private List<QuestionRequest> multipleChoice; // 문제에 해당하는 질문
 
-    private char userAnswer;
-    private char correctAnswer; // 정답
+    private int userAnswer;
+    private int correctAnswer; // 정답
 }

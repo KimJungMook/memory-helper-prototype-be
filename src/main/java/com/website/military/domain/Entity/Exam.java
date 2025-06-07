@@ -21,15 +21,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "tests")
+@Table(name = "exam")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Tests {
+public class Exam {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "test_id", updatable = false)
-    private Long testId;
+    @Column(name = "exam_id", updatable = false)
+    private Long examId;
+
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -45,14 +46,14 @@ public class Tests {
     private int testCount;
 
     @JsonManagedReference // 중복 순환 해결.
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "tests", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TestProblems> testproblems;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Problems> problems;
 
     @JsonManagedReference // 중복 순환 해결.
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "tests",  cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "exam",  cascade = CascadeType.ALL)
     private List<Results> results;
     
-    public Tests(User user, WordSets wordsets,int testType){
+    public Exam(User user, WordSets wordsets,int testType){
         this.user = user;
         this.wordsets = wordsets;
         this.testType = testType;

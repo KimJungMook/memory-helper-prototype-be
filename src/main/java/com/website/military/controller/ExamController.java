@@ -15,7 +15,7 @@ import com.website.military.domain.dto.test.response.DeleteExamResponse;
 import com.website.military.domain.dto.test.response.GenerateExamListResponseDto;
 import com.website.military.domain.dto.test.response.GetAllExamListResponse;
 import com.website.military.domain.dto.test.response.GetTestProblemsResponse;
-import com.website.military.service.TestService;
+import com.website.military.service.ExamService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -34,10 +34,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 @RequestMapping("/api/exam")
 @Tag(name = "EXAM", description = "시험 관련 API")
-public class TestController {
+public class ExamController {
     
     @Autowired
-    private TestService testService;
+    private ExamService testService;
 
     // GET
     @Operation(summary = "시험세트 찾기", description = "내가 만든 시험세트 찾아주는 메서드")
@@ -137,9 +137,9 @@ public class TestController {
                 examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
                 ))})
     })
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getTestProblems(HttpServletRequest request, @PathVariable("id") Long id){
-        return testService.getTestProblems(request, id);
+    @GetMapping("/{examId}")
+    public ResponseEntity<?> getTestProblems(HttpServletRequest request, @PathVariable("examId") Long examId){
+        return testService.getTestProblems(request, examId);
     }
 
     // POST
@@ -207,9 +207,9 @@ public class TestController {
         return testService.generateExamList(request, setId);
     }
 
-    @PostMapping("/check/{testId}") // -> 채점을 할 때 result는 생성됌.
-    public ResponseEntity<?> checkAnswers(HttpServletRequest request, @PathVariable("testId")Long testId, @Valid @RequestBody CheckRequest dto) {
-        return testService.checkAnswers(request, testId, dto.getCheckedAnswers());
+    @PostMapping("/check/{examId}") // -> 채점을 할 때 result는 생성됌.
+    public ResponseEntity<?> checkAnswers(HttpServletRequest request, @PathVariable("examId")Long examId, @Valid @RequestBody CheckRequest dto) {
+        return testService.checkAnswers(request, examId, dto.getCheckedAnswers());
     }
     
     // DELETE
@@ -228,8 +228,8 @@ public class TestController {
                 examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
                 ))})
     })
-    @DeleteMapping("/{testId}")
-    public ResponseEntity<?> deleteExam(HttpServletRequest request, @PathVariable("testId")Long testId){
-        return testService.deleteTest(request, testId);
+    @DeleteMapping("/{examId}")
+    public ResponseEntity<?> deleteExam(HttpServletRequest request, @PathVariable("examId")Long examId){
+        return testService.deleteTest(request, examId);
     }
 }
