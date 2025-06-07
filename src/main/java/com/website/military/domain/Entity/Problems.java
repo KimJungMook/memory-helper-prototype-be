@@ -38,7 +38,10 @@ public class Problems {
 
     private Long problemNumber;
 
+    private int userAnswer;
+
     private int answer;
+
     
     @OneToOne(mappedBy = "problems") // 1대1 관계의 반대편
     private SolvedProblems solvedProblem;
@@ -52,6 +55,18 @@ public class Problems {
         this.question = question;
         this.problemNumber = problemNumber;
         this.answer = answer;
+    }
+
+    public Problems(Problems problems, int userAnswer){
+        this.problemId = problems.getProblemId();
+        this.exam = problems.getExam();
+        this.question = problems.getQuestion();
+        this.multipleChoice = problems.getMultipleChoice();
+        this.problemNumber = problems.getProblemNumber();
+        this.userAnswer = userAnswer;
+        this.answer = problems.getAnswer();
+        this.solvedProblem = problems.getSolvedProblem();
+        this.mistakes = problems.getMistakes();
     }
     
     public void setSolvedProblem(SolvedProblems solvedProblem) {

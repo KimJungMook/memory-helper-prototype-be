@@ -2,7 +2,6 @@ package com.website.military.domain.dto.wordsets.response;
 
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.website.military.domain.Entity.Exam;
@@ -16,7 +15,7 @@ public class WordSetsResponseDto {
     private int wordCount;
     private int testSetsCount;
     private Instant createdAt;
-    private List<Long> testIds;
+    // private List<Long> testIds;
 
     public WordSetsResponseDto(Long setId, String setName, Instant createdAt, int wordCount, List<Exam> tests){
         this.setId = setId;
@@ -24,11 +23,11 @@ public class WordSetsResponseDto {
         this.createdAt = createdAt;
         this.wordCount = wordCount;
         this.testSetsCount = tests.size();
-        List<Long> testIdList = new ArrayList<>();
-        for(Exam test : tests){
-            Long id = test.getExamId();
-            testIdList.add(id);
-        }
-        testIds = testIdList;
+        // List<Long> testIdList = new ArrayList<>();
+        // for(Exam test : tests){
+        //     Long id = test.getExamId();
+        //     testIdList.add(id);
+        // }
+        // testIds = testIdList;
     }
 }

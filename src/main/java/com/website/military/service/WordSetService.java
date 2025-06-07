@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import com.website.military.domain.Entity.Exam;
 import com.website.military.domain.Entity.User;
 import com.website.military.domain.Entity.Word;
 import com.website.military.domain.Entity.WordSetMapping;
@@ -79,6 +81,7 @@ public class WordSetService {
     public ResponseEntity<?> getWordsBySetId(Long setId, HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<WordSets> wordsets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
+        List<Long> examIds = new ArrayList<>();
         if(wordsets.isPresent()){
             List<WordSetMapping> wordSetsMappings = wordSetsMappingRepository.findAllByWordsets_SetId(setId);
             List<GetWordsBySetIdResponse> words = new ArrayList<>();
@@ -88,10 +91,14 @@ public class WordSetService {
                 response.getVerb(), response.getAdjective(), response.getAdverb(), response.getCreateAt());
                 words.add(responses);
             }
+            for(Exam exam : wordsets.get().getExams()){
+                examIds.add(exam.getExamId());
+            }
             GetWordsBySetIdFinalResponse response = GetWordsBySetIdFinalResponse.builder()
             .list(words)
             .name(wordsets.get().getSetName())
             .createdAt(wordsets.get().getCreatedAt())
+            .examIds(examIds)
             .build();
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
         }
@@ -321,6 +328,7 @@ public class WordSetService {
 
     }
 
+    // 단어 변경하는 메서드
     public ResponseEntity<?> patchWordFromSet(Long setId, Long wordId, UpdateMeaningDto dto, HttpServletRequest request){
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);

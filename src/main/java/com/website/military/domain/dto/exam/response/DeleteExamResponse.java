@@ -1,4 +1,4 @@
-package com.website.military.domain.dto.test.response;
+package com.website.military.domain.dto.exam.response;
 
 import java.time.Instant;
 

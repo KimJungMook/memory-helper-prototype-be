@@ -1,8 +1,8 @@
-package com.website.military.domain.dto.test.response;
+package com.website.military.domain.dto.exam.response;
 
 import java.util.List;
 
-import com.website.military.domain.dto.test.request.QuestionRequest;
+import com.website.military.domain.dto.exam.request.QuestionRequest;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
