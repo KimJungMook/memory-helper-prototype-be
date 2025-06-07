@@ -49,7 +49,7 @@ public class WordSets {
 
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "wordsets")
-    private List<Tests> tests;
+    private List<Exam> exams;
 
     
     public WordSets(String setName){

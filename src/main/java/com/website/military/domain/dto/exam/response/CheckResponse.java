@@ -1,8 +1,8 @@
-package com.website.military.domain.dto.test.response;
+package com.website.military.domain.dto.exam.response;
 
 import java.util.List;
 
-import com.website.military.domain.dto.test.request.QuestionRequest;
+import com.website.military.domain.dto.exam.request.QuestionRequest;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,6 +15,8 @@ public class CheckResponse {
 
     private List<QuestionRequest> multipleChoice; // 문제에 해당하는 질문
 
-    private char userAnswer;
-    private char correctAnswer; // 정답
+    private int userAnswer;
+    private int correctAnswer; // 정답
+
+
 }

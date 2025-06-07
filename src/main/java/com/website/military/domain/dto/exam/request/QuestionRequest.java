@@ -1,4 +1,4 @@
-package com.website.military.domain.dto.test.request;
+package com.website.military.domain.dto.exam.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

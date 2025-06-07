@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.website.military.domain.dto.exam.request.CheckRequest;
+import com.website.military.domain.dto.exam.response.DeleteExamResponse;
+import com.website.military.domain.dto.exam.response.GenerateExamListResponse;
+import com.website.military.domain.dto.exam.response.GetAllExamListResponse;
+import com.website.military.domain.dto.exam.response.GetTestProblemsResponse;
 import com.website.military.domain.dto.response.ResponseMessageDto;
-import com.website.military.domain.dto.test.request.CheckRequest;
-import com.website.military.domain.dto.test.response.DeleteExamResponse;
-import com.website.military.domain.dto.test.response.GenerateExamListResponseDto;
-import com.website.military.domain.dto.test.response.GetAllExamListResponse;
-import com.website.military.domain.dto.test.response.GetTestProblemsResponse;
-import com.website.military.service.TestService;
+import com.website.military.service.ExamService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -34,10 +34,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 @RequestMapping("/api/exam")
 @Tag(name = "EXAM", description = "시험 관련 API")
-public class TestController {
+public class ExamController {
     
     @Autowired
-    private TestService testService;
+    private ExamService testService;
 
     // GET
     @Operation(summary = "시험세트 찾기", description = "내가 만든 시험세트 찾아주는 메서드")
@@ -94,36 +94,36 @@ public class TestController {
                 + "    \"problemNumber\": 1,"
                 + "    \"question\": \"banana의 의미는 무엇입니까?\","
                 + "    \"multipleChoice\": ["
-                + "      {\"id\": \"D\", \"meaning\": \"바나나\"},"
-                + "      {\"id\": \"C\", \"meaning\": \"포도\"},"
-                + "      {\"id\": \"A\", \"meaning\": \"사과\"},"
-                + "      {\"id\": \"B\", \"meaning\": \"오렌지\"}"
+                + "      {\"id\": \"1\", \"meaning\": \"바나나\"},"
+                + "      {\"id\": \"2\", \"meaning\": \"포도\"},"
+                + "      {\"id\": \"3\", \"meaning\": \"사과\"},"
+                + "      {\"id\": \"4\", \"meaning\": \"오렌지\"}"
                 + "    ],"
-                + "    \"answer\": \"D\""
+                + "    \"answer\": \"1\""
                 + "  },"
                 + "  {"
                 + "    \"problemId\": 332,"
                 + "    \"problemNumber\": 2,"
                 + "    \"question\": \"word의 의미는 무엇입니까?\","
                 + "    \"multipleChoice\": ["
-                + "      {\"id\": \"C\", \"meaning\": \"그림을 그리다\"},"
-                + "      {\"id\": \"D\", \"meaning\": \"노래를 부르다\"},"
-                + "      {\"id\": \"A\", \"meaning\": \"책을 읽다\"},"
-                + "      {\"id\": \"B\", \"meaning\": \"단어를 입력하다\"}"
+                + "      {\"id\": \"1\", \"meaning\": \"그림을 그리다\"},"
+                + "      {\"id\": \"2\", \"meaning\": \"노래를 부르다\"},"
+                + "      {\"id\": \"4\", \"meaning\": \"책을 읽다\"},"
+                + "      {\"id\": \"3\", \"meaning\": \"단어를 입력하다\"}"
                 + "    ],"
-                + "    \"answer\": \"B\""
+                + "    \"answer\": \"2\""
                 + "  },"
                 + "  {"
                 + "    \"problemId\": 333,"
                 + "    \"problemNumber\": 3,"
                 + "    \"question\": \"rabbit의 의미는 무엇입니까?\","
                 + "    \"multipleChoice\": ["
-                + "      {\"id\": \"D\", \"meaning\": \"새\"},"
-                + "      {\"id\": \"C\", \"meaning\": \"개\"},"
-                + "      {\"id\": \"A\", \"meaning\": \"토끼\"},"
-                + "      {\"id\": \"B\", \"meaning\": \"고양이\"}"
+                + "      {\"id\": \"2\", \"meaning\": \"새\"},"
+                + "      {\"id\": \"1\", \"meaning\": \"개\"},"
+                + "      {\"id\": \"4\", \"meaning\": \"토끼\"},"
+                + "      {\"id\": \"3\", \"meaning\": \"고양이\"}"
                 + "    ],"
-                + "    \"answer\": \"A\""
+                + "    \"answer\": \"1\""
                 + "  }"
                 + "]"
                 + "}")
@@ -137,9 +137,9 @@ public class TestController {
                 examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
                 ))})
     })
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getTestProblems(HttpServletRequest request, @PathVariable("id") Long id){
-        return testService.getTestProblems(request, id);
+    @GetMapping("/{examId}")
+    public ResponseEntity<?> getTestProblems(HttpServletRequest request, @PathVariable("examId") Long examId){
+        return testService.getTestProblems(request, examId);
     }
 
     // POST
@@ -149,7 +149,7 @@ public class TestController {
             content = {@Content(
                 mediaType = "application/json",
                 array = @ArraySchema(
-                    schema = @Schema(implementation=GenerateExamListResponseDto.class)
+                    schema = @Schema(implementation=GenerateExamListResponse.class)
                 ),
                 examples = @ExampleObject(value = "{"
                 + "\"code\": \"OK\","
@@ -159,35 +159,35 @@ public class TestController {
                 + "      {"
                 + "        \"problemNumber\": 1,"
                 + "        \"multipleChoice\": ["
-                + "          {\"id\": \"A\", \"meaning\": \"편지\"},"
-                + "          {\"id\": \"C\", \"meaning\": \"글자\"},"
-                + "          {\"id\": \"D\", \"meaning\": \"서한\"},"
-                + "          {\"id\": \"B\", \"meaning\": \"문자\"}"
+                + "          {\"id\": \"1\", \"meaning\": \"편지\"},"
+                + "          {\"id\": \"2\", \"meaning\": \"글자\"},"
+                + "          {\"id\": \"3\", \"meaning\": \"서한\"},"
+                + "          {\"id\": \"4\", \"meaning\": \"문자\"}"
                 + "        ],"
                 + "        \"question\": \"다음 중 'letter'의 의미로 가장 적절한 것은 무엇일까요?\"," 
-                + "        \"answer\": \"B\""
+                + "        \"answer\": \"1\""
                 + "      },"
                 + "      {"
                 + "        \"problemNumber\": 2,"
                 + "        \"multipleChoice\": ["
-                + "          {\"id\": \"C\", \"meaning\": \"결코\"},"
-                + "          {\"id\": \"A\", \"meaning\": \"항상\"},"
-                + "          {\"id\": \"B\", \"meaning\": \"대개\"},"
-                + "          {\"id\": \"D\", \"meaning\": \"때때로\"}"
+                + "          {\"id\": \"2\", \"meaning\": \"결코\"},"
+                + "          {\"id\": \"1\", \"meaning\": \"항상\"},"
+                + "          {\"id\": \"4\", \"meaning\": \"대개\"},"
+                + "          {\"id\": \"3\", \"meaning\": \"때때로\"}"
                 + "        ],"
                 + "        \"question\": \"다음 중 'usually'의 의미와 가장 가까운 것은 무엇입니까?\"," 
-                + "        \"answer\": \"B\""
+                + "        \"answer\": \"3\""
                 + "      },"
                 + "      {"
                 + "        \"problemNumber\": 3,"
                 + "        \"multipleChoice\": ["
-                + "          {\"id\": \"A\", \"meaning\": \"매우\"},"
-                + "          {\"id\": \"B\", \"meaning\": \"조금\"},"
-                + "          {\"id\": \"D\", \"meaning\": \"약간\"},"
-                + "          {\"id\": \"C\", \"meaning\": \"거의\"}"
+                + "          {\"id\": \"1\", \"meaning\": \"매우\"},"
+                + "          {\"id\": \"3\", \"meaning\": \"조금\"},"
+                + "          {\"id\": \"4\", \"meaning\": \"약간\"},"
+                + "          {\"id\": \"2\", \"meaning\": \"거의\"}"
                 + "        ],"
                 + "        \"question\": \"다음 중 'very'의 뜻과 가장 가까운 것은 무엇입니까?\"," 
-                + "        \"answer\": \"A\""
+                + "        \"answer\": \"3\""
                 + "      }"
                 + "    ]"
                 + "  }"
@@ -207,9 +207,9 @@ public class TestController {
         return testService.generateExamList(request, setId);
     }
 
-    @PostMapping("/check/{testId}") // -> 채점을 할 때 result는 생성됌.
-    public ResponseEntity<?> checkAnswers(HttpServletRequest request, @PathVariable("testId")Long testId, @Valid @RequestBody CheckRequest dto) {
-        return testService.checkAnswers(request, testId, dto.getCheckedAnswers());
+    @PostMapping("/check/{examId}") // -> 채점을 할 때 result는 생성됌.
+    public ResponseEntity<?> checkAnswers(HttpServletRequest request, @PathVariable("examId")Long examId, @Valid @RequestBody CheckRequest dto) {
+        return testService.checkAnswers(request, examId, dto.getCheckedAnswers());
     }
     
     // DELETE
@@ -228,8 +228,142 @@ public class TestController {
                 examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
                 ))})
     })
-    @DeleteMapping("/{testId}")
-    public ResponseEntity<?> deleteExam(HttpServletRequest request, @PathVariable("testId")Long testId){
-        return testService.deleteTest(request, testId);
+    @DeleteMapping("/{examId}")
+    public ResponseEntity<?> deleteExam(HttpServletRequest request, @PathVariable("examId")Long examId){
+        return testService.deleteTest(request, examId);
     }
 }
+
+
+/*
+ * {
+  "code": "OK",
+  "data": {
+    "resultId": 1,
+    "correctList": [
+      {
+        "problemId": 8,
+        "problemNumber": 8,
+        "multipleChoice": [
+          {
+            "id": "3",
+            "meaning": "과정"
+          },
+          {
+            "id": "4",
+            "meaning": "방법"
+          },
+          {
+            "id": "2",
+            "meaning": "결과"
+          },
+          {
+            "id": "1",
+            "meaning": "요소"
+          }
+        ],
+        "userAnswer": 1,
+        "correctAnswer": 1
+      },
+      {
+        "problemId": 9,
+        "problemNumber": 9,
+        "multipleChoice": [
+          {
+            "id": "2",
+            "meaning": "단어"
+          },
+          {
+            "id": "3",
+            "meaning": "구절"
+          },
+          {
+            "id": "4",
+            "meaning": "글자"
+          },
+          {
+            "id": "1",
+            "meaning": "문장"
+          }
+        ],
+        "userAnswer": 2,
+        "correctAnswer": 2
+      }
+    ],
+    "incorrectList": [
+      {
+        "problemId": 5,
+        "problemNumber": 5,
+        "multipleChoice": [
+          {
+            "id": "2",
+            "meaning": "운 나쁘게도"
+          },
+          {
+            "id": "3",
+            "meaning": "슬프게도"
+          },
+          {
+            "id": "4",
+            "meaning": "운 좋게도"
+          },
+          {
+            "id": "1",
+            "meaning": "불운하게도"
+          }
+        ],
+        "userAnswer": 1,
+        "correctAnswer": 4
+      },
+      {
+        "problemId": 6,
+        "problemNumber": 6,
+        "multipleChoice": [
+          {
+            "id": "1",
+            "meaning": "읽다"
+          },
+          {
+            "id": "3",
+            "meaning": "듣다"
+          },
+          {
+            "id": "4",
+            "meaning": "말하다"
+          },
+          {
+            "id": "2",
+            "meaning": "쓰다"
+          }
+        ],
+        "userAnswer": 2,
+        "correctAnswer": 1
+      },
+      {
+        "problemId": 10,
+        "problemNumber": 10,
+        "multipleChoice": [
+          {
+            "id": "4",
+            "meaning": "취소하다"
+          },
+          {
+            "id": "3",
+            "meaning": "중지하다"
+          },
+          {
+            "id": "2",
+            "meaning": "실행하다"
+          },
+          {
+            "id": "1",
+            "meaning": "생성하다"
+          }
+        ],
+        "userAnswer": 1,
+        "correctAnswer": 2
+      }
+    ]
+  }
+}
+ */

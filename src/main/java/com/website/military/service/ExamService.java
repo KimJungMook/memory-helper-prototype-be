@@ -1,6 +1,8 @@
 package com.website.military.service;
 
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,41 +17,41 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.website.military.domain.Entity.Mistakes;
 import com.website.military.domain.Entity.Results;
 import com.website.military.domain.Entity.SolvedProblems;
-import com.website.military.domain.Entity.TestProblems;
-import com.website.military.domain.Entity.Tests;
+import com.website.military.domain.Entity.Problems;
+import com.website.military.domain.Entity.Exam;
 import com.website.military.domain.Entity.Word;
 import com.website.military.domain.Entity.WordSetMapping;
 import com.website.military.domain.Entity.WordSets;
+import com.website.military.domain.dto.exam.request.QuestionRequest;
+import com.website.military.domain.dto.exam.response.CheckListResponse;
+import com.website.military.domain.dto.exam.response.CheckResponse;
+import com.website.military.domain.dto.exam.response.DeleteExamResponse;
+import com.website.military.domain.dto.exam.response.GenerateExamListResponse;
+import com.website.military.domain.dto.exam.response.GenerateExamListTestIdResponse;
+import com.website.military.domain.dto.exam.response.GetAllExamListResponse;
+import com.website.military.domain.dto.exam.response.GetTestProblemsResponse;
 import com.website.military.domain.dto.gemini.request.GeminiRequestDto;
 import com.website.military.domain.dto.gemini.response.GeminiResponseDto;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
-import com.website.military.domain.dto.test.request.QuestionRequest;
-import com.website.military.domain.dto.test.response.CheckListResponse;
-import com.website.military.domain.dto.test.response.CheckResponse;
-import com.website.military.domain.dto.test.response.DeleteExamResponse;
-import com.website.military.domain.dto.test.response.GenerateExamListResponse;
-import com.website.military.domain.dto.test.response.GenerateExamListResponseDto;
-import com.website.military.domain.dto.test.response.GenerateExamListTestIdResponse;
-import com.website.military.domain.dto.test.response.GetAllExamListResponse;
-import com.website.military.domain.dto.test.response.GetTestProblemsResponse;
 import com.website.military.repository.MistakesRepository;
 import com.website.military.repository.ResultsRepository;
 import com.website.military.repository.SolvedProblemRepository;
-import com.website.military.repository.TestProblemsRepository;
-import com.website.military.repository.TestsRepository;
+import com.website.military.repository.ProblemsRepository;
+import com.website.military.repository.ExamRepository;
 import com.website.military.repository.WordSetsRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 @Service
-public class TestService { 
+public class ExamService { 
     @Autowired
     private AuthService authService;
     
@@ -57,10 +59,10 @@ public class TestService {
     private WordSetsRepository wordSetsRepository;
 
     @Autowired
-    private TestProblemsRepository testProblemsRepository;
+    private ProblemsRepository problemsRepository;
 
     @Autowired
-    private TestsRepository testsRepository;
+    private ExamRepository examRepository;
 
     @Autowired
     private SolvedProblemRepository solvedProblemRepository;
@@ -92,29 +94,29 @@ public class TestService {
 
     public ResponseEntity<?> getAllExamList(HttpServletRequest request){ // 시험이 뭐뭐 있었는지를 체크하는 리스트
         Long userId = authService.getUserId(request);
-        List<Tests> testsList = testsRepository.findByUser_UserId(userId);
+        List<Exam> testsList = examRepository.findByUser_UserId(userId);
         List<GetAllExamListResponse> responses = new ArrayList<>();
         if(testsList.isEmpty()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }else{
-            for(Tests test : testsList){
-                GetAllExamListResponse response = new GetAllExamListResponse(test.getTestId(), test.getCreatedAt(), test.getTestType(), test.getTestCount());
+            for(Exam test : testsList){
+                GetAllExamListResponse response = new GetAllExamListResponse(test.getExamId(), test.getCreatedAt(), test.getTestType(), test.getTestCount());
                 responses.add(response);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
         }
     }
 
-    public ResponseEntity<?> getTestProblems(HttpServletRequest request, Long id){
+    public ResponseEntity<?> getTestProblems(HttpServletRequest request, Long examId){
         Long userId = authService.getUserId(request);
-        Optional<Tests> existingTests = testsRepository.findByUser_UserIdAndTestId(userId, id);
+        Optional<Exam> existingTests = examRepository.findByUser_UserIdAndExamId(userId, examId);
         if(existingTests.isPresent()){
-            List<TestProblems> problems = existingTests.get().getTestproblems();
+            List<Problems> problems = existingTests.get().getProblems();
             List<GetTestProblemsResponse> responses = new ArrayList<>();
-            for(TestProblems problem : problems){
+            for(Problems problem : problems){
                 List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
                 GetTestProblemsResponse response = new GetTestProblemsResponse(problem.getProblemId(), problem.getProblemNumber(), problem.getQuestion(), 
-                multipleChoiceList, problem.getAnswer());
+                multipleChoiceList);
                 responses.add(response);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
@@ -123,6 +125,7 @@ public class TestService {
     }
 
     // 시험 문제 만드는 메서드  -> 중복으로 생성되는거 일단 막기. -> 이상한 거 ai로 생기는거 막기. (2025.05.01)
+    @Transactional
     public ResponseEntity<?> generateExamList(HttpServletRequest request, Long setId){
         Long userId = authService.getUserId(request);
         Optional<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetId(userId, setId);
@@ -130,15 +133,15 @@ public class TestService {
             WordSets wordSets = existingWordSets.get();
             List<WordSetMapping> mapping = wordSets.getWordsetmapping();
             int length = wordSets.getWordCount();
-            Tests tests = new Tests(wordSets.getUser(), wordSets, 0);
+            Exam tests = new Exam(wordSets.getUser(), wordSets, 0);
             Collections.shuffle(mapping); // 매핑 된거 먼저 셔플을 해야 넣은 순서대로 문제가 나오지 않음.
 
             if(length < 20){
                 tests.setTestCount(length);
-                testsRepository.save(tests); // test 생성
-                List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
-                List<GenerateExamListResponseDto> firstTenResponses = new ArrayList<>();
-                List<GenerateExamListResponseDto> lastResponses = new ArrayList<>();
+                examRepository.save(tests); // test 생성
+                List<GenerateExamListResponse> responseDtos = new ArrayList<>();
+                List<GenerateExamListResponse> firstTenResponses = new ArrayList<>();
+                List<GenerateExamListResponse> lastResponses = new ArrayList<>();
                 List<Word> wordList = new ArrayList<>();
                 for(WordSetMapping tmp : mapping){
                     Word tmpWord = tmp.getWord();
@@ -153,9 +156,9 @@ public class TestService {
                     firstTenResponses = parsingData(wordList, 1L);
                 }
 
-                for(GenerateExamListResponseDto response : firstTenResponses){
+                for(GenerateExamListResponse response : firstTenResponses){
                     List<QuestionRequest> words = new ArrayList<>();
-                    for(GenerateExamListResponse list : response.getMultipleChoice()){
+                    for(QuestionRequest list : response.getMultipleChoice()){
                         String id = list.getId();
                         String meaning = list.getMeaning();
                         words.add(new QuestionRequest(id, meaning));
@@ -164,9 +167,9 @@ public class TestService {
                         ObjectMapper objectMapper = new ObjectMapper();   
                         String question = response.getQuestion();
                         String jsonString = objectMapper.writeValueAsString(words);
-                        char answer = response.getAnswer().charAt(0);
-                        TestProblems testProblems = new TestProblems(tests, jsonString, question, response.getProblemNumber(), answer);
-                        testProblemsRepository.save(testProblems); 
+                        int answer = response.getAnswer();
+                        Problems testProblems = new Problems(tests, jsonString, question, response.getProblemNumber(), answer);
+                        problemsRepository.save(testProblems); 
                         responseDtos.add(response); 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -175,16 +178,16 @@ public class TestService {
                 }
                 // 2025.04.03 list형태로 만들어내는것 성공 -> 10개단위로 끊어내는 것도 만들어야함. -> 아직 테스트에 넣는 것까지는 불가능.
                 // 2025.04.26 test 만드는 것까지 성공. -> QA 부족. -> 아직까지는 에러는 안뜸
-                GenerateExamListTestIdResponse response = new GenerateExamListTestIdResponse(tests.getTestId(), responseDtos);
+                GenerateExamListTestIdResponse response = new GenerateExamListTestIdResponse(tests.getExamId(), responseDtos);
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
             }else{
-                List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
-                List<GenerateExamListResponseDto> firstTenResponses = new ArrayList<>();
-                List<GenerateExamListResponseDto> lastResponses = new ArrayList<>();
+                List<GenerateExamListResponse> responseDtos = new ArrayList<>();
+                List<GenerateExamListResponse> firstTenResponses = new ArrayList<>();
+                List<GenerateExamListResponse> lastResponses = new ArrayList<>();
                 List<Word> wordList = new ArrayList<>();
             
                 tests.setTestCount(20);
-                testsRepository.save(tests); // test 생성
+                examRepository.save(tests); // test 생성
 
                 for(WordSetMapping tmp : mapping.subList(0, 20)){
                     Word tmpWord = tmp.getWord();
@@ -194,9 +197,9 @@ public class TestService {
                 lastResponses = parsingData(wordList.subList(10, 20), 11L);
                 firstTenResponses.addAll(lastResponses);
 
-                for(GenerateExamListResponseDto response : firstTenResponses){
+                for(GenerateExamListResponse response : firstTenResponses){
                     List<QuestionRequest> words = new ArrayList<>();
-                    for(GenerateExamListResponse list : response.getMultipleChoice()){
+                    for(QuestionRequest list : response.getMultipleChoice()){
                         String id = list.getId();
                         String meaning = list.getMeaning();
                         words.add(new QuestionRequest(id, meaning));
@@ -205,9 +208,9 @@ public class TestService {
                         ObjectMapper objectMapper = new ObjectMapper();   
                         String question = response.getQuestion();
                         String jsonString = objectMapper.writeValueAsString(words);
-                        char answer = response.getAnswer().charAt(0);
-                        TestProblems testProblems = new TestProblems(tests, jsonString, question, response.getProblemNumber(), answer);
-                        testProblemsRepository.save(testProblems); 
+                        int answer = response.getAnswer();
+                        Problems testProblems = new Problems(tests, jsonString, question, response.getProblemNumber(), answer);
+                        problemsRepository.save(testProblems); 
                         responseDtos.add(response); 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -216,62 +219,75 @@ public class TestService {
                     
                 }
 
-                GenerateExamListTestIdResponse response = new GenerateExamListTestIdResponse(tests.getTestId(), responseDtos);
+                GenerateExamListTestIdResponse response = new GenerateExamListTestIdResponse(tests.getExamId(), responseDtos);
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", response));
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
     }
 
-
-    public ResponseEntity<?> checkAnswers(HttpServletRequest request, Long testId, List<Character> checkedAnswers){
+    @Transactional
+    public ResponseEntity<?> checkAnswers(HttpServletRequest request, Long examId, List<Integer> checkedAnswers){
         Long userId = authService.getUserId(request);
-        Optional<Tests> existingTests = testsRepository.findByUser_UserIdAndTestId(userId, testId);
+        Optional<Exam> existingTests = examRepository.findByUser_UserIdAndExamId(userId, examId);
         List<CheckResponse> correctList = new ArrayList<>();
         List<SolvedProblems> solvedProblemsList = new ArrayList<>();
         List<Mistakes> mistakesList = new ArrayList<>();
         List<CheckResponse> incorrectList = new ArrayList<>();
-        if(existingTests.isPresent() && checkedAnswers.size() == existingTests.get().getTestCount()){
-            Tests tests = existingTests.get();
-            List<TestProblems> problems = tests.getTestproblems();
-            int index = 0;
-            int mistakeIndex = 0;
-            for(TestProblems problem : problems){
-                List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
-                if(checkedAnswers.get(index).equals(problem.getAnswer())){
-                    SolvedProblems solvedProblems = new SolvedProblems(problem);
-                    solvedProblemRepository.save(solvedProblems);
-                    solvedProblemsList.add(solvedProblems);
-                    CheckResponse response = new CheckResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList, checkedAnswers.get(index), problem.getAnswer()); 
-                    correctList.add(response);
-                }else{
-                    Mistakes mistakesProblems = new Mistakes(problem);
-                    mistakesRepository.save(mistakesProblems);
-                    mistakesList.add(mistakesProblems);
-                    CheckResponse response = new CheckResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList, checkedAnswers.get(index),problem.getAnswer()); 
-                    incorrectList.add(response);
-                    mistakeIndex++;
+        if(existingTests.isPresent() && (checkedAnswers.size() == existingTests.get().getTestCount())){
+            Exam exams = existingTests.get();
+            if(exams.getResults().isEmpty()){
+                List<Problems> problems = exams.getProblems();
+                int index = 0;
+                int mistakeIndex = 0;
+                for(Problems problem : problems){
+                    List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
+                    if(checkedAnswers.get(index) == problem.getAnswer()){
+                        Problems newProblems = new Problems(problem, checkedAnswers.get(index));
+                        problemsRepository.save(newProblems);
+                        SolvedProblems solvedProblems = new SolvedProblems(problem);
+                        solvedProblemsList.add(solvedProblems);
+                        CheckResponse response = new CheckResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList, checkedAnswers.get(index), problem.getAnswer()); 
+                        correctList.add(response);
+                    }else{
+                        Problems newProblems = new Problems(problem, checkedAnswers.get(index));
+                        problemsRepository.save(newProblems);
+                        Mistakes mistakesProblems = new Mistakes(problem);
+                        mistakesList.add(mistakesProblems);
+                        CheckResponse response = new CheckResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList, checkedAnswers.get(index),problem.getAnswer()); 
+                        incorrectList.add(response);
+                        mistakeIndex++;
+                    }
+                    index++; // Result에 저장하기. 채점을 했으니까. 여기서부터 다시하기. 25.03.08 (23:23)
                 }
-                index++; // Result에 저장하기. 채점을 했으니까. 여기서부터 다시하기. 25.03.08 (23:23)
+                BigDecimal bd = new BigDecimal((double)(index-mistakeIndex)*100/index);
+                bd = bd.setScale(2, RoundingMode.HALF_UP);
+                double roundedScore = bd.doubleValue();
+                Results results = new Results(exams.getUser(), exams, roundedScore, mistakesList, solvedProblemsList);
+
+                for (Mistakes mistake : mistakesList) {
+                    mistake.setResults(results);
+                    mistakesRepository.save(mistake);
+                }
+
+                for (SolvedProblems solvedProblem : solvedProblemsList) {
+                    solvedProblem.setResults(results);
+                    solvedProblemRepository.save(solvedProblem);
+                }
+
+                try {
+                    resultsRepository.save(results);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
+                }
+                // result 만들어내기 03.11 (23:33) -> result 저장후, mistake solvedproblem 연결 완료 -> QA 부족 체크하기.
+                CheckListResponse responses = new CheckListResponse(results.getResultId(), correctList, incorrectList);
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responses));
             }
 
-            Results results = new Results(tests.getUser(), tests, (index-mistakeIndex)*100/index, mistakesList, solvedProblemsList);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
 
-            for (Mistakes mistake : mistakesList) {
-                mistake.setResults(results);
-            }
-            for (SolvedProblems solvedProblem : solvedProblemsList) {
-                solvedProblem.setResults(results);
-            }
-            try {
-                resultsRepository.save(results);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
-            }
-            // result 만들어내기 03.11 (23:33) -> result 저장후, mistake solvedproblem 연결 완료 -> QA 부족 체크하기.
-            CheckListResponse responses = new CheckListResponse(results.getResultId(), correctList, incorrectList);
-            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responses));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
 
@@ -279,14 +295,14 @@ public class TestService {
     }
 
     // 시험 연결된거 삭제하기. 
-    public ResponseEntity<?> deleteTest(HttpServletRequest request, Long testId){
+    public ResponseEntity<?> deleteTest(HttpServletRequest request, Long examId){
         Long userId = authService.getUserId(request);
-        Optional<Tests> existingWordSets = testsRepository.findByUser_UserIdAndTestId(userId, testId);
+        Optional<Exam> existingWordSets = examRepository.findByUser_UserIdAndExamId(userId, examId);
         if(existingWordSets.isPresent()){
-            Tests tests = existingWordSets.get();
-            DeleteExamResponse response = new DeleteExamResponse(testId, tests.getWordsets().getSetName(), Instant.now());
+            Exam tests = existingWordSets.get();
+            DeleteExamResponse response = new DeleteExamResponse(examId, tests.getWordsets().getSetName(), Instant.now());
             try {
-                testsRepository.deleteById(testId);              
+                examRepository.deleteById(examId);              
             } catch (Exception e) {
                 e.printStackTrace();
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
@@ -302,8 +318,8 @@ public class TestService {
         GeminiRequestDto request = new GeminiRequestDto();
         StringBuilder processedSentence = new StringBuilder();
         for(int i = 0;i<wordList.size();i++){
-            String[] choices = {"A", "B", "C", "D"};
-            String correctAnswer = choices[new Random().nextInt(choices.length)]; // 랜덤 선택
+            int[] choices = {1, 2, 3, 4};
+            int correctAnswer = choices[new Random().nextInt(choices.length)]; // 랜덤 선택
             processedSentence.append(wordList.get(i)).append("에 대한 의미를 묻는 객관식 문제를 만들어줘.")
             .append(wordList.get(i)).append("의 의미를 '").append(meaningList.get(i)).append("'로 하고, 이를 정답으로 설정해줘. ")
             .append("나머지 보기는 ").append(wordList.get(i)).append("와 관련 없는 단어의 뜻으로 만들어줘. ")
@@ -312,12 +328,12 @@ public class TestService {
         }
         processedSentence.append("JSON 형식으로 다음과 같이 만들어줘: ")
         .append("{\"question\":\"객관식 문제의 질문 내용\", ")
-        .append("\"answer\":\"").append('A').append("\", ")
+        .append("\"answer\":\"").append('1').append("\", ")
         .append("\"options\":[")
-        .append("{\"id\":\"A\",\"text\":\"보기1\"}, ")
-        .append("{\"id\":\"B\",\"text\":\"보기2\"}, ")
-        .append("{\"id\":\"C\",\"text\":\"보기3\"}, ")
-        .append("{\"id\":\"D\",\"text\":\"보기4\"}")
+        .append("{\"id\":\"1\",\"text\":\"보기1\"}, ")
+        .append("{\"id\":\"2\",\"text\":\"보기2\"}, ")
+        .append("{\"id\":\"3\",\"text\":\"보기3\"}, ")
+        .append("{\"id\":\"4\",\"text\":\"보기4\"}")
         .append("]}")
         .append("마지막에는 배열로 만들어줘.")
         .append("제공된 항목만 사용하고, 새로운 항목이나 문항을 임의로 만들지 마세요");
@@ -365,7 +381,7 @@ public class TestService {
         }
     }
 
-    private List<GenerateExamListResponseDto> parsingData(List<Word> words, Long number){
+    private List<GenerateExamListResponse> parsingData(List<Word> words, Long number){
         Long problemNumber = number;             // 문제를 response로 낼 때는 몇번이지 알려줘야하기에.
         List<String> meaningList = new ArrayList<>();
         List<String> wordList = new ArrayList<>(); 
@@ -392,18 +408,19 @@ public class TestService {
         String s = getAIDescription(wordList, meaningList);
         String cleanJson = s.replaceAll("^```json\\s*", "").replaceAll("\\s*```$", ""); // 불필요한 json이런게 들어감.
         JSONArray objectArray = new JSONArray(cleanJson);
-        List<GenerateExamListResponseDto> responseDtos = new ArrayList<>();
+        List<GenerateExamListResponse> responseDtos = new ArrayList<>();
         for(int i=0;i<objectArray.length() && problemNumber <= 20;i++){
-            List<GenerateExamListResponse> responses = new ArrayList<>();
+            List<QuestionRequest> responses = new ArrayList<>();
             JSONArray newObject = objectArray.getJSONObject(i).getJSONArray("options"); // options에 나오는거까지 찍힘.
             String question = objectArray.getJSONObject(i).getString("question");
             String answer = objectArray.getJSONObject(i).getString("answer");
+            System.out.println(answer);
             for(Object obj : newObject){
                 JSONObject jsonObj = (JSONObject) obj;
-                GenerateExamListResponse response = new GenerateExamListResponse(jsonObj.getString("id"), jsonObj.getString("text"));
+                QuestionRequest response = new QuestionRequest(jsonObj.getString("id"), jsonObj.getString("text"));
                 responses.add(response);
             }
-            GenerateExamListResponseDto responseDto = new GenerateExamListResponseDto(problemNumber, responses, question, answer);    
+            GenerateExamListResponse responseDto = new GenerateExamListResponse(problemNumber, responses, question, Integer.parseInt(answer));    
             problemNumber = problemNumber + 1;
             Collections.shuffle(responseDto.getMultipleChoice());     
             responseDtos.add(responseDto);   

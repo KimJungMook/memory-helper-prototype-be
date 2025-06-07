@@ -16,7 +16,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -39,11 +40,12 @@ public class Results {
 
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
-    @JoinColumn(name = "test_id")
-    private Tests tests; // 외래키
+    @JoinColumn(name = "exam_id")
+    private Exam exam; // 외래키
 
-    @Size(min = 0, max = 100, message = "점수는 0점에서 100점 사이여야합니다.")
-    private double score;
+    @DecimalMin(value = "0.0", inclusive = true, message = "점수는 0점 이상이어야 합니다.")
+    @DecimalMax(value = "100.0", inclusive = true, message = "점수는 100점 이하여야 합니다.")
+    private Double score;
     
     private Instant submittedAt;
 
@@ -55,9 +57,9 @@ public class Results {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "results", cascade = CascadeType.PERSIST)
     private List<SolvedProblems> solvedProblems;
 
-    public Results(User user, Tests tests, int score, List<Mistakes> mistakes, List<SolvedProblems> solvedProblems){
+    public Results(User user, Exam exam, double score, List<Mistakes> mistakes, List<SolvedProblems> solvedProblems){
         this.user = user;
-        this.tests = tests;
+        this.exam = exam;
         this.score = score;
         this.submittedAt = Instant.now();
         this.mistakes = mistakes;

@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.word.request.AddWordToWordSetDto;
+import com.website.military.domain.dto.word.request.UpdateMeaningDto;
 import com.website.military.domain.dto.word.response.AddWordToWordSetResponseDto;
 import com.website.military.domain.dto.wordsets.request.ChangeSetNameDto;
 import com.website.military.domain.dto.wordsets.request.WordSetsDto;
@@ -134,11 +135,11 @@ public class WordSetController {
                 examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
                 ))})
     })
-    @GetMapping("/{id}")
+    @GetMapping("/{setId}")
     public ResponseEntity<?> getWordsBySetId(    
     @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
-    @PathVariable("id") Long id, HttpServletRequest request) {
-        return wordSetService.getWordsBySetId(id, request);
+    @PathVariable("setId") Long setId, HttpServletRequest request) {
+        return wordSetService.getWordsBySetId(setId, request);
     }
     
 
@@ -300,14 +301,24 @@ public class WordSetController {
             examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
             ))})
     })
-    @PatchMapping("/name/{id}")
+    @PatchMapping("/name/{setId}")
     public ResponseEntity<?> changeSetName(
     @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
-    @PathVariable("id") Long id,
+    @PathVariable("setId") Long setId,
     @RequestBody ChangeSetNameDto dto,HttpServletRequest request){
-        return wordSetService.changeSetName(id, dto.getSetName() ,request);
+        return wordSetService.changeSetName(setId, dto.getSetName() ,request);
     }
     
+    @PatchMapping("/{setId}/word/{wordId}")
+    public ResponseEntity<?> patchWordFromSet(
+    @RequestBody UpdateMeaningDto dto,
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64"))     
+    @PathVariable("setId") Long setId, 
+    @Parameter(description = "단어의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("wordId")Long wordId, HttpServletRequest request){
+        return wordSetService.patchWordFromSet(setId, wordId, dto, request);
+    }
+
     // DELETE
     @Operation(summary = "단어세트 삭제", description = "ID에 해당하는 단어셋을 삭제합니다.")
     @ApiResponses(value = {
@@ -330,12 +341,12 @@ public class WordSetController {
             examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
             ))})
     })
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{setId}")
     public ResponseEntity<?> deleteWordSets(
     @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
-    @PathVariable("id") Long id, 
+    @PathVariable("setId") Long setId, 
     HttpServletRequest request){
-        return wordSetService.deleteWordSets(id, request);
+        return wordSetService.deleteWordSets(setId, request);
     }
 
     @Operation(summary = "단어 단어장에서 삭제", description = "단어를 단어장에서 없애주는 api")

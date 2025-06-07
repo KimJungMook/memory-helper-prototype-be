@@ -1,4 +1,4 @@
-package com.website.military.domain.dto.test.response;
+package com.website.military.domain.dto.exam.response;
 
 import java.util.List;
 
@@ -9,5 +9,5 @@ import lombok.Data;
 @AllArgsConstructor
 public class GenerateExamListTestIdResponse {
     private Long testId;
-    private List<GenerateExamListResponseDto> examList;
+    private List<GenerateExamListResponse> examList;
 }

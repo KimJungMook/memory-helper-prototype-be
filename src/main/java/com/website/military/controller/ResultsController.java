@@ -21,9 +21,9 @@ public class ResultsController {
     @Autowired
     private ResultsService resultsService;
 
-    @GetMapping("/{id}") 
-    public ResponseEntity<?> getGradingResult(HttpServletRequest request, @PathVariable("id") Long id){
-        return resultsService.getGradingResult(request, id);
+    @GetMapping("/{resultId}") 
+    public ResponseEntity<?> getGradingResult(HttpServletRequest request, @PathVariable("resultId") Long resultId){
+        return resultsService.getGradingResult(request, resultId);
     }
 
     @GetMapping("/all") 
