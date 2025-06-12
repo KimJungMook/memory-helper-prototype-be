@@ -8,6 +8,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class GenerateExamListTestIdResponse {
-    private Long testId;
-    private List<GenerateExamListResponse> examList;
+    private Long examId;
+    private List<GenerateProblemResponse> examList;
 }

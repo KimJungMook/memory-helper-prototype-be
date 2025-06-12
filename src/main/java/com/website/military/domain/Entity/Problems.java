@@ -2,6 +2,7 @@ package com.website.military.domain.Entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -43,10 +44,10 @@ public class Problems {
     private int answer;
 
     
-    @OneToOne(mappedBy = "problems") // 1대1 관계의 반대편
+    @OneToOne(mappedBy = "problems", cascade = CascadeType.ALL, orphanRemoval = true) // 1대1 관계의 반대편
     private SolvedProblems solvedProblem;
 
-    @OneToOne(mappedBy = "problems") // 1대1 관계의 반대편
+    @OneToOne(mappedBy = "problems", cascade = CascadeType.ALL, orphanRemoval = true) // 1대1 관계의 반대편
     private Mistakes mistakes;
 
     public Problems(Exam exam, String multipleChoice, String question, Long problemNumber, int answer){

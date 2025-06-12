@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.website.military.domain.dto.exam.request.CheckRequest;
 import com.website.military.domain.dto.exam.response.DeleteExamResponse;
-import com.website.military.domain.dto.exam.response.GenerateExamListResponse;
+import com.website.military.domain.dto.exam.response.GenerateProblemResponse;
 import com.website.military.domain.dto.exam.response.GetAllExamListResponse;
-import com.website.military.domain.dto.exam.response.GetTestProblemsResponse;
+import com.website.military.domain.dto.exam.response.GetProblemsResponse;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.service.ExamService;
 
@@ -84,7 +84,7 @@ public class ExamController {
             content = {@Content(
                 mediaType = "application/json",
                 array = @ArraySchema(
-                    schema = @Schema(implementation=GetTestProblemsResponse.class)
+                    schema = @Schema(implementation=GetProblemsResponse.class)
                 ),
                 examples = @ExampleObject(value = "{"
                 + "\"code\": \"OK\","
@@ -149,7 +149,7 @@ public class ExamController {
             content = {@Content(
                 mediaType = "application/json",
                 array = @ArraySchema(
-                    schema = @Schema(implementation=GenerateExamListResponse.class)
+                    schema = @Schema(implementation=GenerateProblemResponse.class)
                 ),
                 examples = @ExampleObject(value = "{"
                 + "\"code\": \"OK\","
