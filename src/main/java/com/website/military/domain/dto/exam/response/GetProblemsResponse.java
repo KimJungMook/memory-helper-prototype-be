@@ -18,5 +18,8 @@ public class GetProblemsResponse {
     
     private List<QuestionRequest> multipleChoice; // 문제에 해당하는 질문
     
-    // private int answer; // 정답
+    private QuestionRequest userAnswers;
+
+    private QuestionRequest rightAnswers;
+
 }

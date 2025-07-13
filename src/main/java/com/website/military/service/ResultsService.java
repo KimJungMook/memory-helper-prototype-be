@@ -10,11 +10,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.website.military.domain.Entity.Exam;
 import com.website.military.domain.Entity.Mistakes;
 import com.website.military.domain.Entity.Problems;
 import com.website.military.domain.Entity.Results;
 import com.website.military.domain.Entity.SolvedProblems;
+import com.website.military.domain.Entity.WordSets;
 import com.website.military.domain.dto.exam.request.QuestionRequest;
+import com.website.military.domain.dto.exam.response.GetProblemsResponse;
+import com.website.military.domain.dto.exam.response.GetTestProblemResponse;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.results.response.GetGradingAllResponse;
@@ -48,28 +52,54 @@ public class ResultsService {
     public ResponseEntity<?> getGradingResult(HttpServletRequest request, Long resultId){
         Long userId = authService.getUserId(request);
         Optional<Results> existingResults = resultsRepository.findByUser_UserIdAndResultId(userId, resultId);
+
         if(existingResults.isPresent()){
             Results result = existingResults.get();
-            List<GradingResponse> correctResponse = new ArrayList<>();
-            List<GradingResponse> inCorrectResponse = new ArrayList<>();
-            for(SolvedProblems problems : result.getSolvedProblems()){
-                Problems problem = problems.getProblems();
-                List<QuestionRequest> multipleChoice = examService.parseMultipleChoice(problem.getMultipleChoice());
-                GradingResponse response = new GradingResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoice, problem.getQuestion(),
-                problem.getUserAnswer(), problem.getAnswer());
-                correctResponse.add(response);
-            }
-            for(Mistakes mistakes : result.getMistakes()){
-                Problems problem = mistakes.getProblems();
-                List<QuestionRequest> multipleChoice = examService.parseMultipleChoice(problem.getMultipleChoice());
-                GradingResponse response = new GradingResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoice, problem.getQuestion(),
-                problem.getUserAnswer(), problem.getAnswer());
-                inCorrectResponse.add(response);
-            }
+            // List<GradingResponse> correctResponse = new ArrayList<>();
+            // List<GradingResponse> inCorrectResponse = new ArrayList<>();
+            // for(SolvedProblems problems : result.getSolvedProblems()){
+            //     Problems problem = problems.getProblems();
+            //     List<QuestionRequest> multipleChoice = examService.parseMultipleChoice(problem.getMultipleChoice());
+            //     GradingResponse response = new GradingResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoice, problem.getQuestion(),
+            //     problem.getUserAnswer(), problem.getAnswer());
+            //     correctResponse.add(response);
+            // }
+            // for(Mistakes mistakes : result.getMistakes()){
+            //     Problems problem = mistakes.getProblems();
+            //     List<QuestionRequest> multipleChoice = examService.parseMultipleChoice(problem.getMultipleChoice());
+            //     GradingResponse response = new GradingResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoice, problem.getQuestion(),
+            //     problem.getUserAnswer(), problem.getAnswer());
+            //     inCorrectResponse.add(response);
 
-            GetGradingResponse response = new GetGradingResponse(resultId, correctResponse, inCorrectResponse, result.getSubmittedAt());
-            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
-        }
+                Exam exam = result.getExam();
+                List<Problems> problems = exam.getProblems();
+                List<GetProblemsResponse> problemResponses = new ArrayList<>();
+                for(Problems problem : problems){
+                    QuestionRequest rightAnswer = new QuestionRequest();
+                    QuestionRequest userAnswer = new QuestionRequest();
+                    List<QuestionRequest> multipleChoiceList = examService.parseMultipleChoice(problem.getMultipleChoice());
+                    for(QuestionRequest requests : multipleChoiceList){
+                        if(Integer.parseInt(requests.getId()) == problem.getAnswer()){
+                            rightAnswer.setId(requests.getId());
+                            rightAnswer.setValue(requests.getValue());
+                        }
+                        if(Integer.parseInt(requests.getId()) == problem.getUserAnswer()){
+                            userAnswer.setId(requests.getId());
+                            userAnswer.setValue(requests.getValue());
+                        }
+                    }
+                    GetProblemsResponse problemResponse = new GetProblemsResponse(problem.getProblemId(), problem.getProblemNumber(), problem.getQuestion(), 
+                    multipleChoiceList, userAnswer, rightAnswer);
+                    problemResponses.add(problemResponse);
+                }
+                WordSets sets = exam.getWordsets();
+                GetTestProblemResponse response = new GetTestProblemResponse(exam.getCreatedAt(),exam.getExamId(), exam.getExamName() ,sets.getSetId(), sets.getSetName(), problemResponses); 
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+            }
+            // GetGradingResponse response = new GetGradingResponse(resultId, correctResponse, inCorrectResponse, result.getSubmittedAt());
+            // return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+
+        // }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
 
