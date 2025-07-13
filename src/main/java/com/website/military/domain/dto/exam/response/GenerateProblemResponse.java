@@ -12,14 +12,16 @@ import lombok.Data;
 public class GenerateProblemResponse {
     private Long problemId;
     private Long problemNumber;
-    private List<QuestionRequest> multipleChoice;
     private String question;
-    private int answer;
-    
-    public GenerateProblemResponse(Long problemNumber, List<QuestionRequest> multipleChoice, String question, int answer){
+    private List<QuestionRequest> multipleChoice;
+    private QuestionRequest userAnswers;
+
+    private QuestionRequest rightAnswers;
+
+    public GenerateProblemResponse(Long problemNumber, String question, List<QuestionRequest> multipleChoice, QuestionRequest rightAnswers){
         this.problemNumber = problemNumber;
         this.multipleChoice = multipleChoice;
         this.question = question;
-        this.answer = answer;
+        this.rightAnswers = rightAnswers;
     }
 }

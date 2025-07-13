@@ -35,7 +35,6 @@ import com.website.military.domain.dto.exam.response.CheckResponse;
 import com.website.military.domain.dto.exam.response.DeleteExamResponse;
 import com.website.military.domain.dto.exam.response.GenerateProblemResponse;
 import com.website.military.domain.dto.exam.response.GenerateTestProblemResponse;
-import com.website.military.domain.dto.exam.response.GenerateExamListTestIdResponse;
 import com.website.military.domain.dto.exam.response.GetAllExamListResponse;
 import com.website.military.domain.dto.exam.response.GetProblemsResponse;
 import com.website.military.domain.dto.exam.response.GetResultResponse;
@@ -119,9 +118,21 @@ public class ExamService {
             List<Problems> problems = exam.getProblems();
             List<GetProblemsResponse> problemResponses = new ArrayList<>();
             for(Problems problem : problems){
+                QuestionRequest rightAnswer = new QuestionRequest();
+                QuestionRequest userAnswer = new QuestionRequest();
                 List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
+                for(QuestionRequest requests : multipleChoiceList){
+                    if(Integer.parseInt(requests.getId()) == problem.getAnswer()){
+                        rightAnswer.setId(requests.getId());
+                        rightAnswer.setValue(requests.getValue());
+                    }
+                    if(Integer.parseInt(requests.getId()) == problem.getUserAnswer()){
+                        userAnswer.setId(requests.getId());
+                        userAnswer.setValue(requests.getValue());
+                    }
+                }
                 GetProblemsResponse problemResponse = new GetProblemsResponse(problem.getProblemId(), problem.getProblemNumber(), problem.getQuestion(), 
-                multipleChoiceList);
+                multipleChoiceList, userAnswer, rightAnswer);
                 problemResponses.add(problemResponse);
             }
             if(exam.getResults().isEmpty()){
@@ -130,9 +141,9 @@ public class ExamService {
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
             }else{
                 WordSets sets = exam.getWordsets();
-                Results result = exam.getResults().get(0);
-                GetResultResponse resultResponse = new GetResultResponse(result.getResultId(), result.getSubmittedAt(), problems.size());
-                GetTestProblemResponse response = new GetTestProblemResponse(exam.getCreatedAt(),examId, exam.getExamName(), sets.getSetId(), sets.getSetName(), problemResponses, resultResponse); 
+                // Results result = exam.getResults().get(0);
+                // GetResultResponse resultResponse = new GetResultResponse(result.getResultId(), result.getSubmittedAt(), problems.size());
+                GetTestProblemResponse response = new GetTestProblemResponse(exam.getCreatedAt(),examId, exam.getExamName(), sets.getSetId(), sets.getSetName(), problemResponses); 
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
             }
 
@@ -187,7 +198,7 @@ public class ExamService {
                         ObjectMapper objectMapper = new ObjectMapper();   
                         String question = response.getQuestion();
                         String jsonString = objectMapper.writeValueAsString(words);
-                        int answer = response.getAnswer();
+                        int answer = Integer.parseInt(response.getRightAnswers().getId());
                         Problems testProblems = new Problems(tests, jsonString, question, response.getProblemNumber(), answer);
                         problemsRepository.save(testProblems); 
                         response.setProblemId(testProblems.getProblemId());
@@ -229,7 +240,7 @@ public class ExamService {
                         ObjectMapper objectMapper = new ObjectMapper();   
                         String question = response.getQuestion();
                         String jsonString = objectMapper.writeValueAsString(words);
-                        int answer = response.getAnswer();
+                        int answer = Integer.parseInt(response.getRightAnswers().getId());
                         Problems testProblems = new Problems(tests, jsonString, question, response.getProblemNumber(), answer);
                         problemsRepository.save(testProblems); 
                         response.setProblemId(testProblems.getProblemId());
@@ -264,16 +275,14 @@ public class ExamService {
                 int mistakeIndex = 0;
                 for(Problems problem : problems){
                     List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
+                    Problems newProblems = new Problems(problem, checkedAnswers.get(index));
+                    problemsRepository.save(newProblems);
                     if(checkedAnswers.get(index) == problem.getAnswer()){
-                        Problems newProblems = new Problems(problem, checkedAnswers.get(index));
-                        problemsRepository.save(newProblems);
                         SolvedProblems solvedProblems = new SolvedProblems(problem);
                         solvedProblemsList.add(solvedProblems);
                         CheckResponse response = new CheckResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList, checkedAnswers.get(index), problem.getAnswer()); 
                         correctList.add(response);
                     }else{
-                        Problems newProblems = new Problems(problem, checkedAnswers.get(index));
-                        problemsRepository.save(newProblems);
                         Mistakes mistakesProblems = new Mistakes(problem);
                         mistakesList.add(mistakesProblems);
                         CheckResponse response = new CheckResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList, checkedAnswers.get(index),problem.getAnswer()); 
@@ -440,12 +449,17 @@ public class ExamService {
             JSONArray newObject = objectArray.getJSONObject(i).getJSONArray("options"); // options에 나오는거까지 찍힘.
             String question = objectArray.getJSONObject(i).getString("question");
             String answer = objectArray.getJSONObject(i).getString("answer");
+            QuestionRequest request = new QuestionRequest();
             for(Object obj : newObject){
                 JSONObject jsonObj = (JSONObject) obj;
                 QuestionRequest response = new QuestionRequest(jsonObj.getString("id"), jsonObj.getString("text"));
+                if(answer.equals(jsonObj.getString("id"))){
+                    request.setId(answer);
+                    request.setValue(jsonObj.getString("text"));
+                }
                 responses.add(response);
             }
-            GenerateProblemResponse responseDto = new GenerateProblemResponse(problemNumber, responses, question, Integer.parseInt(answer));    
+            GenerateProblemResponse responseDto = new GenerateProblemResponse(problemNumber, question, responses, request);    
             problemNumber = problemNumber + 1;
             Collections.shuffle(responseDto.getMultipleChoice());     
             responseDtos.add(responseDto);   
@@ -465,62 +479,5 @@ public class ExamService {
 }
 
 
-// lion에 대한 의미를 묻는 객관식 문제를 만들어줘. 
-// lion의 의미를 '사자'로 하고, 이를 정답으로 설정해줘. 
-// 나머지 보기는 lion와 관련 없는 단어의 뜻으로 만들어줘. 
-// 선택지의 품사는 '사자'와 동일하게 맞춰줘. 
-// 정답 선택지의 ID 값은 A로 설정해줘. 
-// key에 대한 의미를 묻는 객관식 문제를 만들어줘.  
-// lion의 의미를 '열쇠'로 하고, 이를 정답으로 설정해줘.  
-// 나머지 보기는 key와 관련 없는 단어의 뜻으로 만들어줘.  
-// 선택지의 품사는 '키'와 동일하게 맞춰줘.  
-// 정답 선택지의 ID 값은 A로 설정해줘.  
-// JSON 형식으로 다음과 같이 만들어줘: 
-// {"question":"객관식 문제의 질문 내용", 
-//  "answer":"A", 
-//  "options":[{"id":"A","text":"보기1"}, 
-//  {"id":"B","text":"보기2"}, 
-//  {"id":"C","text":"보기3"}, 
-//  {"id":"D","text":"보기4"}]}
-
-// 응답 결과.
-
-// ```json
-// [
-//   {
-//     "question": "lucky의 의미는 무엇입니까?",
-//     "answer": "D",
-//     "options": [
-//       {"id": "A", "text": "슬픈"},
-//       {"id": "B", "text": "화난"},
-//       {"id": "C", "text": "행복한"},
-//       {"id": "D", "text": "운이 좋은"}
-//     ]
-//   },
-//   {
-//     "question": "word의 의미는 무엇입니까?",
-//     "answer": "A",
-//     "options": [
-//       {"id": "A", "text": "단어"},
-//       {"id": "B", "text": "문장"},
-//       {"id": "C", "text": "구절"},
-//       {"id": "D", "text": "글"}
-//     ]
-//   },
-//   {
-//     "question": "drink의 의미는 무엇입니까?",
-//     "answer": "B",
-//     "options": [
-//       {"id": "A", "text": "먹다"},
-//       {"id": "B", "text": "마시다"},
-//       {"id": "C", "text": "씹다"},
-//       {"id": "D", "text": "맛보다"}
-//     ]
-//   }
-// ]
-// ```
-
-
-// 2025.4.26 야간 연등때 해야할 일
-// 1. 테스트쪽 코드 10개단위로 수정하기. 
-// 2. logic 한 번씩 보면서 불필요한 것 수정하기.
+// 2025.06.16 
+// response쪽에서 result쪽 다시 한 번 보고 말하고 수정하기.
