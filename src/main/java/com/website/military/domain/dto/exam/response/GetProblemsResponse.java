@@ -9,7 +9,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class GetTestProblemsResponse {
+public class GetProblemsResponse {
     private Long problemId;
     
     private Long problemNumber;

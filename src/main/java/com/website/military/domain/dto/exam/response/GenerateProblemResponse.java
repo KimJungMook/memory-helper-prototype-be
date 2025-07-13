@@ -9,9 +9,17 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class GenerateExamListResponse {
+public class GenerateProblemResponse {
+    private Long problemId;
     private Long problemNumber;
     private List<QuestionRequest> multipleChoice;
     private String question;
     private int answer;
+    
+    public GenerateProblemResponse(Long problemNumber, List<QuestionRequest> multipleChoice, String question, int answer){
+        this.problemNumber = problemNumber;
+        this.multipleChoice = multipleChoice;
+        this.question = question;
+        this.answer = answer;
+    }
 }

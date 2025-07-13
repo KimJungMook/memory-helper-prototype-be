@@ -31,6 +31,8 @@ public class Exam {
     @Column(name = "exam_id", updatable = false)
     private Long examId;
 
+    private String examName;
+
     @JsonBackReference // 중복 순환 해결.
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -43,7 +45,7 @@ public class Exam {
 
     private int testType; // 0번 객관식, 1번 주관식, 2번 빈칸뚫기 
     private Instant createdAt;
-    private int testCount;
+    private int problemCount;
 
     @JsonManagedReference // 중복 순환 해결.
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -53,7 +55,8 @@ public class Exam {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "exam",  cascade = CascadeType.ALL)
     private List<Results> results;
     
-    public Exam(User user, WordSets wordsets,int testType){
+    public Exam(String setName, User user, WordSets wordsets,int testType, int testCount){
+        this.examName = setName + "의 시험" + testCount;
         this.user = user;
         this.wordsets = wordsets;
         this.testType = testType;
