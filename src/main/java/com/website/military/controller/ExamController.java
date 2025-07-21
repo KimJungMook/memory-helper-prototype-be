@@ -4,20 +4,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.website.military.domain.dto.exam.request.ChangeExamName;
 import com.website.military.domain.dto.exam.request.CheckRequest;
 import com.website.military.domain.dto.exam.response.DeleteExamResponse;
 import com.website.military.domain.dto.exam.response.GenerateProblemResponse;
 import com.website.military.domain.dto.exam.response.GetAllExamListResponse;
 import com.website.military.domain.dto.exam.response.GetProblemsResponse;
 import com.website.military.domain.dto.response.ResponseMessageDto;
+import com.website.military.domain.dto.wordsets.request.ChangeSetNameDto;
 import com.website.military.service.ExamService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -76,6 +80,11 @@ public class ExamController {
     @GetMapping("/all")
     public ResponseEntity<?> getAllExamList(HttpServletRequest request) {
         return testService.getAllExamList(request);
+    }
+
+    @GetMapping("/{page}/{pageSize}")
+    public ResponseEntity<?> getAllExamList(HttpServletRequest request, @PathVariable("page") Long page, @PathVariable("pageSize") Long pageSize) {
+        return testService.getAllExamListPage(request, page, pageSize);
     }
 
     @Operation(summary = "시험 하나를 불러오는 API", description = "생성된 시험 하나를 불러오는 API")
@@ -210,6 +219,15 @@ public class ExamController {
     @PostMapping("/check/{examId}") // -> 채점을 할 때 result는 생성됌.
     public ResponseEntity<?> checkAnswers(HttpServletRequest request, @PathVariable("examId")Long examId, @Valid @RequestBody CheckRequest dto) {
         return testService.checkAnswers(request, examId, dto.getCheckedAnswers());
+    }
+
+    // PATCH
+      @PatchMapping("/name/{testId}")
+    public ResponseEntity<?> patchTestName(
+    @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
+    @PathVariable("testId") Long testId,
+    @RequestBody ChangeExamName dto,HttpServletRequest request){
+        return testService.patchTestName(request, testId, dto.getTestName());
     }
     
     // DELETE

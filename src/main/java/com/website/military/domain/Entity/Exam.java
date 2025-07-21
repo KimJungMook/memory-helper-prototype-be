@@ -45,6 +45,7 @@ public class Exam {
 
     private int testType; // 0번 객관식, 1번 주관식, 2번 빈칸뚫기 
     private Instant createdAt;
+    private Instant submittedAt;
     private int problemCount;
 
     @JsonManagedReference // 중복 순환 해결.
