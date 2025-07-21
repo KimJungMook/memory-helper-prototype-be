@@ -14,6 +14,9 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,16 +32,21 @@ import com.website.military.domain.Entity.Exam;
 import com.website.military.domain.Entity.Word;
 import com.website.military.domain.Entity.WordSetMapping;
 import com.website.military.domain.Entity.WordSets;
+import com.website.military.domain.dto.exam.request.ChangeExamName;
 import com.website.military.domain.dto.exam.request.QuestionRequest;
+import com.website.military.domain.dto.exam.response.ChangeExamNameResponse;
 import com.website.military.domain.dto.exam.response.CheckListResponse;
 import com.website.military.domain.dto.exam.response.CheckResponse;
 import com.website.military.domain.dto.exam.response.DeleteExamResponse;
 import com.website.military.domain.dto.exam.response.GenerateProblemResponse;
 import com.website.military.domain.dto.exam.response.GenerateTestProblemResponse;
 import com.website.military.domain.dto.exam.response.GetAllExamListResponse;
+import com.website.military.domain.dto.exam.response.GetExamIdResponse;
 import com.website.military.domain.dto.exam.response.GetProblemsResponse;
 import com.website.military.domain.dto.exam.response.GetResultResponse;
 import com.website.military.domain.dto.exam.response.GetTestProblemResponse;
+import com.website.military.domain.dto.exam.response.ProblemResponse;
+import com.website.military.domain.dto.exam.response.ResultResponse;
 import com.website.military.domain.dto.gemini.request.GeminiRequestDto;
 import com.website.military.domain.dto.gemini.response.GeminiResponseDto;
 import com.website.military.domain.dto.response.ResponseDataDto;
@@ -102,21 +110,38 @@ public class ExamService {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }else{
             for(Exam test : testsList){
-                GetAllExamListResponse response = new GetAllExamListResponse(test.getExamId(), test.getCreatedAt(), test.getTestType(), test.getProblemCount());
+                GetAllExamListResponse response = new GetAllExamListResponse(test.getExamId(), test.getExamName(), test.getCreatedAt(), test.getSubmittedAt() ,
+                test.getTestType(), test.getProblemCount());
                 responses.add(response);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
         }
     }
+
+    public ResponseEntity<?> getAllExamListPage(HttpServletRequest request, Long page, Long pageSize){
+        Long userId = authService.getUserId(request);
+        Pageable pageable = PageRequest.of(page.intValue(), pageSize.intValue()); // pageable 객체 생성
+        Page<Exam> pageExam = examRepository.findByUser_UserIdOrderByCreatedAtDesc(userId, pageable);
+        Page<GetAllExamListResponse> pageResponse = pageExam.map(exam ->
+            new GetAllExamListResponse(
+                exam.getExamId(),
+                exam.getExamName(),
+                exam.getCreatedAt(),
+                exam.getSubmittedAt(),
+                exam.getTestType(),
+                exam.getProblemCount()
+            )
+        );
+        return ResponseEntity.status(HttpStatus.OK).body(pageResponse);
+    }
     // 밑에서 시험 이름을 생성하면 그를 토대로 불러서 response에 반영하기. (25.06.11) 
     public ResponseEntity<?> getTestProblems(HttpServletRequest request, Long examId){
         Long userId = authService.getUserId(request);
         Optional<Exam> existingExams = examRepository.findByUser_UserIdAndExamId(userId, examId);
-
         if(existingExams.isPresent()){
             Exam exam = existingExams.get();
             List<Problems> problems = exam.getProblems();
-            List<GetProblemsResponse> problemResponses = new ArrayList<>();
+            List<ProblemResponse> problemResponses = new ArrayList<>();
             for(Problems problem : problems){
                 QuestionRequest rightAnswer = new QuestionRequest();
                 QuestionRequest userAnswer = new QuestionRequest();
@@ -131,20 +156,24 @@ public class ExamService {
                         userAnswer.setValue(requests.getValue());
                     }
                 }
-                GetProblemsResponse problemResponse = new GetProblemsResponse(problem.getProblemId(), problem.getProblemNumber(), problem.getQuestion(), 
-                multipleChoiceList, userAnswer, rightAnswer);
+                ProblemResponse problemResponse = new ProblemResponse(problem.getProblemId(), problem.getProblemNumber(), problem.getQuestion(), multipleChoiceList);
                 problemResponses.add(problemResponse);
             }
+            WordSets examSets = exam.getWordsets();
+            GetExamIdResponse getProblemsResponse = new GetExamIdResponse(exam.getCreatedAt(), exam.getExamId(), exam.getExamName(), 
+                examSets.getSetId(), examSets.getSetName(), problemResponses);
             if(exam.getResults().isEmpty()){
-                WordSets sets = exam.getWordsets();
-                GetTestProblemResponse response = new GetTestProblemResponse(exam.getCreatedAt(),examId, exam.getExamName() ,sets.getSetId(), sets.getSetName(), problemResponses); 
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",getProblemsResponse));
             }else{
-                WordSets sets = exam.getWordsets();
+                List<ResultResponse> resultResponses = new ArrayList<>();
+                for(Results result : exam.getResults()){
+                    ResultResponse response = new ResultResponse(result.getResultId(), result.getSubmittedAt(), Long.valueOf(exam.getProblemCount()), Long.valueOf(result.getSolvedProblems().size()));
+                    resultResponses.add(response);
+                }
                 // Results result = exam.getResults().get(0);
-                // GetResultResponse resultResponse = new GetResultResponse(result.getResultId(), result.getSubmittedAt(), problems.size());
-                GetTestProblemResponse response = new GetTestProblemResponse(exam.getCreatedAt(),examId, exam.getExamName(), sets.getSetId(), sets.getSetName(), problemResponses); 
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",response));
+                // GetResultResponse resultResponse = new GetResultResponse(result.getResultId(), result.getSubmittedAt(), problems.size()); 
+                getProblemsResponse.setResultResponses(resultResponses);
+                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",getProblemsResponse));
             }
 
         }
@@ -307,6 +336,7 @@ public class ExamService {
                 }
 
                 try {
+                    exams.setSubmittedAt(Instant.now());
                     resultsRepository.save(results);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -323,6 +353,19 @@ public class ExamService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
 
 
+    }
+
+    public ResponseEntity<?> patchTestName(HttpServletRequest request, Long examId, String testName){
+        Long userId = authService.getUserId(request);
+        Optional<Exam> existingExam = examRepository.findByUser_UserIdAndExamId(userId, examId);
+        if(existingExam.isPresent()){
+            Exam exams = existingExam.get();
+            exams.setExamName(testName);
+            examRepository.save(exams);
+            ChangeExamNameResponse response = new ChangeExamNameResponse(examId, testName);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
     }
 
     // 시험 연결된거 삭제하기. 
