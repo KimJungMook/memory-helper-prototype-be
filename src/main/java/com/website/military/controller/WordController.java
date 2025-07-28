@@ -95,6 +95,7 @@ public class WordController {
     @PostMapping("/spelling-error")
     public ResponseEntity<?> correctSpelling(@RequestBody ExistWordDto dto ){
         return wordService.correctSpelling(dto.getWord());
+       // return null;
     }
 
     // PATCH(PUT)

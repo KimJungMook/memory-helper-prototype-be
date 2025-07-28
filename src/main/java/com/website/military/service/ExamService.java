@@ -38,6 +38,7 @@ import com.website.military.domain.dto.exam.response.ChangeExamNameResponse;
 import com.website.military.domain.dto.exam.response.CheckListResponse;
 import com.website.military.domain.dto.exam.response.CheckResponse;
 import com.website.military.domain.dto.exam.response.DeleteExamResponse;
+import com.website.military.domain.dto.exam.response.ExamPagenationResponse;
 import com.website.military.domain.dto.exam.response.GenerateProblemResponse;
 import com.website.military.domain.dto.exam.response.GenerateTestProblemResponse;
 import com.website.military.domain.dto.exam.response.GetAllExamListResponse;
@@ -104,14 +105,15 @@ public class ExamService {
 
     public ResponseEntity<?> getAllExamList(HttpServletRequest request){ // 시험이 뭐뭐 있었는지를 체크하는 리스트
         Long userId = authService.getUserId(request);
-        List<Exam> testsList = examRepository.findByUser_UserId(userId);
-        List<GetAllExamListResponse> responses = new ArrayList<>();
-        if(testsList.isEmpty()){
+        List<Exam> examList = examRepository.findByUser_UserId(userId);
+        List<ExamPagenationResponse> responses = new ArrayList<>();
+        if(examList.isEmpty()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }else{
-            for(Exam test : testsList){
-                GetAllExamListResponse response = new GetAllExamListResponse(test.getExamId(), test.getExamName(), test.getCreatedAt(), test.getSubmittedAt() ,
-                test.getTestType(), test.getProblemCount());
+            for(Exam exam : examList){
+                Long examSum = Long.valueOf(exam.getResults().size());
+                ExamPagenationResponse response = new ExamPagenationResponse(exam.getExamId(), exam.getExamName(), exam.getCreatedAt(), examSum, exam.getSubmittedAt(), 
+                Long.valueOf(exam.getProblemCount()));
                 responses.add(response);
             }
             return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
@@ -122,14 +124,14 @@ public class ExamService {
         Long userId = authService.getUserId(request);
         Pageable pageable = PageRequest.of(page.intValue(), pageSize.intValue()); // pageable 객체 생성
         Page<Exam> pageExam = examRepository.findByUser_UserIdOrderByCreatedAtDesc(userId, pageable);
-        Page<GetAllExamListResponse> pageResponse = pageExam.map(exam ->
-            new GetAllExamListResponse(
+        Page<ExamPagenationResponse> pageResponse = pageExam.map(exam ->
+            new ExamPagenationResponse(
                 exam.getExamId(),
                 exam.getExamName(),
                 exam.getCreatedAt(),
+                Long.valueOf(exam.getResults().size()),
                 exam.getSubmittedAt(),
-                exam.getTestType(),
-                exam.getProblemCount()
+                Long.valueOf(exam.getProblemCount())
             )
         );
         return ResponseEntity.status(HttpStatus.OK).body(pageResponse);
@@ -298,58 +300,54 @@ public class ExamService {
         List<CheckResponse> incorrectList = new ArrayList<>();
         if(existingTests.isPresent() && (checkedAnswers.size() == existingTests.get().getProblemCount())){
             Exam exams = existingTests.get();
-            if(exams.getResults().isEmpty()){
-                List<Problems> problems = exams.getProblems();
-                int index = 0;
-                int mistakeIndex = 0;
-                for(Problems problem : problems){
-                    List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
-                    Problems newProblems = new Problems(problem, checkedAnswers.get(index));
-                    problemsRepository.save(newProblems);
-                    if(checkedAnswers.get(index) == problem.getAnswer()){
-                        SolvedProblems solvedProblems = new SolvedProblems(problem);
-                        solvedProblemsList.add(solvedProblems);
-                        CheckResponse response = new CheckResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList, checkedAnswers.get(index), problem.getAnswer()); 
-                        correctList.add(response);
-                    }else{
-                        Mistakes mistakesProblems = new Mistakes(problem);
-                        mistakesList.add(mistakesProblems);
-                        CheckResponse response = new CheckResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList, checkedAnswers.get(index),problem.getAnswer()); 
-                        incorrectList.add(response);
-                        mistakeIndex++;
-                    }
-                    index++; // Result에 저장하기. 채점을 했으니까. 여기서부터 다시하기. 25.03.08 (23:23)
+            List<Problems> problems = exams.getProblems();
+            int index = 0;
+            int mistakeIndex = 0;
+            for(Problems problem : problems){
+                List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
+                Problems newProblems = new Problems(problem, checkedAnswers.get(index));
+                problemsRepository.save(newProblems);
+                if(checkedAnswers.get(index) == problem.getAnswer()){
+                    SolvedProblems solvedProblems = new SolvedProblems(problem);
+                    solvedProblemsList.add(solvedProblems);
+                    CheckResponse response = new CheckResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList, checkedAnswers.get(index), problem.getAnswer()); 
+                    correctList.add(response);
+                }else{
+                    Mistakes mistakesProblems = new Mistakes(problem);
+                    mistakesList.add(mistakesProblems);
+                    CheckResponse response = new CheckResponse(problem.getProblemId(), problem.getProblemNumber(), multipleChoiceList, checkedAnswers.get(index),problem.getAnswer()); 
+                    incorrectList.add(response);
+                    mistakeIndex++;
                 }
-                BigDecimal bd = new BigDecimal((double)(index-mistakeIndex)*100/index);
-                bd = bd.setScale(2, RoundingMode.HALF_UP);
-                double roundedScore = bd.doubleValue();
-                Results results = new Results(exams.getUser(), exams, roundedScore, mistakesList, solvedProblemsList);
+                index++; // Result에 저장하기. 채점을 했으니까. 여기서부터 다시하기. 25.03.08 (23:23)
+            }
+            BigDecimal bd = new BigDecimal((double)(index-mistakeIndex)*100/index);
+            bd = bd.setScale(2, RoundingMode.HALF_UP);
+            double roundedScore = bd.doubleValue();
+            Results results = new Results(exams.getUser(), exams, roundedScore, mistakesList, solvedProblemsList);
 
-                for (Mistakes mistake : mistakesList) {
-                    mistake.setResults(results);
-                    mistakesRepository.save(mistake);
-                }
-
-                for (SolvedProblems solvedProblem : solvedProblemsList) {
-                    solvedProblem.setResults(results);
-                    solvedProblemRepository.save(solvedProblem);
-                }
-
-                try {
-                    exams.setSubmittedAt(Instant.now());
-                    resultsRepository.save(results);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
-                }
-                // result 만들어내기 03.11 (23:33) -> result 저장후, mistake solvedproblem 연결 완료 -> QA 부족 체크하기.
-                CheckListResponse responses = new CheckListResponse(results.getResultId(), correctList, incorrectList);
-                return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responses));
+            for (Mistakes mistake : mistakesList) {
+                mistake.setResults(results);
+                mistakesRepository.save(mistake);
             }
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
+            for (SolvedProblems solvedProblem : solvedProblemsList) {
+                solvedProblem.setResults(results);
+                solvedProblemRepository.save(solvedProblem);
+            }
 
+            try {
+                exams.setSubmittedAt(Instant.now());
+                resultsRepository.save(results);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(internalError, "서버 에러입니다."));
+            }
+            // result 만들어내기 03.11 (23:33) -> result 저장후, mistake solvedproblem 연결 완료 -> QA 부족 체크하기.
+            CheckListResponse responses = new CheckListResponse(results.getResultId(), correctList, incorrectList);
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK", responses));
         }
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 접근입니다."));
 
 

@@ -32,7 +32,7 @@ public class Mistakes {
     private Results results; // 외래키
     
     @OneToOne
-    @JoinColumn(name = "problem_id", unique = true) // 1대1 관계
+    @JoinColumn(name = "problem_id") // 1대1 관계
     private Problems problems;
 
     public Mistakes(Problems problems){
