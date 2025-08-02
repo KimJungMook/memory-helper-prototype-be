@@ -11,10 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.website.military.domain.Entity.Exam;
-import com.website.military.domain.Entity.Mistakes;
 import com.website.military.domain.Entity.Problems;
 import com.website.military.domain.Entity.Results;
-import com.website.military.domain.Entity.SolvedProblems;
 import com.website.military.domain.Entity.WordSets;
 import com.website.military.domain.dto.exam.request.QuestionRequest;
 import com.website.military.domain.dto.exam.response.GetProblemsResponse;
@@ -22,8 +20,6 @@ import com.website.military.domain.dto.exam.response.GetTestProblemResponse;
 import com.website.military.domain.dto.response.ResponseDataDto;
 import com.website.military.domain.dto.response.ResponseMessageDto;
 import com.website.military.domain.dto.results.response.GetGradingAllResponse;
-import com.website.military.domain.dto.results.response.GetGradingResponse;
-import com.website.military.domain.dto.results.response.GradingResponse;
 import com.website.military.repository.ResultsRepository;
 
 import jakarta.servlet.http.HttpServletRequest;

@@ -105,6 +105,20 @@ public class WordSetService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }
 
+    public ResponseEntity<?> getSearchWordSetName(String wordSetName, HttpServletRequest request){
+        Long userId = authService.getUserId(request);
+        List<WordSets> existingWordSets = wordSetsRepository.findByUser_UserIdAndSetNameContaining(userId, wordSetName);
+        if(existingWordSets.isEmpty()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+        }
+        List<WordSetsResponseDto> responses = new ArrayList<>();
+        for(WordSets sets : existingWordSets){
+            WordSetsResponseDto dto = new WordSetsResponseDto(sets.getSetId(), sets.getSetName(), sets.getCreatedAt(), sets.getWordCount(), sets.getExams());
+            responses.add(dto);
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(responses);
+
+    }
     // 세트 만드는 메서드
     public ResponseEntity<?> registerWordSets(WordSetsDto dto, HttpServletRequest request){
         Optional<WordSets> existingWordSets = wordSetsRepository.findBysetName(dto.getSetName());

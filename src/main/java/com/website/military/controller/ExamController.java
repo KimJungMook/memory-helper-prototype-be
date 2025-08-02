@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.website.military.domain.dto.exam.request.ChangeExamName;
@@ -17,7 +18,6 @@ import com.website.military.domain.dto.exam.response.GenerateProblemResponse;
 import com.website.military.domain.dto.exam.response.GetAllExamListResponse;
 import com.website.military.domain.dto.exam.response.GetProblemsResponse;
 import com.website.military.domain.dto.response.ResponseMessageDto;
-import com.website.military.domain.dto.wordsets.request.ChangeSetNameDto;
 import com.website.military.service.ExamService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -82,9 +82,9 @@ public class ExamController {
         return testService.getAllExamList(request);
     }
 
-    @GetMapping("/{page}/{pageSize}")
-    public ResponseEntity<?> getAllExamList(HttpServletRequest request, @PathVariable("page") Long page, @PathVariable("pageSize") Long pageSize) {
-        return testService.getAllExamListPage(request, page, pageSize);
+    @GetMapping("")
+    public ResponseEntity<?> getAllExamList(HttpServletRequest request, @RequestParam(value = "page", defaultValue = "0") Long page, @RequestParam(value = "size", defaultValue = "10") Long size) {
+        return testService.getAllExamListPage(request, page, size);
     }
 
     @Operation(summary = "시험 하나를 불러오는 API", description = "생성된 시험 하나를 불러오는 API")
@@ -151,6 +151,70 @@ public class ExamController {
         return testService.getTestProblems(request, examId);
     }
 
+        @Operation(summary = "SetId로 시험 하나를 불러오는 API", description = "생성된 시험 하나를 불러오는 API")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "성공",
+            content = {@Content(
+                mediaType = "application/json",
+                array = @ArraySchema(
+                    schema = @Schema(implementation=GetProblemsResponse.class)
+                ),
+                examples = @ExampleObject(value = "{"
+                + "\"code\": \"OK\","
+                + "\"data\": ["
+                + "  {"
+                + "    \"problemId\": 331,"
+                + "    \"problemNumber\": 1,"
+                + "    \"question\": \"banana의 의미는 무엇입니까?\","
+                + "    \"multipleChoice\": ["
+                + "      {\"id\": \"1\", \"meaning\": \"바나나\"},"
+                + "      {\"id\": \"2\", \"meaning\": \"포도\"},"
+                + "      {\"id\": \"3\", \"meaning\": \"사과\"},"
+                + "      {\"id\": \"4\", \"meaning\": \"오렌지\"}"
+                + "    ],"
+                + "    \"answer\": \"1\""
+                + "  },"
+                + "  {"
+                + "    \"problemId\": 332,"
+                + "    \"problemNumber\": 2,"
+                + "    \"question\": \"word의 의미는 무엇입니까?\","
+                + "    \"multipleChoice\": ["
+                + "      {\"id\": \"1\", \"meaning\": \"그림을 그리다\"},"
+                + "      {\"id\": \"2\", \"meaning\": \"노래를 부르다\"},"
+                + "      {\"id\": \"4\", \"meaning\": \"책을 읽다\"},"
+                + "      {\"id\": \"3\", \"meaning\": \"단어를 입력하다\"}"
+                + "    ],"
+                + "    \"answer\": \"2\""
+                + "  },"
+                + "  {"
+                + "    \"problemId\": 333,"
+                + "    \"problemNumber\": 3,"
+                + "    \"question\": \"rabbit의 의미는 무엇입니까?\","
+                + "    \"multipleChoice\": ["
+                + "      {\"id\": \"2\", \"meaning\": \"새\"},"
+                + "      {\"id\": \"1\", \"meaning\": \"개\"},"
+                + "      {\"id\": \"4\", \"meaning\": \"토끼\"},"
+                + "      {\"id\": \"3\", \"meaning\": \"고양이\"}"
+                + "    ],"
+                + "    \"answer\": \"1\""
+                + "  }"
+                + "]"
+                + "}")
+            )}),
+        @ApiResponse(responseCode = "401", description = "잘못된 접근입니다.",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                    examples = @ExampleObject(value = "{\"code\": \"BAD_REQUEST\", \"data\": { \"message\": \"잘못된 접근입니다.\" } }"
+                    ))}),
+        @ApiResponse(responseCode = "500", description = "서버 에러",
+            content = {@Content(schema = @Schema(implementation = ResponseMessageDto.class),
+                examples = @ExampleObject(value = "{\"code\": \"INTERNAL_SERVER\", \"data\": { \"message\": \"서버 에러\" } }"
+                ))})
+    })
+    @GetMapping("/wordsets/{setId}")
+    public ResponseEntity<?> getSetIdTestProblems(HttpServletRequest request, @RequestParam("setId") Long setId){
+        return testService.getSetIdTestProblems(request, setId);
+    }
+    
     // POST
     @Operation(summary = "시험을 생성하는 API", description = "AI 이용해서 시험 생성하는 API")
     @ApiResponses(value = {
