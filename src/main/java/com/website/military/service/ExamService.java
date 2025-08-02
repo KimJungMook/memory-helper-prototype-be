@@ -32,7 +32,6 @@ import com.website.military.domain.Entity.Exam;
 import com.website.military.domain.Entity.Word;
 import com.website.military.domain.Entity.WordSetMapping;
 import com.website.military.domain.Entity.WordSets;
-import com.website.military.domain.dto.exam.request.ChangeExamName;
 import com.website.military.domain.dto.exam.request.QuestionRequest;
 import com.website.military.domain.dto.exam.response.ChangeExamNameResponse;
 import com.website.military.domain.dto.exam.response.CheckListResponse;
@@ -41,11 +40,7 @@ import com.website.military.domain.dto.exam.response.DeleteExamResponse;
 import com.website.military.domain.dto.exam.response.ExamPagenationResponse;
 import com.website.military.domain.dto.exam.response.GenerateProblemResponse;
 import com.website.military.domain.dto.exam.response.GenerateTestProblemResponse;
-import com.website.military.domain.dto.exam.response.GetAllExamListResponse;
 import com.website.military.domain.dto.exam.response.GetExamIdResponse;
-import com.website.military.domain.dto.exam.response.GetProblemsResponse;
-import com.website.military.domain.dto.exam.response.GetResultResponse;
-import com.website.military.domain.dto.exam.response.GetTestProblemResponse;
 import com.website.military.domain.dto.exam.response.ProblemResponse;
 import com.website.military.domain.dto.exam.response.ResultResponse;
 import com.website.military.domain.dto.gemini.request.GeminiRequestDto;
@@ -120,9 +115,9 @@ public class ExamService {
         }
     }
 
-    public ResponseEntity<?> getAllExamListPage(HttpServletRequest request, Long page, Long pageSize){
+    public ResponseEntity<?> getAllExamListPage(HttpServletRequest request, Long page, Long size){
         Long userId = authService.getUserId(request);
-        Pageable pageable = PageRequest.of(page.intValue(), pageSize.intValue()); // pageable 객체 생성
+        Pageable pageable = PageRequest.of(page.intValue(), size.intValue()); // pageable 객체 생성
         Page<Exam> pageExam = examRepository.findByUser_UserIdOrderByCreatedAtDesc(userId, pageable);
         Page<ExamPagenationResponse> pageResponse = pageExam.map(exam ->
             new ExamPagenationResponse(
@@ -134,7 +129,7 @@ public class ExamService {
                 Long.valueOf(exam.getProblemCount())
             )
         );
-        return ResponseEntity.status(HttpStatus.OK).body(pageResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",pageResponse));
     }
     // 밑에서 시험 이름을 생성하면 그를 토대로 불러서 response에 반영하기. (25.06.11) 
     public ResponseEntity<?> getTestProblems(HttpServletRequest request, Long examId){
@@ -178,6 +173,51 @@ public class ExamService {
                 return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",getProblemsResponse));
             }
 
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
+    }
+
+    public ResponseEntity<?> getSetIdTestProblems(HttpServletRequest request, Long setId){
+        Long userId = authService.getUserId(request);
+        List<Exam> existingExams = examRepository.findByUser_UserIdAndWordsets_SetId(userId, setId);
+        if(!existingExams.isEmpty()){
+            List<GetExamIdResponse> responses = new ArrayList<>();
+            for(Exam exam : existingExams){
+                List<Problems> problems = exam.getProblems();
+                List<ProblemResponse> problemResponses = new ArrayList<>();
+                for(Problems problem : problems){
+                    QuestionRequest rightAnswer = new QuestionRequest();
+                    QuestionRequest userAnswer = new QuestionRequest();
+                    List<QuestionRequest> multipleChoiceList = parseMultipleChoice(problem.getMultipleChoice());
+                    for(QuestionRequest requests : multipleChoiceList){
+                        if(Integer.parseInt(requests.getId()) == problem.getAnswer()){
+                            rightAnswer.setId(requests.getId());
+                            rightAnswer.setValue(requests.getValue());
+                        }
+                        if(Integer.parseInt(requests.getId()) == problem.getUserAnswer()){
+                            userAnswer.setId(requests.getId());
+                            userAnswer.setValue(requests.getValue());
+                        }
+                    }
+                    ProblemResponse problemResponse = new ProblemResponse(problem.getProblemId(), problem.getProblemNumber(), problem.getQuestion(), multipleChoiceList);
+                    problemResponses.add(problemResponse);
+                }
+                WordSets examSets = exam.getWordsets();
+                GetExamIdResponse getProblemsResponse = new GetExamIdResponse(exam.getCreatedAt(), exam.getExamId(), exam.getExamName(), 
+                    examSets.getSetId(), examSets.getSetName(), problemResponses);
+                if(!exam.getResults().isEmpty()){
+                    List<ResultResponse> resultResponses = new ArrayList<>();
+                    for(Results result : exam.getResults()){
+                        ResultResponse response = new ResultResponse(result.getResultId(), result.getSubmittedAt(), Long.valueOf(exam.getProblemCount()), Long.valueOf(result.getSolvedProblems().size()));
+                        resultResponses.add(response);
+                    }
+                    // Results result = exam.getResults().get(0);
+                    // GetResultResponse resultResponse = new GetResultResponse(result.getResultId(), result.getSubmittedAt(), problems.size()); 
+                    getProblemsResponse.setResultResponses(resultResponses);
+                }
+                responses.add(getProblemsResponse);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",responses));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
     }

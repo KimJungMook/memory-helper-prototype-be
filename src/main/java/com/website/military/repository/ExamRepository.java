@@ -13,5 +13,6 @@ import com.website.military.domain.Entity.Exam;
 public interface ExamRepository extends JpaRepository<Exam, Long>{
     Optional<Exam> findByUser_UserIdAndExamId(Long userId, Long examId);
     List<Exam> findByUser_UserId(Long userId);
+    List<Exam> findByUser_UserIdAndWordsets_SetId(Long userId, Long setId);
     Page<Exam> findByUser_UserIdOrderByCreatedAtDesc(Long userId, Pageable pagable);
 }

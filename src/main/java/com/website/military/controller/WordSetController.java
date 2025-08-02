@@ -1,6 +1,7 @@
 package com.website.military.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.website.military.domain.dto.response.ResponseMessageDto;
@@ -140,6 +141,13 @@ public class WordSetController {
     @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("setId") Long setId, HttpServletRequest request) {
         return wordSetService.getWordsBySetId(setId, request);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> getSearchWordSetName(    
+    @Parameter(description = "단어셋의 이름", schema = @Schema(type = "string", format = "string")) 
+    @RequestParam("wordSetName") String wordSetName, HttpServletRequest request) {
+        return wordSetService.getSearchWordSetName(wordSetName, request);
     }
     
 
