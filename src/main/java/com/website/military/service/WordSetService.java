@@ -7,10 +7,15 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.website.military.config.specification.WordSetsSpecification;
 import com.website.military.domain.Entity.Exam;
 import com.website.military.domain.Entity.User;
 import com.website.military.domain.Entity.Word;
@@ -75,6 +80,29 @@ public class WordSetService {
         }else{
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseMessageDto.set(badRequestError, "잘못된 요청입니다."));
         }
+    }
+
+    public ResponseEntity<?> getAllWordSetsListPage(HttpServletRequest request, Long page, Long size, String name){
+        Long userId = authService.getUserId(request);
+        Pageable pageable = PageRequest.of(page.intValue(), size.intValue()); // pageable 객체 생성
+
+        Specification<WordSets> spec = Specification
+            .where(WordSetsSpecification.userIdEquals(userId))
+            .and(WordSetsSpecification.nameContains(name));
+        
+        // 검색 실행
+        Page<WordSets> pageWordSets = wordSetsRepository.findAll(spec, pageable);
+
+        Page<WordSetsResponseDto> pageResponse = pageWordSets.map(sets ->
+            new WordSetsResponseDto(
+                sets.getSetId(),
+                sets.getSetName(),
+                sets.getCreatedAt(),
+                sets.getWordCount(),
+                sets.getExams()
+            )
+        );
+        return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",pageResponse));
     }
 
     // 단어세트에 있는 단어 불러오는 메서드

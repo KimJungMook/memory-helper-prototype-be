@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import com.website.military.domain.Entity.Mistakes;
 import com.website.military.domain.Entity.Results;
 import com.website.military.domain.Entity.SolvedProblems;
 import com.website.military.domain.Entity.Problems;
+import com.website.military.config.specification.ExamSpecification;
 import com.website.military.domain.Entity.Exam;
 import com.website.military.domain.Entity.Word;
 import com.website.military.domain.Entity.WordSetMapping;
@@ -115,10 +117,16 @@ public class ExamService {
         }
     }
 
-    public ResponseEntity<?> getAllExamListPage(HttpServletRequest request, Long page, Long size){
+    public ResponseEntity<?> getAllExamListPage(HttpServletRequest request, Long page, Long size, String name, Long setId){
         Long userId = authService.getUserId(request);
         Pageable pageable = PageRequest.of(page.intValue(), size.intValue()); // pageable 객체 생성
-        Page<Exam> pageExam = examRepository.findByUser_UserIdOrderByCreatedAtDesc(userId, pageable);
+
+        Specification<Exam> spec = Specification
+            .where(ExamSpecification.userIdEquals(userId))
+            .and(ExamSpecification.nameContains(name))
+            .and(ExamSpecification.setIdEquals(setId));
+        // 검색 실행
+        Page<Exam> pageExam = examRepository.findAll(spec, pageable);
         Page<ExamPagenationResponse> pageResponse = pageExam.map(exam ->
             new ExamPagenationResponse(
                 exam.getExamId(),
@@ -131,6 +139,7 @@ public class ExamService {
         );
         return ResponseEntity.status(HttpStatus.OK).body(ResponseDataDto.set("OK",pageResponse));
     }
+    
     // 밑에서 시험 이름을 생성하면 그를 토대로 불러서 response에 반영하기. (25.06.11) 
     public ResponseEntity<?> getTestProblems(HttpServletRequest request, Long examId){
         Long userId = authService.getUserId(request);

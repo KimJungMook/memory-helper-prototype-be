@@ -92,6 +92,13 @@ public class WordSetController {
         return wordSetService.getWordSets(request);
     }
 
+    
+    @GetMapping("/list")
+    public ResponseEntity<?> getAllExamList(HttpServletRequest request, @RequestParam(value = "page", defaultValue = "0") Long page, 
+    @RequestParam(value = "size", defaultValue = "5") Long size, @RequestParam(value = "name", required = false) String name) {
+        return wordSetService.getAllWordSetsListPage(request, page, size, name);
+    }
+
     @Operation(summary = "단어세트안에있는 단어 리스트", description = "단어 세트안에 있는 단어 리스트를 불러오는 메서드")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "OK",
