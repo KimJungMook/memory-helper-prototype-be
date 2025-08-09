@@ -41,7 +41,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class ExamController {
     
     @Autowired
-    private ExamService testService;
+    private ExamService examService;
 
     // GET
     @Operation(summary = "시험세트 찾기", description = "내가 만든 시험세트 찾아주는 메서드")
@@ -79,12 +79,13 @@ public class ExamController {
     })
     @GetMapping("/all")
     public ResponseEntity<?> getAllExamList(HttpServletRequest request) {
-        return testService.getAllExamList(request);
+        return examService.getAllExamList(request);
     }
 
-    @GetMapping("")
-    public ResponseEntity<?> getAllExamList(HttpServletRequest request, @RequestParam(value = "page", defaultValue = "0") Long page, @RequestParam(value = "size", defaultValue = "10") Long size) {
-        return testService.getAllExamListPage(request, page, size);
+    @GetMapping("/list")
+    public ResponseEntity<?> getAllExamList(HttpServletRequest request, @RequestParam(value = "page", defaultValue = "0") Long page, 
+    @RequestParam(value = "size", defaultValue = "5") Long size, @RequestParam(value = "name", required = false) String name, @RequestParam(value= "setId", required = false) Long setId) {
+        return examService.getAllExamListPage(request, page, size, name, setId);
     }
 
     @Operation(summary = "시험 하나를 불러오는 API", description = "생성된 시험 하나를 불러오는 API")
@@ -148,7 +149,7 @@ public class ExamController {
     })
     @GetMapping("/{examId}")
     public ResponseEntity<?> getTestProblems(HttpServletRequest request, @PathVariable("examId") Long examId){
-        return testService.getTestProblems(request, examId);
+        return examService.getTestProblems(request, examId);
     }
 
         @Operation(summary = "SetId로 시험 하나를 불러오는 API", description = "생성된 시험 하나를 불러오는 API")
@@ -212,7 +213,7 @@ public class ExamController {
     })
     @GetMapping("/wordsets/{setId}")
     public ResponseEntity<?> getSetIdTestProblems(HttpServletRequest request, @RequestParam("setId") Long setId){
-        return testService.getSetIdTestProblems(request, setId);
+        return examService.getSetIdTestProblems(request, setId);
     }
     
     // POST
@@ -277,12 +278,12 @@ public class ExamController {
     })
     @PostMapping("/{setId}")
     public ResponseEntity<?> generateExamList(HttpServletRequest request,@PathVariable("setId") Long setId) {
-        return testService.generateExamList(request, setId);
+        return examService.generateExamList(request, setId);
     }
 
     @PostMapping("/check/{examId}") // -> 채점을 할 때 result는 생성됌.
     public ResponseEntity<?> checkAnswers(HttpServletRequest request, @PathVariable("examId")Long examId, @Valid @RequestBody CheckRequest dto) {
-        return testService.checkAnswers(request, examId, dto.getCheckedAnswers());
+        return examService.checkAnswers(request, examId, dto.getCheckedAnswers());
     }
 
     // PATCH
@@ -291,7 +292,7 @@ public class ExamController {
     @Parameter(description = "단어셋의 id", schema = @Schema(type = "integer", format = "int64")) 
     @PathVariable("testId") Long testId,
     @RequestBody ChangeExamName dto,HttpServletRequest request){
-        return testService.patchTestName(request, testId, dto.getTestName());
+        return examService.patchTestName(request, testId, dto.getTestName());
     }
     
     // DELETE
@@ -312,7 +313,7 @@ public class ExamController {
     })
     @DeleteMapping("/{examId}")
     public ResponseEntity<?> deleteExam(HttpServletRequest request, @PathVariable("examId")Long examId){
-        return testService.deleteTest(request, examId);
+        return examService.deleteTest(request, examId);
     }
 }
 
