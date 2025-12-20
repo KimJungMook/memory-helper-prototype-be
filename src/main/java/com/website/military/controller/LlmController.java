@@ -34,6 +34,6 @@ public class LlmController {
                 """.formatted(UUID.randomUUID(), prompt);
 
         handler.sendJob(job);
-        return ResponseEntity.ok("Job sent to LLM worker");
+        return ResponseEntity.ok(job);
     }
 }
