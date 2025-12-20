@@ -9,19 +9,19 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
 
-//    private final LlmWebSocketHandler llmWebSocketHandler;
+    private final LlmWebSocketHandler llmWebSocketHandler;
 
     private final ChatWebSocketHandler chatWebSocketHandler;
 
     public WebSocketConfig(LlmWebSocketHandler llmWebSocketHandler, ChatWebSocketHandler chatWebSocketHandler){
-//        this.llmWebSocketHandler = llmWebSocketHandler;
+        this.llmWebSocketHandler = llmWebSocketHandler;
         this.chatWebSocketHandler = chatWebSocketHandler;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry){
-//        registry.addHandler(llmWebSocketHandler, "/ws/llm")
-//                .setAllowedOrigins("*");
+        registry.addHandler(llmWebSocketHandler, "/ws/llm")
+                .setAllowedOrigins("*");
 
         registry.addHandler(chatWebSocketHandler, "/ws/chat")
                 .setAllowedOrigins("*");
