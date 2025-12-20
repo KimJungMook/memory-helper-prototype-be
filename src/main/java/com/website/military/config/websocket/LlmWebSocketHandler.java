@@ -14,6 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LlmWebSocketHandler extends TextWebSocketHandler {
 
     private final Set<WebSocketSession> sessions = ConcurrentHashMap.newKeySet();
+    private ChatWebSocketHandler chatHandler;
+
+    public  void setChatHandler(ChatWebSocketHandler chatHandler){
+        this.chatHandler = chatHandler;
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session){
@@ -22,13 +27,15 @@ public class LlmWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message){
-        System.out.println("Result from worker: " + message.getPayload());
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception{
+//        System.out.println("Result from worker: " + message.getPayload());
+        chatHandler.handleLlmResult(message.getPayload());
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status){
         sessions.remove(session);
+        System.out.println("LLM Worker Disconnected");
     }
 
     public  void sendJob(String jobJson) throws IOException{
