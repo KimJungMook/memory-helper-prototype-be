@@ -16,6 +16,12 @@ public class LlmWebSocketHandler extends TextWebSocketHandler {
     private final Set<WebSocketSession> sessions = ConcurrentHashMap.newKeySet();
 
     @Override
+    public void afterConnectionEstablished(WebSocketSession session){
+        sessions.add(session);
+        System.out.println("LLM Worker connected");
+    }
+
+    @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message){
         System.out.println("Result from worker: " + message.getPayload());
     }
